@@ -197,8 +197,12 @@ fn cache_path(
 ) -> Result<PathBuf> {
     let key = stable_hash(cache_source_key(source, size)?);
     let key = stable_hash(format!(
-        "{key}:{:?}:{:?}:{:?}:{:?}",
-        treatment.blur_radius, treatment.dim_strength, treatment.tint, treatment.tint_opacity
+        "{key}:{:?}:{:?}:{:?}:{:?}:{:?}",
+        treatment.blur_radius,
+        treatment.dim_strength,
+        treatment.tint,
+        treatment.tint_opacity,
+        treatment.scaling
     ));
     let key = stable_hash(format!("{key}:{}", variant.unwrap_or_default()));
 
@@ -374,7 +378,9 @@ mod tests {
 
     use crate::{ClearColor, FrameSize, SoftwareBuffer};
 
-    use super::{BackgroundTreatment, CacheSource, GeneratedBackground, cache_path};
+    use super::{
+        super::BackgroundScaling, BackgroundTreatment, CacheSource, GeneratedBackground, cache_path,
+    };
     use crate::background::BackgroundGradient;
 
     #[test]
@@ -530,6 +536,47 @@ mod tests {
         .expect("cached buffer");
         assert_eq!(loaded_base, base);
         assert_eq!(loaded_layered, layered);
+
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn separates_cache_entries_by_background_scaling() {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("time")
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("veila-render-scale-cache-test-{unique}"));
+        fs::create_dir_all(&root).expect("cache root");
+
+        let wallpaper = root.join("wallpaper.jpg");
+        fs::write(&wallpaper, b"stub").expect("wallpaper file");
+        let size = FrameSize::new(1920, 1080);
+
+        let fill = cache_path(
+            CacheSource::Path(&wallpaper),
+            size,
+            BackgroundTreatment {
+                scaling: BackgroundScaling::Fill,
+                ..BackgroundTreatment::default()
+            },
+            None,
+            Some(&root),
+        )
+        .expect("fill key");
+        let fit = cache_path(
+            CacheSource::Path(&wallpaper),
+            size,
+            BackgroundTreatment {
+                scaling: BackgroundScaling::Fit,
+                ..BackgroundTreatment::default()
+            },
+            None,
+            Some(&root),
+        )
+        .expect("fit key");
+
+        assert_ne!(fill, fit);
 
         let _ = fs::remove_dir_all(root);
     }

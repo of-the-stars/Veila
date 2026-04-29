@@ -116,8 +116,8 @@ where
 mod tests {
     use super::{
         ClientMessage, CurtainControlMessage, DaemonControlMessage, DaemonControlResponse,
-        DaemonMessage,
-        DaemonReloadStatus, DaemonStatus, LiveReloadStatus, decode_message, encode_message,
+        DaemonMessage, DaemonReloadStatus, DaemonStatus, LiveReloadStatus, decode_message,
+        encode_message,
     };
 
     #[test]

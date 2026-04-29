@@ -8,13 +8,17 @@ use std::{
 use time::{OffsetDateTime, UtcOffset};
 use veila_common::{
     AppConfig, BatterySnapshot, ConfigColor, NowPlayingSnapshot, WeatherCondition, WeatherSnapshot,
-    config::{BackgroundLayeredBaseMode, BackgroundLayeredConfig},
+    config::{
+        BackgroundLayeredBaseMode, BackgroundLayeredConfig,
+        BackgroundScaling as ConfigBackgroundScaling,
+    },
 };
 use veila_renderer::{
     ClearColor, FrameSize, SoftwareBuffer,
     background::{
         BackgroundAsset, BackgroundGradient, BackgroundLayered, BackgroundLayeredBase,
-        BackgroundLayeredBlob, BackgroundRadial, BackgroundTreatment, GeneratedBackground,
+        BackgroundLayeredBlob, BackgroundRadial, BackgroundScaling, BackgroundTreatment,
+        GeneratedBackground,
     },
 };
 use veila_ui::{ShellState, ShellTheme};
@@ -69,6 +73,7 @@ pub(crate) fn render_preview(options: CurtainOptions) -> Result<()> {
         dim_strength: config.background.dim_strength,
         tint: config.background.tint.map(to_clear_color),
         tint_opacity: config.background.tint_opacity,
+        scaling: to_background_scaling(config.background.scaling),
     };
     let background = BackgroundAsset::load(
         config.background.resolved_path().as_deref(),
@@ -118,6 +123,16 @@ fn render_shell(shell: &ShellState, buffer: &mut SoftwareBuffer) {
 
 fn to_clear_color(color: ConfigColor) -> ClearColor {
     ClearColor::rgba(color.0, color.1, color.2, color.3)
+}
+
+fn to_background_scaling(scaling: ConfigBackgroundScaling) -> BackgroundScaling {
+    match scaling {
+        ConfigBackgroundScaling::Fill => BackgroundScaling::Fill,
+        ConfigBackgroundScaling::Fit => BackgroundScaling::Fit,
+        ConfigBackgroundScaling::Center => BackgroundScaling::Center,
+        ConfigBackgroundScaling::Tile => BackgroundScaling::Tile,
+        ConfigBackgroundScaling::Stretch => BackgroundScaling::Stretch,
+    }
 }
 
 fn background_generated(

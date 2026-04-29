@@ -32,11 +32,22 @@ pub struct RenderCacheSummary {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum BackgroundScaling {
+    #[default]
+    Fill,
+    Fit,
+    Center,
+    Tile,
+    Stretch,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct BackgroundTreatment {
     pub blur_radius: u8,
     pub dim_strength: u8,
     pub tint: Option<ClearColor>,
     pub tint_opacity: u8,
+    pub scaling: BackgroundScaling,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -104,5 +115,8 @@ pub struct BackgroundAsset {
 enum BackgroundKind {
     Solid(ClearColor),
     Generated(GeneratedBackground),
-    Image(Arc<RgbaImage>),
+    Image {
+        image: Arc<RgbaImage>,
+        fallback: ClearColor,
+    },
 }

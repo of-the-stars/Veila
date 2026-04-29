@@ -28,6 +28,17 @@ impl BackgroundMode {
     }
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum BackgroundScaling {
+    #[default]
+    Fill,
+    Fit,
+    Center,
+    Tile,
+    Stretch,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BackgroundGradientConfig {
     #[serde(default = "default_gradient_top_left")]
@@ -158,6 +169,8 @@ pub struct BackgroundConfig {
     #[serde(default = "default_background_color")]
     pub color: RgbColor,
     #[serde(default)]
+    pub scaling: BackgroundScaling,
+    #[serde(default)]
     pub gradient: Option<BackgroundGradientConfig>,
     #[serde(default)]
     pub layered: Option<BackgroundLayeredConfig>,
@@ -180,6 +193,7 @@ impl Default for BackgroundConfig {
             path: None,
             outputs: Vec::new(),
             color: default_background_color(),
+            scaling: BackgroundScaling::Fill,
             gradient: Some(BackgroundGradientConfig::default()),
             layered: Some(BackgroundLayeredConfig::default()),
             radial: Some(BackgroundRadialConfig::default()),

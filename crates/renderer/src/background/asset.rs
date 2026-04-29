@@ -26,7 +26,10 @@ impl BackgroundAsset {
     ) -> Result<Self> {
         if let Some(path) = path {
             return Ok(Self {
-                kind: BackgroundKind::Image(Arc::new(load_rgba_image(path)?)),
+                kind: BackgroundKind::Image {
+                    image: Arc::new(load_rgba_image(path)?),
+                    fallback,
+                },
                 treatment,
             });
         }
@@ -48,7 +51,9 @@ impl BackgroundAsset {
         let mut buffer = match &self.kind {
             BackgroundKind::Solid(color) => SoftwareBuffer::solid(size, *color),
             BackgroundKind::Generated(generated) => render_generated(size, *generated),
-            BackgroundKind::Image(image) => render_image(image, size, self.treatment),
+            BackgroundKind::Image { image, fallback } => {
+                render_image(image, size, *fallback, self.treatment)
+            }
         }?;
         apply_treatment(&mut buffer, self.treatment);
         Ok(buffer)

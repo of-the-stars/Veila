@@ -27,7 +27,7 @@ const DEFAULT_THEME_NAME: &str = "default";
 pub use background::{
     BackgroundConfig, BackgroundGradientConfig, BackgroundLayeredBaseConfig,
     BackgroundLayeredBaseMode, BackgroundLayeredBlobConfig, BackgroundLayeredConfig,
-    BackgroundMode, BackgroundOutputConfig, BackgroundRadialConfig,
+    BackgroundMode, BackgroundOutputConfig, BackgroundRadialConfig, BackgroundScaling,
 };
 pub use battery::BatteryConfig;
 pub use color::ConfigColor;

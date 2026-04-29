@@ -1,16 +1,39 @@
-use image::{RgbaImage, imageops::FilterType};
+use image::{Rgba, RgbaImage, imageops::FilterType};
 
 use super::{
     BackgroundGradient, BackgroundLayered, BackgroundLayeredBase, BackgroundLayeredBlob,
-    BackgroundRadial, BackgroundTreatment, GeneratedBackground,
+    BackgroundRadial, BackgroundScaling, BackgroundTreatment, GeneratedBackground,
 };
 use crate::{ClearColor, FrameSize, Result, SoftwareBuffer, blur::blur_rgba};
 
 pub(super) fn render_image(
     image: &RgbaImage,
     size: FrameSize,
+    fallback: ClearColor,
     treatment: BackgroundTreatment,
 ) -> Result<SoftwareBuffer> {
+    let composed = match treatment.scaling {
+        BackgroundScaling::Fill => render_image_fill(image, size),
+        BackgroundScaling::Fit => render_image_fit(image, size, fallback),
+        BackgroundScaling::Center => render_image_center(image, size, fallback),
+        BackgroundScaling::Tile => render_image_tile(image, size, fallback),
+        BackgroundScaling::Stretch => render_image_stretch(image, size),
+    };
+    let composed = blur_rgba(&composed, treatment.blur_radius, 12);
+    let mut buffer = SoftwareBuffer::new(size)?;
+
+    for (target, pixel) in buffer
+        .pixels_mut()
+        .chunks_exact_mut(4)
+        .zip(composed.pixels())
+    {
+        target.copy_from_slice(&[pixel[2], pixel[1], pixel[0], pixel[3]]);
+    }
+
+    Ok(buffer)
+}
+
+fn render_image_fill(image: &RgbaImage, size: FrameSize) -> RgbaImage {
     let (scaled_width, scaled_height) = cover_dimensions(
         image.width(),
         image.height(),
@@ -20,20 +43,61 @@ pub(super) fn render_image(
     let resized = image::imageops::resize(image, scaled_width, scaled_height, FilterType::Triangle);
     let crop_x = (scaled_width.saturating_sub(size.width)) / 2;
     let crop_y = (scaled_height.saturating_sub(size.height)) / 2;
-    let cropped =
-        image::imageops::crop_imm(&resized, crop_x, crop_y, size.width, size.height).to_image();
-    let cropped = blur_rgba(&cropped, treatment.blur_radius, 12);
-    let mut buffer = SoftwareBuffer::new(size)?;
+    image::imageops::crop_imm(&resized, crop_x, crop_y, size.width, size.height).to_image()
+}
 
-    for (target, pixel) in buffer
-        .pixels_mut()
-        .chunks_exact_mut(4)
-        .zip(cropped.pixels())
-    {
-        target.copy_from_slice(&[pixel[2], pixel[1], pixel[0], pixel[3]]);
+fn render_image_fit(image: &RgbaImage, size: FrameSize, fallback: ClearColor) -> RgbaImage {
+    let (scaled_width, scaled_height) = fit_dimensions(
+        image.width(),
+        image.height(),
+        size.width.max(1),
+        size.height.max(1),
+    );
+    let resized = image::imageops::resize(image, scaled_width, scaled_height, FilterType::Triangle);
+    let mut canvas = filled_canvas(size, fallback);
+    blit_centered(&mut canvas, &resized);
+    canvas
+}
+
+fn render_image_center(image: &RgbaImage, size: FrameSize, fallback: ClearColor) -> RgbaImage {
+    let mut canvas = filled_canvas(size, fallback);
+    blit_centered(&mut canvas, image);
+    canvas
+}
+
+fn render_image_tile(image: &RgbaImage, size: FrameSize, fallback: ClearColor) -> RgbaImage {
+    let mut canvas = filled_canvas(size, fallback);
+    let tile_width = image.width().max(1);
+    let tile_height = image.height().max(1);
+
+    let mut dst_y = 0;
+    while dst_y < size.height {
+        let mut dst_x = 0;
+        while dst_x < size.width {
+            let copy_width = tile_width.min(size.width - dst_x);
+            let copy_height = tile_height.min(size.height - dst_y);
+            blit_region(
+                &mut canvas,
+                image,
+                (0, 0),
+                (dst_x, dst_y),
+                (copy_width, copy_height),
+            );
+            dst_x += tile_width;
+        }
+        dst_y += tile_height;
     }
 
-    Ok(buffer)
+    canvas
+}
+
+fn render_image_stretch(image: &RgbaImage, size: FrameSize) -> RgbaImage {
+    image::imageops::resize(
+        image,
+        size.width.max(1),
+        size.height.max(1),
+        FilterType::Triangle,
+    )
 }
 
 pub(super) fn render_generated(
@@ -198,6 +262,14 @@ fn blend_component(dst: u8, src: u8, inverse_alpha: u16) -> u8 {
     blended.min(u16::from(u8::MAX)) as u8
 }
 
+fn filled_canvas(size: FrameSize, color: ClearColor) -> RgbaImage {
+    RgbaImage::from_pixel(size.width, size.height, rgba_from_clear_color(color))
+}
+
+fn rgba_from_clear_color(color: ClearColor) -> Rgba<u8> {
+    Rgba([color.red, color.green, color.blue, color.alpha])
+}
+
 pub(super) fn cover_dimensions(
     source_width: u32,
     source_height: u32,
@@ -213,4 +285,65 @@ pub(super) fn cover_dimensions(
     let height_limited_width =
         (u128::from(source_width) * u128::from(target_height)).div_ceil(u128::from(source_height));
     (height_limited_width as u32, target_height)
+}
+
+pub(super) fn fit_dimensions(
+    source_width: u32,
+    source_height: u32,
+    target_width: u32,
+    target_height: u32,
+) -> (u32, u32) {
+    let width_limited_height =
+        (u128::from(source_height) * u128::from(target_width)) / u128::from(source_width);
+    if width_limited_height <= u128::from(target_height) {
+        return (target_width, width_limited_height.max(1) as u32);
+    }
+
+    let height_limited_width =
+        (u128::from(source_width) * u128::from(target_height)) / u128::from(source_height);
+    (height_limited_width.max(1) as u32, target_height)
+}
+
+fn blit_centered(canvas: &mut RgbaImage, image: &RgbaImage) {
+    let (src_x, dst_x, width) = centered_axis(image.width(), canvas.width());
+    let (src_y, dst_y, height) = centered_axis(image.height(), canvas.height());
+    blit_region(
+        canvas,
+        image,
+        (src_x, src_y),
+        (dst_x, dst_y),
+        (width, height),
+    );
+}
+
+fn centered_axis(source: u32, target: u32) -> (u32, u32, u32) {
+    if source <= target {
+        let dst = (target - source) / 2;
+        return (0, dst, source);
+    }
+
+    let src = (source - target) / 2;
+    (src, 0, target)
+}
+
+fn blit_region(
+    canvas: &mut RgbaImage,
+    image: &RgbaImage,
+    src_origin: (u32, u32),
+    dst_origin: (u32, u32),
+    size: (u32, u32),
+) {
+    let (src_x, src_y) = src_origin;
+    let (dst_x, dst_y) = dst_origin;
+    let (width, height) = size;
+    if width == 0 || height == 0 {
+        return;
+    }
+
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = image.get_pixel(src_x + x, src_y + y);
+            canvas.put_pixel(dst_x + x, dst_y + y, *pixel);
+        }
+    }
 }

@@ -211,6 +211,22 @@ fn infers_file_mode_from_legacy_background_path() {
 }
 
 #[test]
+fn parses_background_file_scaling_mode() {
+    let config = AppConfig::from_toml_str(
+        r#"
+            [background]
+            mode = "file"
+            path = "/tmp/wallpaper.jpg"
+            scaling = "fit"
+        "#,
+    )
+    .expect("config should parse");
+
+    assert_eq!(config.background.effective_mode(), BackgroundMode::File);
+    assert_eq!(config.background.scaling, BackgroundScaling::Fit);
+}
+
+#[test]
 fn parses_per_output_background_overrides_with_default_fallback() {
     let config = AppConfig::from_toml_str(
         r#"

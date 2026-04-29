@@ -5,16 +5,20 @@ use std::{
 
 use veila_common::{
     AppConfig, LayerAlignment, LayerMode, LayerStyle, RgbColor,
-    config::{BackgroundLayeredBaseMode, BackgroundLayeredConfig},
+    config::{
+        BackgroundLayeredBaseMode, BackgroundLayeredConfig,
+        BackgroundScaling as ConfigBackgroundScaling,
+    },
 };
 use veila_renderer::{
     ClearColor, FrameSize,
     background::{
         BackgroundAsset, BackgroundGradient, BackgroundLayered, BackgroundLayeredBase,
-        BackgroundLayeredBlob, BackgroundRadial, BackgroundTreatment, GeneratedBackground,
-        RenderCacheSummary, SourceCacheStatus, load_cached_generated_render_variant,
-        load_cached_render_variant, prewarm_rendered, prewarm_rendered_generated, prewarm_source,
-        store_cached_generated_render_variant, store_cached_render_variant,
+        BackgroundLayeredBlob, BackgroundRadial, BackgroundScaling, BackgroundTreatment,
+        GeneratedBackground, RenderCacheSummary, SourceCacheStatus,
+        load_cached_generated_render_variant, load_cached_render_variant, prewarm_rendered,
+        prewarm_rendered_generated, prewarm_source, store_cached_generated_render_variant,
+        store_cached_render_variant,
     },
     draw::layer::{
         BackdropLayerAlignment, BackdropLayerMode, BackdropLayerShape, BackdropLayerStyle,
@@ -490,6 +494,17 @@ fn background_treatment(config: &veila_common::config::BackgroundConfig) -> Back
         dim_strength: config.dim_strength,
         tint: config.tint.map(to_clear_color),
         tint_opacity: config.tint_opacity,
+        scaling: to_background_scaling(config.scaling),
+    }
+}
+
+fn to_background_scaling(scaling: ConfigBackgroundScaling) -> BackgroundScaling {
+    match scaling {
+        ConfigBackgroundScaling::Fill => BackgroundScaling::Fill,
+        ConfigBackgroundScaling::Fit => BackgroundScaling::Fit,
+        ConfigBackgroundScaling::Center => BackgroundScaling::Center,
+        ConfigBackgroundScaling::Tile => BackgroundScaling::Tile,
+        ConfigBackgroundScaling::Stretch => BackgroundScaling::Stretch,
     }
 }
 

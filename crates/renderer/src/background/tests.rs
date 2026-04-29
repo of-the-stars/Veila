@@ -4,8 +4,10 @@ use image::{Rgba, RgbaImage};
 
 use super::{
     BackgroundAsset, BackgroundGradient, BackgroundKind, BackgroundLayered, BackgroundLayeredBase,
-    BackgroundLayeredBlob, BackgroundRadial, BackgroundTreatment, GeneratedBackground,
-    RenderCacheSummary, SourceCacheStatus, asset::unique_sizes, render::cover_dimensions,
+    BackgroundLayeredBlob, BackgroundRadial, BackgroundScaling, BackgroundTreatment,
+    GeneratedBackground, RenderCacheSummary, SourceCacheStatus,
+    asset::unique_sizes,
+    render::{cover_dimensions, fit_dimensions},
 };
 use crate::{ClearColor, FrameSize};
 
@@ -100,7 +102,10 @@ fn scales_images_into_argb8888_buffers() {
     let mut image = RgbaImage::new(1, 1);
     image.put_pixel(0, 0, Rgba([10, 20, 30, 255]));
     let asset = BackgroundAsset {
-        kind: BackgroundKind::Image(Arc::new(image)),
+        kind: BackgroundKind::Image {
+            image: Arc::new(image),
+            fallback: ClearColor::opaque(0, 0, 0),
+        },
         treatment: BackgroundTreatment::default(),
     };
 
@@ -113,6 +118,111 @@ fn scales_images_into_argb8888_buffers() {
 fn cover_dimensions_fill_target() {
     assert_eq!(cover_dimensions(4000, 3000, 1920, 1080), (1920, 1440));
     assert_eq!(cover_dimensions(3000, 4000, 1920, 1080), (1920, 2560));
+}
+
+#[test]
+fn fit_dimensions_preserve_entire_image() {
+    assert_eq!(fit_dimensions(4000, 3000, 1920, 1080), (1440, 1080));
+    assert_eq!(fit_dimensions(3000, 4000, 1920, 1080), (810, 1080));
+}
+
+#[test]
+fn fit_scaling_uses_fallback_bars() {
+    let mut image = RgbaImage::new(2, 1);
+    image.put_pixel(0, 0, Rgba([255, 0, 0, 255]));
+    image.put_pixel(1, 0, Rgba([0, 255, 0, 255]));
+    let asset = BackgroundAsset {
+        kind: BackgroundKind::Image {
+            image: Arc::new(image),
+            fallback: ClearColor::opaque(10, 20, 30),
+        },
+        treatment: BackgroundTreatment {
+            scaling: BackgroundScaling::Fit,
+            ..BackgroundTreatment::default()
+        },
+    };
+
+    let buffer = asset.render(FrameSize::new(4, 4)).expect("buffer");
+
+    assert_eq!(&buffer.pixels()[0..4], &[30, 20, 10, 255]);
+    let middle_left = 4 * 4usize;
+    let middle_right = 7 * 4usize;
+    assert_eq!(
+        &buffer.pixels()[middle_left..middle_left + 4],
+        &[0, 0, 255, 255]
+    );
+    assert_eq!(
+        &buffer.pixels()[middle_right..middle_right + 4],
+        &[0, 255, 0, 255]
+    );
+}
+
+#[test]
+fn center_scaling_keeps_image_unscaled() {
+    let mut image = RgbaImage::new(1, 1);
+    image.put_pixel(0, 0, Rgba([12, 34, 56, 255]));
+    let asset = BackgroundAsset {
+        kind: BackgroundKind::Image {
+            image: Arc::new(image),
+            fallback: ClearColor::opaque(1, 2, 3),
+        },
+        treatment: BackgroundTreatment {
+            scaling: BackgroundScaling::Center,
+            ..BackgroundTreatment::default()
+        },
+    };
+
+    let buffer = asset.render(FrameSize::new(3, 3)).expect("buffer");
+
+    assert_eq!(&buffer.pixels()[0..4], &[3, 2, 1, 255]);
+    let center = 4 * 4usize;
+    assert_eq!(&buffer.pixels()[center..center + 4], &[56, 34, 12, 255]);
+}
+
+#[test]
+fn tile_scaling_repeats_source_image() {
+    let mut image = RgbaImage::new(2, 1);
+    image.put_pixel(0, 0, Rgba([255, 0, 0, 255]));
+    image.put_pixel(1, 0, Rgba([0, 255, 0, 255]));
+    let asset = BackgroundAsset {
+        kind: BackgroundKind::Image {
+            image: Arc::new(image),
+            fallback: ClearColor::opaque(0, 0, 0),
+        },
+        treatment: BackgroundTreatment {
+            scaling: BackgroundScaling::Tile,
+            ..BackgroundTreatment::default()
+        },
+    };
+
+    let buffer = asset.render(FrameSize::new(4, 2)).expect("buffer");
+
+    assert_eq!(&buffer.pixels()[0..4], &[0, 0, 255, 255]);
+    assert_eq!(&buffer.pixels()[4..8], &[0, 255, 0, 255]);
+    assert_eq!(&buffer.pixels()[8..12], &[0, 0, 255, 255]);
+    assert_eq!(&buffer.pixels()[12..16], &[0, 255, 0, 255]);
+}
+
+#[test]
+fn stretch_scaling_fills_target_without_preserving_aspect() {
+    let mut image = RgbaImage::new(1, 2);
+    image.put_pixel(0, 0, Rgba([200, 10, 20, 255]));
+    image.put_pixel(0, 1, Rgba([30, 220, 40, 255]));
+    let asset = BackgroundAsset {
+        kind: BackgroundKind::Image {
+            image: Arc::new(image),
+            fallback: ClearColor::opaque(0, 0, 0),
+        },
+        treatment: BackgroundTreatment {
+            scaling: BackgroundScaling::Stretch,
+            ..BackgroundTreatment::default()
+        },
+    };
+
+    let buffer = asset.render(FrameSize::new(2, 2)).expect("buffer");
+
+    assert_eq!(&buffer.pixels()[0..4], &[20, 10, 200, 255]);
+    assert_eq!(&buffer.pixels()[4..8], &[20, 10, 200, 255]);
 }
 
 #[test]
@@ -157,6 +267,7 @@ fn applies_dim_and_tint_treatment() {
             dim_strength: 20,
             tint: Some(ClearColor::opaque(10, 20, 40)),
             tint_opacity: 10,
+            scaling: BackgroundScaling::Fill,
         },
     )
     .expect("asset");
