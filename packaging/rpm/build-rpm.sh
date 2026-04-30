@@ -80,7 +80,6 @@ install -m755 bin/veilad %{buildroot}%{_bindir}/veilad
 install -m755 bin/veila-curtain %{buildroot}%{_bindir}/veila-curtain
 
 install -d %{buildroot}%{_datadir}/veila
-cp -a share/veila/bg %{buildroot}%{_datadir}/veila/
 cp -a share/veila/fonts %{buildroot}%{_datadir}/veila/
 cp -a share/veila/icons %{buildroot}%{_datadir}/veila/
 cp -a share/veila/systemd %{buildroot}%{_datadir}/veila/
@@ -106,7 +105,6 @@ install -m644 LICENSE %{buildroot}%{_licensedir}/%{name}/LICENSE
 %{_bindir}/veilad
 %{_bindir}/veila-curtain
 /usr/lib/systemd/user/veilad.service
-%{_datadir}/veila/bg
 %{_datadir}/veila/fonts
 %{_datadir}/veila/icons
 %{_datadir}/veila/systemd
