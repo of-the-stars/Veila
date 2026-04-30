@@ -123,6 +123,24 @@ fn battery_svg_icons_follow_style_color() {
 }
 
 #[test]
+fn caps_lock_svg_icon_follows_style_color() {
+    let key = IconRasterKey {
+        icon: AssetIcon::CapsLock,
+        width: 48,
+        height: 48,
+        color: ClearColor::opaque(255, 211, 122),
+        padding: 0,
+    };
+    let pixels = rasterize_icon(key, icon_source(key.icon));
+
+    assert!(
+        pixels
+            .chunks_exact(4)
+            .any(|pixel| { pixel[3] > 0 && pixel[0] < 150 && pixel[1] > 180 && pixel[2] > 220 })
+    );
+}
+
+#[test]
 fn weather_svg_icons_trim_internal_transparent_bounds() {
     let key = IconRasterKey {
         icon: AssetIcon::Weather(WeatherIcon::ClearDay),

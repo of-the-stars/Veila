@@ -253,21 +253,6 @@ impl ShellState {
         )
     }
 
-    pub(crate) fn caps_lock_text_style(&self) -> TextStyle {
-        TextStyle::new(
-            secondary_text_color(
-                self.theme
-                    .caps_lock_color
-                    .or(self.theme.status_color)
-                    .unwrap_or(self.theme.input_border),
-                self.theme.caps_lock_opacity.or(self.theme.status_opacity),
-                214,
-            ),
-            1,
-        )
-        .with_line_spacing(0)
-    }
-
     fn apply_input_font(&self, style: TextStyle) -> TextStyle {
         self.apply_font_overrides(
             style,

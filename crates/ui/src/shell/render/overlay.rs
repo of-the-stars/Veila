@@ -217,15 +217,6 @@ impl ShellState {
                 draw_weather_widget(buffer, y, weather);
             }
             SceneWidget::Input(placeholder) => {
-                let caps_lock_indicator =
-                    if dynamic && self.caps_lock_active && self.theme.caps_lock_enabled {
-                        Some(self.text_layout_cache.borrow_mut().caps_lock_block(
-                            self.caps_lock_text_style(),
-                            metrics.input_width as u32,
-                        ))
-                    } else {
-                        None
-                    };
                 let revealed_secret = if self.reveal_secret && !self.secret.is_empty() {
                     Some(self.text_layout_cache.borrow_mut().revealed_secret_block(
                         &self.secret,
@@ -246,19 +237,21 @@ impl ShellState {
                 } else {
                     None
                 };
-                let right_adornment = if self.theme.eye_enabled {
-                    if let Some(phase) = self.pending_spinner_phase() {
-                        InputRightAdornment::Spinner {
-                            phase,
-                            style: self.toggle_style(),
-                        }
-                    } else {
-                        InputRightAdornment::Toggle {
-                            hovered: self.reveal_toggle_hovered,
-                            pressed: self.reveal_toggle_pressed,
-                            reveal_secret: self.reveal_secret,
-                            style: self.toggle_style(),
-                        }
+                let right_adornment = if let Some(phase) = self.pending_spinner_phase() {
+                    InputRightAdornment::Spinner {
+                        phase,
+                        style: self.toggle_style(),
+                    }
+                } else if self.caps_lock_active && self.theme.caps_lock_enabled {
+                    InputRightAdornment::CapsLock {
+                        style: self.caps_lock_icon_style(),
+                    }
+                } else if self.theme.eye_enabled {
+                    InputRightAdornment::Toggle {
+                        hovered: self.reveal_toggle_hovered,
+                        pressed: self.reveal_toggle_pressed,
+                        reveal_secret: self.reveal_secret,
+                        style: self.toggle_style(),
                     }
                 } else {
                     InputRightAdornment::None
@@ -273,7 +266,6 @@ impl ShellState {
                     revealed_secret,
                     inline_status,
                     right_adornment,
-                    caps_lock_indicator,
                 };
                 if dynamic {
                     if self.input_shell_is_dynamic() {

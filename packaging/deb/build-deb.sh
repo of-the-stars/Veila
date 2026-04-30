@@ -55,7 +55,6 @@ install -m644 assets/systemd/veilad.service "$staging/usr/lib/systemd/user/veila
 install -m644 README.md "$staging/usr/share/doc/veila/README.md"
 install -m644 LICENSE "$staging/usr/share/doc/veila/copyright"
 
-cp -R assets/bg "$staging/usr/share/veila/"
 cp -R assets/fonts "$staging/usr/share/veila/"
 cp -R assets/icons "$staging/usr/share/veila/"
 cp -R assets/systemd "$staging/usr/share/veila/"

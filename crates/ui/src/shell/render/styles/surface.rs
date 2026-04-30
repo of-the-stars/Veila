@@ -8,7 +8,9 @@ use veila_renderer::{
 
 use super::{
     super::ShellState,
-    color::{avatar_background_color, avatar_ring_color, eye_icon_alpha, styled_alpha},
+    color::{
+        avatar_background_color, avatar_ring_color, eye_icon_alpha, percent_to_alpha, styled_alpha,
+    },
 };
 
 impl ShellState {
@@ -93,6 +95,16 @@ impl ShellState {
         };
         let base = self.theme.eye_icon_color.unwrap_or(self.theme.foreground);
         let alpha = eye_icon_alpha(base.alpha, self.theme.eye_icon_opacity, interaction_alpha);
+        IconStyle::new(base.with_alpha(alpha)).with_padding(4)
+    }
+
+    pub(crate) fn caps_lock_icon_style(&self) -> IconStyle {
+        let base = self.theme.caps_lock_color.unwrap_or(self.theme.foreground);
+        let alpha = match self.theme.caps_lock_opacity {
+            Some(percent) => percent_to_alpha(percent),
+            None if base.alpha == u8::MAX => percent_to_alpha(72),
+            None => base.alpha,
+        };
         IconStyle::new(base.with_alpha(alpha)).with_padding(4)
     }
 }

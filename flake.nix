@@ -64,7 +64,6 @@
               install -Dm755 "$curtain_bin" "$out/bin/veila-curtain"
 
               mkdir -p "$out/share/veila"
-              cp -R assets/bg "$out/share/veila/"
               cp -R assets/fonts "$out/share/veila/"
               cp -R assets/icons "$out/share/veila/"
               cp -R assets/systemd "$out/share/veila/"

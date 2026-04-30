@@ -27,6 +27,7 @@ pub enum AssetIcon {
     Eye,
     EyeOff,
     User,
+    CapsLock,
     Battery(BatteryIcon),
     Weather(WeatherIcon),
 }
@@ -136,6 +137,9 @@ fn icon_source(icon: AssetIcon) -> IconRasterSource {
         AssetIcon::Eye => IconRasterSource::Parsed(eye_icon()),
         AssetIcon::EyeOff => IconRasterSource::Parsed(eye_off_icon()),
         AssetIcon::User => IconRasterSource::Parsed(user_icon()),
+        AssetIcon::CapsLock => {
+            IconRasterSource::Svg(include_bytes!("../../../../../assets/icons/caps-lock.svg"))
+        }
         AssetIcon::Battery(icon) => IconRasterSource::Svg(battery_svg(icon)),
         AssetIcon::Weather(icon) => IconRasterSource::Svg(weather_svg(icon)),
     }

@@ -34,7 +34,6 @@ pub(super) struct InputWidget {
     pub revealed_secret: Option<TextBlock>,
     pub inline_status: Option<TextBlock>,
     pub right_adornment: InputRightAdornment,
-    pub caps_lock_indicator: Option<TextBlock>,
 }
 
 pub(super) enum InputRightAdornment {
@@ -47,6 +46,9 @@ pub(super) enum InputRightAdornment {
     },
     Spinner {
         phase: u8,
+        style: IconStyle,
+    },
+    CapsLock {
         style: IconStyle,
     },
 }
@@ -261,12 +263,6 @@ pub(super) fn draw_input_content(buffer: &mut SoftwareBuffer, widget: &InputWidg
 
     if let Some(adornment_rect) = adornment_rect {
         draw_input_right_adornment(buffer, adornment_rect, &widget.right_adornment);
-    }
-
-    if let Some(caps_lock_indicator) = widget.caps_lock_indicator.as_ref() {
-        let x = widget.rect.x + widget.rect.width - caps_lock_indicator.width as i32;
-        let y = (widget.rect.y - caps_lock_indicator.height as i32 - 6).max(0);
-        caps_lock_indicator.draw(buffer, x, y);
     }
 }
 
@@ -495,6 +491,9 @@ fn draw_input_right_adornment(
         } => draw_toggle_icon(buffer, hitbox, *reveal_secret, *hovered, *pressed, *style),
         InputRightAdornment::Spinner { phase, style } => {
             draw_spinner_icon(buffer, hitbox, *phase, *style)
+        }
+        InputRightAdornment::CapsLock { style } => {
+            draw_icon(buffer, hitbox, AssetIcon::CapsLock, *style)
         }
     }
 }

@@ -34,7 +34,6 @@ override_dh_auto_install:
 	install -D -m755 target/release/veila-curtain $(CURDIR)/debian/veila/usr/bin/veila-curtain
 
 	mkdir -p $(CURDIR)/debian/veila/usr/share/veila
-	cp -a assets/bg $(CURDIR)/debian/veila/usr/share/veila/
 	cp -a assets/fonts $(CURDIR)/debian/veila/usr/share/veila/
 	cp -a assets/icons $(CURDIR)/debian/veila/usr/share/veila/
 	cp -a assets/systemd $(CURDIR)/debian/veila/usr/share/veila/

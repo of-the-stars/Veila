@@ -51,7 +51,10 @@ fn rasterize_svg_icon(key: IconRasterKey, svg: &[u8]) -> Vec<u8> {
     let transform = Transform::from_scale(scale, scale).post_translate(translate_x, translate_y);
     resvg::render(&tree, transform, &mut pixmap.as_mut());
     let mut pixels = pixmap.take();
-    if matches!(key.icon, super::AssetIcon::Battery(_)) {
+    if matches!(
+        key.icon,
+        super::AssetIcon::Battery(_) | super::AssetIcon::CapsLock
+    ) {
         recolor_svg_pixels(&mut pixels, key.color);
     }
     scale_svg_alpha(&mut pixels, key.color.alpha);

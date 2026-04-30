@@ -79,7 +79,6 @@ jobs:
           install -m755 target/release/veila "$dist_dir/bin/veila"
           install -m755 target/release/veilad "$dist_dir/bin/veilad"
           install -m755 target/release/veila-curtain "$dist_dir/bin/veila-curtain"
-          cp -R assets/bg "$dist_dir/share/veila/"
           cp -R assets/fonts "$dist_dir/share/veila/"
           cp -R assets/icons "$dist_dir/share/veila/"
           cp -R assets/systemd "$dist_dir/share/veila/"
