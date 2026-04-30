@@ -33,6 +33,21 @@ fn loads_nested_visual_tables_with_precedence_for_auth_and_header_entries() {
     assert_eq!(config.visuals.reveal_font_size(), Some(2));
     assert_eq!(config.visuals.output_ui_mode(), OutputUiMode::Single);
     assert_eq!(config.visuals.ui_output_name(), Some("DP-1"));
+    assert_eq!(
+        config.visuals.status_pending_color(),
+        Some(RgbColor::rgb(255, 194, 92))
+    );
+    assert_eq!(config.visuals.status_pending_opacity(), Some(73));
+    assert_eq!(
+        config.visuals.status_rejected_color(),
+        Some(RgbColor::rgb(220, 96, 96))
+    );
+    assert_eq!(config.visuals.status_rejected_opacity(), Some(92));
+    assert_eq!(
+        config.visuals.caps_lock_color(),
+        Some(RgbColor::rgb(255, 211, 122))
+    );
+    assert_eq!(config.visuals.caps_lock_opacity(), Some(64));
     assert_eq!(config.visuals.input_horizontal_padding(), Some(64));
     assert_eq!(config.visuals.input_vertical_padding(), Some(56));
     assert_eq!(config.visuals.input_offset_x(), Some(14));

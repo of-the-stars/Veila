@@ -66,6 +66,14 @@ pub struct StatusVisualConfig {
     #[serde(default)]
     pub opacity: Option<u8>,
     #[serde(default)]
+    pub pending_color: Option<RgbColor>,
+    #[serde(default)]
+    pub pending_opacity: Option<u8>,
+    #[serde(default)]
+    pub rejected_color: Option<RgbColor>,
+    #[serde(default)]
+    pub rejected_opacity: Option<u8>,
+    #[serde(default)]
     pub gap: Option<u16>,
 }
 
@@ -75,6 +83,10 @@ impl Default for StatusVisualConfig {
             enabled: Some(true),
             color: Some(RgbColor::rgb(255, 224, 160)),
             opacity: Some(88),
+            pending_color: None,
+            pending_opacity: None,
+            rejected_color: None,
+            rejected_opacity: None,
             gap: Some(18),
         }
     }
@@ -104,12 +116,18 @@ impl Default for EyeVisualConfig {
 pub struct CapsLockVisualConfig {
     #[serde(default)]
     pub enabled: Option<bool>,
+    #[serde(default)]
+    pub color: Option<RgbColor>,
+    #[serde(default)]
+    pub opacity: Option<u8>,
 }
 
 impl Default for CapsLockVisualConfig {
     fn default() -> Self {
         Self {
             enabled: Some(true),
+            color: None,
+            opacity: None,
         }
     }
 }
@@ -271,6 +289,28 @@ impl super::VisualConfig {
             .or(self.status_opacity)
     }
 
+    pub fn status_pending_color(&self) -> Option<RgbColor> {
+        self.status.as_ref().and_then(|status| status.pending_color)
+    }
+
+    pub fn status_pending_opacity(&self) -> Option<u8> {
+        self.status
+            .as_ref()
+            .and_then(|status| status.pending_opacity)
+    }
+
+    pub fn status_rejected_color(&self) -> Option<RgbColor> {
+        self.status
+            .as_ref()
+            .and_then(|status| status.rejected_color)
+    }
+
+    pub fn status_rejected_opacity(&self) -> Option<u8> {
+        self.status
+            .as_ref()
+            .and_then(|status| status.rejected_opacity)
+    }
+
     pub fn status_gap(&self) -> Option<u16> {
         self.status
             .as_ref()
@@ -304,6 +344,18 @@ impl super::VisualConfig {
             .as_ref()
             .and_then(|caps_lock| caps_lock.enabled)
             .unwrap_or(true)
+    }
+
+    pub fn caps_lock_color(&self) -> Option<RgbColor> {
+        self.caps_lock
+            .as_ref()
+            .and_then(|caps_lock| caps_lock.color)
+    }
+
+    pub fn caps_lock_opacity(&self) -> Option<u8> {
+        self.caps_lock
+            .as_ref()
+            .and_then(|caps_lock| caps_lock.opacity)
     }
 
     pub fn keyboard_enabled(&self) -> bool {

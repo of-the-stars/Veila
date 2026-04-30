@@ -96,6 +96,10 @@ border_color = "#DDDDDD"
             [visuals.status]
             color = "#FFE0A0"
             opacity = 88
+            pending_color = "#FFC25C"
+            pending_opacity = 73
+            rejected_color = "#DC6060"
+            rejected_opacity = 92
             gap = 18
 
             [visuals.eye]
@@ -120,6 +124,11 @@ border_color = "#DDDDDD"
             top_offset = -12
             right_offset = 0
             gap = 8
+
+            [visuals.caps_lock]
+            enabled = true
+            color = "#FFD37A"
+            opacity = 64
 
             [visuals.layer]
             enabled = true

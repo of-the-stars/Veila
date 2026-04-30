@@ -502,6 +502,71 @@ fn status_style_preserves_explicit_pending_alpha_when_unset() {
 }
 
 #[test]
+fn pending_status_style_prefers_state_specific_status_override() {
+    let theme = ShellTheme {
+        status_color: Some(ClearColor::opaque(255, 255, 255)),
+        status_opacity: Some(88),
+        status_pending_color: Some(ClearColor::opaque(12, 34, 56)),
+        status_pending_opacity: Some(60),
+        ..ShellTheme::default()
+    };
+    let mut shell = ShellState::new(theme, None, None, true);
+    shell.status = ShellStatus::Pending {
+        visible_after: std::time::Instant::now(),
+        shown: true,
+    };
+
+    let style = shell.status_text_style();
+
+    assert_eq!(style.color.red, 12);
+    assert_eq!(style.color.green, 34);
+    assert_eq!(style.color.blue, 56);
+    assert_eq!(style.color.alpha, 153);
+}
+
+#[test]
+fn rejected_status_style_prefers_state_specific_status_override() {
+    let theme = ShellTheme {
+        status_color: Some(ClearColor::opaque(255, 255, 255)),
+        status_opacity: Some(88),
+        status_rejected_color: Some(ClearColor::opaque(180, 40, 40)),
+        status_rejected_opacity: Some(70),
+        ..ShellTheme::default()
+    };
+    let mut shell = ShellState::new(theme, None, None, true);
+    shell.status = ShellStatus::Rejected {
+        retry_until: None,
+        displayed_retry_seconds: None,
+        failed_attempts: None,
+    };
+
+    let style = shell.status_text_style();
+
+    assert_eq!(style.color.red, 180);
+    assert_eq!(style.color.green, 40);
+    assert_eq!(style.color.blue, 40);
+    assert_eq!(style.color.alpha, 179);
+}
+
+#[test]
+fn caps_lock_style_uses_dedicated_override() {
+    let theme = ShellTheme {
+        status_color: Some(ClearColor::opaque(255, 224, 160)),
+        status_opacity: Some(88),
+        caps_lock_color: Some(ClearColor::opaque(255, 211, 122)),
+        caps_lock_opacity: Some(64),
+        ..ShellTheme::default()
+    };
+    let shell = ShellState::new(theme, None, None, true);
+    let style = shell.caps_lock_text_style();
+
+    assert_eq!(style.color.red, 255);
+    assert_eq!(style.color.green, 211);
+    assert_eq!(style.color.blue, 122);
+    assert_eq!(style.color.alpha, 163);
+}
+
+#[test]
 fn pending_status_text_stays_hidden_until_delay_elapses() {
     let mut shell = ShellState::default();
 

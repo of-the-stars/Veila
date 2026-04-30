@@ -229,6 +229,7 @@ fn input_opacity_overrides_embedded_alpha() {
         color: Some(ConfigColor::rgb(255, 224, 160)),
         opacity: Some(88),
         gap: Some(18),
+        ..StatusVisualConfig::default()
     });
     config.visuals.layout = Some(LayoutVisualConfig {
         auth_stack_offset: Some(16),

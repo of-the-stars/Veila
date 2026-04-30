@@ -1,3 +1,4 @@
+use crate::shell::ShellStatus;
 use veila_common::FontStyle as ConfigFontStyle;
 use veila_renderer::text::{
     FontStyle as RendererFontStyle, TextStyle, bundled_clock_font_family, resolve_font_family,
@@ -191,21 +192,41 @@ impl ShellState {
     }
 
     pub(crate) fn status_text_style(&self) -> TextStyle {
-        TextStyle::new(
-            secondary_text_color(
-                self.theme.status_color.unwrap_or(self.accent_color()),
-                self.theme.status_opacity,
-                255,
+        let (color, opacity) = match self.status {
+            ShellStatus::Pending { .. } => (
+                self.theme
+                    .status_pending_color
+                    .or(self.theme.status_color)
+                    .unwrap_or(self.theme.pending),
+                self.theme
+                    .status_pending_opacity
+                    .or(self.theme.status_opacity),
             ),
-            2,
-        )
+            ShellStatus::Rejected { .. } => (
+                self.theme
+                    .status_rejected_color
+                    .or(self.theme.status_color)
+                    .unwrap_or(self.theme.rejected),
+                self.theme
+                    .status_rejected_opacity
+                    .or(self.theme.status_opacity),
+            ),
+            ShellStatus::Idle => (
+                self.theme.status_color.unwrap_or(self.theme.input_border),
+                self.theme.status_opacity,
+            ),
+        };
+        TextStyle::new(secondary_text_color(color, opacity, 255), 2)
     }
 
     pub(crate) fn caps_lock_text_style(&self) -> TextStyle {
         TextStyle::new(
             secondary_text_color(
-                self.theme.status_color.unwrap_or(self.accent_color()),
-                self.theme.status_opacity,
+                self.theme
+                    .caps_lock_color
+                    .or(self.theme.status_color)
+                    .unwrap_or(self.theme.input_border),
+                self.theme.caps_lock_opacity.or(self.theme.status_opacity),
                 214,
             ),
             1,
