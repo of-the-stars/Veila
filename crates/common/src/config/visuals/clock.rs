@@ -33,8 +33,6 @@ pub struct ClockVisualConfig {
     #[serde(default)]
     pub color: Option<RgbColor>,
     #[serde(default)]
-    pub opacity: Option<u8>,
-    #[serde(default)]
     pub size: Option<u16>,
     #[serde(default)]
     pub gap: Option<u16>,
@@ -56,8 +54,7 @@ impl Default for ClockVisualConfig {
             meridiem_size: Some(3),
             meridiem_offset_x: Some(6),
             meridiem_offset_y: Some(7),
-            color: Some(RgbColor::rgb(255, 255, 255)),
-            opacity: Some(40),
+            color: Some(RgbColor::rgba(255, 255, 255, 102)),
             size: Some(14),
             gap: Some(20),
         }
@@ -234,13 +231,6 @@ impl super::VisualConfig {
             .as_ref()
             .and_then(|clock| clock.color)
             .or(self.clock_color)
-    }
-
-    pub fn clock_opacity(&self) -> Option<u8> {
-        self.clock
-            .as_ref()
-            .and_then(|clock| clock.opacity)
-            .or(self.clock_opacity)
     }
 
     pub fn clock_size(&self) -> Option<u16> {

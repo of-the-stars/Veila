@@ -75,8 +75,7 @@ fn loads_config_from_file() {
             clock_meridiem_size = 3
             clock_meridiem_offset_x = 6
             clock_meridiem_offset_y = -2
-            clock_color = "#F8FBFF"
-            clock_opacity = 96
+            clock_color = "#F8FBFFF5"
             date_color = "#C8D4EC"
             date_opacity = 74
             clock_size = 4
@@ -205,9 +204,8 @@ fn loads_config_from_file() {
     assert_eq!(loaded.config.visuals.clock_meridiem_offset_y(), Some(-2));
     assert_eq!(
         loaded.config.visuals.clock_color(),
-        Some(RgbColor::rgb(248, 251, 255))
+        Some(RgbColor::rgba(248, 251, 255, 245))
     );
-    assert_eq!(loaded.config.visuals.clock_opacity(), Some(96));
     assert_eq!(
         loaded.config.visuals.date_color(),
         Some(RgbColor::rgb(200, 212, 236))

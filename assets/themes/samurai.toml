@@ -39,8 +39,7 @@ meridiem_offset_x = 6
 meridiem_offset_y = 7
 font_family = "Japanola"
 font_weight = 700
-color = "#000000"
-opacity = 70
+color = "#000000B3"
 size = 24
 gap = 20
 

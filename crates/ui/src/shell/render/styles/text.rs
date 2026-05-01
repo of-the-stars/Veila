@@ -44,7 +44,7 @@ impl ShellState {
         let style = TextStyle::new(
             header_color(
                 self.theme.clock_color.unwrap_or(self.theme.foreground),
-                self.theme.clock_opacity,
+                None,
                 246,
             ),
             self.theme
@@ -85,7 +85,7 @@ impl ShellState {
         let style = TextStyle::new(
             header_color(
                 self.theme.clock_color.unwrap_or(self.theme.foreground),
-                self.theme.clock_opacity,
+                None,
                 246,
             ),
             meridiem_scale,

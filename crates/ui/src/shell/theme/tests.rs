@@ -72,8 +72,7 @@ fn input_alpha_uses_rgba_values() {
         meridiem_size: Some(3),
         meridiem_offset_x: Some(6),
         meridiem_offset_y: Some(-2),
-        color: Some(ConfigColor::rgb(248, 251, 255)),
-        opacity: Some(96),
+        color: Some(ConfigColor::rgba(248, 251, 255, 245)),
         size: Some(4),
         gap: Some(10),
     });
@@ -307,8 +306,10 @@ fn input_alpha_uses_rgba_values() {
     assert_eq!(theme.clock_meridiem_size, Some(3));
     assert_eq!(theme.clock_meridiem_offset_x, Some(6));
     assert_eq!(theme.clock_meridiem_offset_y, Some(-2));
-    assert_eq!(theme.clock_color, Some(ClearColor::opaque(248, 251, 255)));
-    assert_eq!(theme.clock_opacity, Some(96));
+    assert_eq!(
+        theme.clock_color,
+        Some(ClearColor::rgba(248, 251, 255, 245))
+    );
     assert_eq!(theme.date_font_family.as_deref(), Some("Geom"));
     assert_eq!(theme.date_font_weight, Some(600));
     assert_eq!(theme.date_font_style, Some(FontStyle::Italic));

@@ -498,7 +498,6 @@ const LEGACY_VISUAL_MAPPINGS: &[(&str, &str, &str)] = &[
     ("clock_meridiem_offset_x", "clock", "meridiem_offset_x"),
     ("clock_meridiem_offset_y", "clock", "meridiem_offset_y"),
     ("clock_color", "clock", "color"),
-    ("clock_opacity", "clock", "opacity"),
     ("clock_size", "clock", "size"),
     ("date_color", "date", "color"),
     ("date_opacity", "date", "opacity"),

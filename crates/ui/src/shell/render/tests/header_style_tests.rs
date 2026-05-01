@@ -1,10 +1,9 @@
 use super::*;
 
 #[test]
-fn clock_style_uses_configured_opacity() {
+fn clock_style_uses_fallback_alpha_for_opaque_colors() {
     let theme = ShellTheme {
-        foreground: ClearColor::rgba(240, 244, 250, 255),
-        clock_opacity: Some(96),
+        clock_color: Some(ClearColor::rgba(240, 244, 250, 255)),
         ..ShellTheme::default()
     };
     let shell = ShellState::new(theme, None, None, true);
@@ -17,15 +16,14 @@ fn clock_style_uses_configured_opacity() {
         InputAlignment::CenterCenter,
     ));
 
-    assert_eq!(style.color.alpha, 245);
+    assert_eq!(style.color.alpha, 246);
     assert_eq!(style.scale, 14);
 }
 
 #[test]
 fn clock_style_uses_configured_color() {
     let theme = ShellTheme {
-        clock_color: Some(ClearColor::opaque(248, 251, 255)),
-        clock_opacity: Some(96),
+        clock_color: Some(ClearColor::rgba(248, 251, 255, 245)),
         ..ShellTheme::default()
     };
     let shell = ShellState::new(theme, None, None, true);
@@ -273,7 +271,6 @@ fn header_styles_preserve_explicit_foreground_alpha_when_unset() {
     let theme = ShellTheme {
         foreground: ClearColor::rgba(240, 244, 250, 90),
         clock_color: None,
-        clock_opacity: None,
         date_color: None,
         date_opacity: None,
         ..ShellTheme::default()

@@ -119,8 +119,6 @@ pub struct VisualConfig {
     #[serde(default)]
     pub clock_color: Option<RgbColor>,
     #[serde(default)]
-    pub clock_opacity: Option<u8>,
-    #[serde(default)]
     pub date_color: Option<RgbColor>,
     #[serde(default)]
     pub date_opacity: Option<u8>,
@@ -256,8 +254,7 @@ impl Default for VisualConfig {
             clock_meridiem_size: Some(3),
             clock_meridiem_offset_x: Some(6),
             clock_meridiem_offset_y: Some(7),
-            clock_color: Some(RgbColor::rgb(255, 255, 255)),
-            clock_opacity: Some(40),
+            clock_color: Some(RgbColor::rgba(255, 255, 255, 102)),
             date_color: Some(RgbColor::rgb(255, 255, 255)),
             date_opacity: Some(50),
             clock_size: Some(14),

@@ -50,7 +50,7 @@ fn flat_visual_overrides_win_over_bundled_default_theme_layer() {
             [visuals]
             avatar_background_color = "rgba(24, 30, 42, 0.82)"
             clock_font_family = "Bebas Neue"
-            clock_opacity = 96
+            clock_color = "#F8FBFFF5"
         "##,
     )
     .expect("config file");
@@ -65,7 +65,10 @@ fn flat_visual_overrides_win_over_bundled_default_theme_layer() {
         loaded.config.visuals.clock_font_family(),
         Some("Bebas Neue")
     );
-    assert_eq!(loaded.config.visuals.clock_opacity(), Some(96));
+    assert_eq!(
+        loaded.config.visuals.clock_color(),
+        Some(RgbColor::rgba(248, 251, 255, 245))
+    );
 
     fs::remove_file(path).ok();
     fs::remove_dir(dir).ok();
@@ -173,11 +176,11 @@ fn loads_user_theme_from_config_directory() {
     let path = dir.join("config.toml");
     fs::write(
         themes_dir.join("custom.toml"),
-        r#"
+        r##"
             [visuals.clock]
             font_family = "Google Sans Flex"
-            opacity = 61
-        "#,
+            color = "#FFFFFF9C"
+        "##,
     )
     .expect("theme file");
     fs::write(
@@ -197,7 +200,10 @@ fn loads_user_theme_from_config_directory() {
         loaded.config.visuals.clock_font_family(),
         Some("Google Sans Flex")
     );
-    assert_eq!(loaded.config.visuals.clock_opacity(), Some(61));
+    assert_eq!(
+        loaded.config.visuals.clock_color(),
+        Some(RgbColor::rgba(255, 255, 255, 156))
+    );
     assert_eq!(loaded.config.visuals.clock_size(), Some(17));
 
     fs::remove_file(themes_dir.join("custom.toml")).ok();

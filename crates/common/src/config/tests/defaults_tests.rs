@@ -137,7 +137,6 @@ fn parses_partial_config_with_defaults() {
     assert!(config.visuals.clock_meridiem_offset_x().is_none());
     assert!(config.visuals.clock_meridiem_offset_y().is_none());
     assert!(config.visuals.clock_color().is_none());
-    assert!(config.visuals.clock_opacity().is_none());
     assert!(config.visuals.date_color().is_none());
     assert!(config.visuals.date_font_family().is_none());
     assert!(config.visuals.date_font_weight().is_none());

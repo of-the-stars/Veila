@@ -62,8 +62,7 @@ border_color = "#DDDDDD1F"
             meridiem_size = 3
             meridiem_offset_x = 6
             meridiem_offset_y = -2
-            color = "#ffffff"
-            opacity = 40
+            color = "#FFFFFF66"
             size = 14
             gap = 20
 

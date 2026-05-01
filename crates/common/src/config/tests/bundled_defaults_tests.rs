@@ -136,9 +136,8 @@ fn first_run_defaults_match_bundled_theme() {
     assert_eq!(config.visuals.clock_meridiem_offset_y(), Some(7));
     assert_eq!(
         config.visuals.clock_color(),
-        Some(RgbColor::rgb(255, 255, 255))
+        Some(RgbColor::rgba(255, 255, 255, 102))
     );
-    assert_eq!(config.visuals.clock_opacity(), Some(40));
     assert_eq!(config.visuals.clock_size(), Some(14));
     assert_eq!(
         config.visuals.date_color(),

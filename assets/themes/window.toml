@@ -38,8 +38,7 @@ meridiem_offset_x = 6
 meridiem_offset_y = 7
 font_family = "Geom"
 font_weight = 600
-color = "#A6AECD"
-opacity = 40
+color = "#A6AECD66"
 size = 20
 gap = 20
 
