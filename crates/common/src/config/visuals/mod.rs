@@ -77,8 +77,6 @@ pub struct VisualConfig {
     #[serde(default)]
     pub username_color: Option<RgbColor>,
     #[serde(default)]
-    pub username_opacity: Option<u8>,
-    #[serde(default)]
     pub username_size: Option<u16>,
     #[serde(default)]
     pub username_offset_y: Option<i16>,
@@ -247,8 +245,7 @@ impl Default for VisualConfig {
             avatar_icon_color: Some(RgbColor::rgb(255, 255, 255)),
             avatar_ring_color: Some(RgbColor::rgb(148, 178, 255)),
             avatar_ring_width: Some(0),
-            username_color: Some(RgbColor::rgb(255, 255, 255)),
-            username_opacity: Some(84),
+            username_color: Some(RgbColor::rgba(255, 255, 255, 214)),
             username_size: Some(4),
             username_offset_y: Some(0),
             avatar_gap: Some(24),

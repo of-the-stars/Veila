@@ -133,10 +133,7 @@ impl ShellState {
 
     pub(crate) fn username_text_style(&self) -> TextStyle {
         let style = TextStyle::new(
-            username_color(
-                self.theme.username_color.unwrap_or(self.theme.foreground),
-                self.theme.username_opacity,
-            ),
+            username_color(self.theme.username_color.unwrap_or(self.theme.foreground)),
             self.theme.username_size.unwrap_or(2).clamp(1, 6),
         );
         self.apply_font_overrides(

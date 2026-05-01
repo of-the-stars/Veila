@@ -96,7 +96,7 @@ fn first_run_defaults_match_bundled_theme() {
     assert_eq!(config.visuals.avatar_ring_width(), Some(0));
     assert_eq!(
         config.visuals.username_color(),
-        Some(RgbColor::rgb(255, 255, 255))
+        Some(RgbColor::rgba(255, 255, 255, 214))
     );
     assert_eq!(
         config.visuals.username_font_family(),
@@ -107,7 +107,6 @@ fn first_run_defaults_match_bundled_theme() {
         config.visuals.username_font_style(),
         Some(FontStyle::Normal)
     );
-    assert_eq!(config.visuals.username_opacity(), Some(84));
     assert_eq!(config.visuals.username_size(), Some(4));
     assert_eq!(config.visuals.username_offset_y(), Some(0));
     assert_eq!(config.visuals.avatar_gap(), Some(24));

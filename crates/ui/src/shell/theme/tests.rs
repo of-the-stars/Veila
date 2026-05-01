@@ -55,8 +55,7 @@ fn input_opacity_overrides_embedded_alpha() {
         font_family: Some(String::from("Geom")),
         font_weight: Some(600),
         font_style: Some(FontStyle::Italic),
-        color: Some(ConfigColor::rgb(215, 227, 255)),
-        opacity: Some(72),
+        color: Some(ConfigColor::rgba(215, 227, 255, 184)),
         size: Some(3),
         offset_y: Some(-12),
         gap: Some(28),
@@ -283,12 +282,11 @@ fn input_opacity_overrides_embedded_alpha() {
     assert_eq!(theme.avatar_ring_width, Some(3));
     assert_eq!(
         theme.username_color,
-        Some(ClearColor::opaque(215, 227, 255))
+        Some(ClearColor::rgba(215, 227, 255, 184))
     );
     assert_eq!(theme.username_font_family.as_deref(), Some("Geom"));
     assert_eq!(theme.username_font_weight, Some(600));
     assert_eq!(theme.username_font_style, Some(FontStyle::Italic));
-    assert_eq!(theme.username_opacity, Some(72));
     assert_eq!(theme.username_size, Some(3));
     assert_eq!(theme.username_offset_y, Some(-12));
     assert_eq!(theme.avatar_gap, Some(14));

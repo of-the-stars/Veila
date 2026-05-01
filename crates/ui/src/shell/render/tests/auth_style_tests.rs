@@ -292,10 +292,9 @@ fn scene_metrics_use_configured_avatar_size() {
 }
 
 #[test]
-fn username_style_uses_configured_opacity_and_size() {
+fn username_style_uses_configured_alpha_and_size() {
     let theme = ShellTheme {
-        foreground: ClearColor::rgba(240, 244, 250, 255),
-        username_opacity: Some(72),
+        username_color: Some(ClearColor::rgba(240, 244, 250, 184)),
         username_size: Some(3),
         ..ShellTheme::default()
     };
@@ -329,8 +328,7 @@ fn username_style_uses_configured_font_family_and_weight() {
 #[test]
 fn username_style_uses_configured_color() {
     let theme = ShellTheme {
-        username_color: Some(ClearColor::opaque(215, 227, 255)),
-        username_opacity: Some(72),
+        username_color: Some(ClearColor::rgba(215, 227, 255, 184)),
         ..ShellTheme::default()
     };
     let shell = ShellState::new(theme, None, None, true);
@@ -347,7 +345,6 @@ fn username_style_preserves_explicit_foreground_alpha_when_unset() {
     let theme = ShellTheme {
         foreground: ClearColor::rgba(240, 244, 250, 90),
         username_color: None,
-        username_opacity: None,
         ..ShellTheme::default()
     };
     let shell = ShellState::new(theme, None, None, true);

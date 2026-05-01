@@ -71,7 +71,7 @@ fn loads_nested_visual_tables_with_precedence_for_auth_and_header_entries() {
     assert_eq!(config.visuals.avatar_gap(), Some(14));
     assert_eq!(
         config.visuals.username_color(),
-        Some(RgbColor::rgb(255, 255, 255))
+        Some(RgbColor::rgba(255, 255, 255, 214))
     );
     assert_eq!(config.visuals.username_font_family(), Some("Geom"));
     assert_eq!(config.visuals.username_font_weight(), Some(600));
@@ -79,7 +79,6 @@ fn loads_nested_visual_tables_with_precedence_for_auth_and_header_entries() {
         config.visuals.username_font_style(),
         Some(FontStyle::Italic)
     );
-    assert_eq!(config.visuals.username_opacity(), Some(84));
     assert_eq!(config.visuals.username_size(), Some(4));
     assert_eq!(config.visuals.username_offset_y(), Some(-10));
     assert_eq!(config.visuals.username_gap(), Some(28));

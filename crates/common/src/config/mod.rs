@@ -484,7 +484,6 @@ const LEGACY_VISUAL_MAPPINGS: &[(&str, &str, &str)] = &[
     ("avatar_ring_width", "avatar", "ring_width"),
     ("avatar_gap", "avatar", "gap"),
     ("username_color", "username", "color"),
-    ("username_opacity", "username", "opacity"),
     ("username_size", "username", "size"),
     ("username_offset_y", "username", "offset_y"),
     ("username_gap", "username", "gap"),

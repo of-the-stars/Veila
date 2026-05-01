@@ -24,11 +24,11 @@ pub(super) fn avatar_ring_color(base: ClearColor, fallback_alpha: u8) -> ClearCo
     base.with_alpha(alpha)
 }
 
-pub(super) fn username_color(base: ClearColor, opacity_percent: Option<u8>) -> ClearColor {
-    let alpha = match opacity_percent {
-        Some(percent) => percent_to_alpha(percent),
-        None if base.alpha == u8::MAX => 214,
-        None => base.alpha,
+pub(super) fn username_color(base: ClearColor) -> ClearColor {
+    let alpha = if base.alpha == u8::MAX {
+        214
+    } else {
+        base.alpha
     };
 
     base.with_alpha(alpha)

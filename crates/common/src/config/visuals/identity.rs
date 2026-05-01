@@ -53,8 +53,6 @@ pub struct UsernameVisualConfig {
     #[serde(default)]
     pub color: Option<RgbColor>,
     #[serde(default)]
-    pub opacity: Option<u8>,
-    #[serde(default)]
     pub size: Option<u16>,
     #[serde(default)]
     pub offset_y: Option<i16>,
@@ -69,8 +67,7 @@ impl Default for UsernameVisualConfig {
             font_family: Some(super::default_google_sans_flex_font_family()),
             font_weight: Some(400),
             font_style: Some(super::input::FontStyle::Normal),
-            color: Some(RgbColor::rgb(255, 255, 255)),
-            opacity: Some(84),
+            color: Some(RgbColor::rgba(255, 255, 255, 214)),
             size: Some(4),
             offset_y: Some(0),
             gap: Some(28),
@@ -172,13 +169,6 @@ impl super::VisualConfig {
         self.username
             .as_ref()
             .and_then(|username| username.font_style)
-    }
-
-    pub fn username_opacity(&self) -> Option<u8> {
-        self.username
-            .as_ref()
-            .and_then(|username| username.opacity)
-            .or(self.username_opacity)
     }
 
     pub fn username_size(&self) -> Option<u16> {

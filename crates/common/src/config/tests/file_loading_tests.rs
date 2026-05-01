@@ -57,8 +57,7 @@ fn loads_config_from_file() {
             avatar_icon_color = "#E8EEF9"
             avatar_ring_color = "#94B2FF"
             avatar_ring_width = 3
-            username_color = "#D7E3FF"
-            username_opacity = 72
+            username_color = "#D7E3FFB8"
             username_size = 3
             username_offset_y = -12
             avatar_gap = 14
@@ -175,9 +174,8 @@ fn loads_config_from_file() {
     assert_eq!(loaded.config.visuals.avatar_ring_width(), Some(3));
     assert_eq!(
         loaded.config.visuals.username_color(),
-        Some(RgbColor::rgb(215, 227, 255))
+        Some(RgbColor::rgba(215, 227, 255, 184))
     );
-    assert_eq!(loaded.config.visuals.username_opacity(), Some(72));
     assert_eq!(loaded.config.visuals.username_size(), Some(3));
     assert_eq!(loaded.config.visuals.username_offset_y(), Some(-12));
     assert_eq!(loaded.config.visuals.avatar_gap(), Some(14));
