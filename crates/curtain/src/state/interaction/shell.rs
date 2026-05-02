@@ -1,9 +1,14 @@
+use std::time::{Duration, Instant};
+
 use smithay_client_toolkit::reexports::client::{QueueHandle, protocol::wl_surface};
 use veila_ui::{ShellAction, ShellKey};
 
 use crate::ipc::auth::submit_password;
 
 use super::super::CurtainApp;
+
+const BACKSPACE_REPEAT_DELAY_MS: u64 = 300;
+const BACKSPACE_REPEAT_INTERVAL_MS: u64 = 32;
 
 impl CurtainApp {
     pub(crate) fn set_keyboard_focus(&mut self, focused: bool, queue_handle: &QueueHandle<Self>) {
@@ -12,6 +17,9 @@ impl CurtainApp {
         }
 
         self.has_keyboard_focus = focused;
+        if !focused {
+            self.backspace_repeat = None;
+        }
         self.ui_shell.set_focus(focused);
         self.render_all_surfaces(queue_handle);
     }
@@ -135,6 +143,30 @@ impl CurtainApp {
         if self.ui_shell.advance_animated_state() {
             self.render_all_surfaces(queue_handle);
         }
+    }
+
+    pub(crate) fn start_backspace_repeat(&mut self) {
+        self.backspace_repeat = Some(super::super::KeyRepeatState::new(
+            Instant::now(),
+            Duration::from_millis(BACKSPACE_REPEAT_DELAY_MS),
+            Duration::from_millis(BACKSPACE_REPEAT_INTERVAL_MS),
+        ));
+    }
+
+    pub(crate) fn stop_backspace_repeat(&mut self) {
+        self.backspace_repeat = None;
+    }
+
+    pub(crate) fn advance_input_repeat(&mut self, queue_handle: &QueueHandle<Self>) {
+        let Some(backspace_repeat) = self.backspace_repeat.as_mut() else {
+            return;
+        };
+
+        if !backspace_repeat.consume_if_due(Instant::now()) {
+            return;
+        }
+
+        self.handle_shell_key(ShellKey::Backspace, queue_handle);
     }
 
     fn surface_size(&self, surface: &wl_surface::WlSurface) -> Option<(u32, u32)> {

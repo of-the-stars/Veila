@@ -111,6 +111,7 @@ impl KeyboardHandler for CurtainApp {
         _serial: u32,
     ) {
         if self.surface_has_focus_target(surface) {
+            self.stop_backspace_repeat();
             self.set_keyboard_focus(false, queue_handle);
         }
     }
@@ -123,6 +124,9 @@ impl KeyboardHandler for CurtainApp {
         _serial: u32,
         event: KeyEvent,
     ) {
+        if event.keysym == Keysym::BackSpace {
+            self.start_backspace_repeat();
+        }
         handle_key_event(self, queue_handle, event);
     }
 
@@ -134,6 +138,9 @@ impl KeyboardHandler for CurtainApp {
         _serial: u32,
         event: KeyEvent,
     ) {
+        if event.keysym == Keysym::BackSpace {
+            return;
+        }
         handle_key_event(self, queue_handle, event);
     }
 
@@ -143,8 +150,11 @@ impl KeyboardHandler for CurtainApp {
         _queue_handle: &QueueHandle<Self>,
         _keyboard: &wl_keyboard::WlKeyboard,
         _serial: u32,
-        _event: KeyEvent,
+        event: KeyEvent,
     ) {
+        if event.keysym == Keysym::BackSpace {
+            self.stop_backspace_repeat();
+        }
     }
 
     fn update_keymap(

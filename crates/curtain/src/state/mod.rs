@@ -1,5 +1,6 @@
 mod interaction;
 mod profiler;
+mod repeat;
 
 use std::{
     path::{Path, PathBuf},
@@ -47,6 +48,7 @@ use crate::{
 };
 
 pub(crate) use profiler::{RenderProfiler, RenderTimingSample};
+pub(crate) use repeat::KeyRepeatState;
 
 pub(crate) struct ManagedLockSurface {
     pub(crate) output: wl_output::WlOutput,
@@ -115,6 +117,7 @@ pub(crate) struct CurtainApp {
     pub(crate) active_keyboard_layout: u32,
     pub(crate) failure_reason: Option<String>,
     pub(crate) render_profiler: RenderProfiler,
+    pub(crate) backspace_repeat: Option<KeyRepeatState>,
 }
 
 impl CurtainApp {
@@ -232,6 +235,7 @@ impl CurtainApp {
             active_keyboard_layout: 0,
             failure_reason: None,
             render_profiler: RenderProfiler::default(),
+            backspace_repeat: None,
             lock_acquisition_started: false,
         })
     }
@@ -304,7 +308,12 @@ impl CurtainApp {
     }
 
     pub(crate) fn animation_poll_interval(&self) -> Duration {
-        self.ui_shell.animation_poll_interval()
+        let shell_interval = self.ui_shell.animation_poll_interval();
+        let Some(backspace_repeat) = self.backspace_repeat.as_ref() else {
+            return shell_interval;
+        };
+
+        shell_interval.min(backspace_repeat.due_in(Instant::now()))
     }
 
     pub(crate) fn failure_reason(&self) -> Option<&str> {
