@@ -3,7 +3,7 @@ use time::{OffsetDateTime, UtcOffset};
 
 use crate::adapters::ipc;
 
-use super::local_build_info;
+use super::{local_build_info, term};
 
 pub(super) async fn stop_running_daemon(daemon_socket_path: &std::path::Path) -> Result<()> {
     ensure_running_daemon(daemon_socket_path)?;
@@ -128,23 +128,34 @@ pub(super) async fn reload_running_config(daemon_socket_path: &std::path::Path) 
 
     match response {
         veila_common::ipc::DaemonControlResponse::Reloaded(status) => {
+            println!("{}", term::success("Config reloaded successfully"));
             println!(
-                "config={}",
+                "config: {}",
                 status.config_path.as_deref().unwrap_or("defaults")
             );
-            println!("active_lock={}", status.active_lock);
-            println!("reload_source={}", status.reload_source);
             println!(
-                "live_reload={}",
-                match status.live_reload {
-                    veila_common::ipc::LiveReloadStatus::NotActive => "not-active",
-                    veila_common::ipc::LiveReloadStatus::Forwarded => "forwarded",
+                "active lock: {}",
+                if status.active_lock {
+                    term::accent("yes")
+                } else {
+                    term::dim("no")
                 }
             );
+            println!("effect: {}", term::accent(reload_effect_message(&status)));
             Ok(())
         }
         veila_common::ipc::DaemonControlResponse::Error { reason } => bail!(reason),
         _ => bail!("daemon returned an unexpected response to --reload-config"),
+    }
+}
+
+fn reload_effect_message(status: &veila_common::ipc::DaemonReloadStatus) -> &'static str {
+    match (status.active_lock, &status.live_reload) {
+        (false, _) => "changes will apply on next lock",
+        (true, veila_common::ipc::LiveReloadStatus::Forwarded) => "active lockscreen updated",
+        (true, veila_common::ipc::LiveReloadStatus::NotActive) => {
+            "active lockscreen was not updated"
+        }
     }
 }
 
@@ -174,4 +185,38 @@ fn format_local_unix_ms(unix_ms: u64) -> Option<String> {
         local.offset().whole_hours(),
         local.offset().minutes_past_hour().unsigned_abs()
     ))
+}
+
+#[cfg(test)]
+mod tests {
+    use veila_common::ipc::{DaemonReloadStatus, LiveReloadStatus};
+
+    use super::reload_effect_message;
+
+    #[test]
+    fn reload_effect_reports_next_lock_when_no_active_lock() {
+        let status = DaemonReloadStatus {
+            config_path: None,
+            active_lock: false,
+            reload_source: "manual".to_string(),
+            live_reload: LiveReloadStatus::NotActive,
+        };
+
+        assert_eq!(
+            reload_effect_message(&status),
+            "changes will apply on next lock"
+        );
+    }
+
+    #[test]
+    fn reload_effect_reports_live_update_when_forwarded() {
+        let status = DaemonReloadStatus {
+            config_path: None,
+            active_lock: true,
+            reload_source: "manual".to_string(),
+            live_reload: LiveReloadStatus::Forwarded,
+        };
+
+        assert_eq!(reload_effect_message(&status), "active lockscreen updated");
+    }
 }

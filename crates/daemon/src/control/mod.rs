@@ -1,4 +1,5 @@
 mod daemon;
+mod term;
 mod theme;
 
 use anyhow::{Result, bail};
