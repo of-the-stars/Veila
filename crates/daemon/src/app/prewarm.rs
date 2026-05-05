@@ -319,6 +319,13 @@ fn prewarm_jobs(
     let mut jobs = Vec::new();
     let all_sizes: Vec<_> = outputs.iter().map(|output| output.size).collect();
 
+    if background.slideshow_enabled() {
+        if let Ok(Some(path)) = background.resolved_slideshow_initial_path() {
+            merge_prewarm_job(&mut jobs, path, &all_sizes);
+        }
+        return jobs;
+    }
+
     if let Some(path) = background.resolved_path() {
         merge_prewarm_job(&mut jobs, path, &all_sizes);
     }

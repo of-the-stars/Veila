@@ -42,7 +42,7 @@ use veila_ui::{ShellState, ShellTheme};
 
 use crate::{
     CurtainOptions,
-    background::BackgroundEvent,
+    background::{BackgroundEvent, BackgroundSlideshow},
     ipc::auth::AuthEvent,
     ipc::control::{ControlEvent, spawn_listener},
 };
@@ -81,6 +81,7 @@ pub(crate) struct CurtainApp {
     pub(crate) config_path: Option<PathBuf>,
     pub(crate) background_path: Option<PathBuf>,
     pub(crate) background_outputs: Vec<BackgroundOutputConfig>,
+    pub(crate) slideshow: Option<BackgroundSlideshow>,
     auth_events: Receiver<AuthEvent>,
     auth_sender: Sender<AuthEvent>,
     pub(crate) background_sender: Sender<BackgroundEvent>,
@@ -146,6 +147,11 @@ impl CurtainApp {
         .context("failed to prepare fallback background")?;
         let background_generated = background_generated(&config.background);
         let background_treatment = background_treatment(&config.background);
+        let slideshow = BackgroundSlideshow::load(&config.background);
+        let background_path = slideshow
+            .as_ref()
+            .map(|slideshow| slideshow.current_path().to_path_buf())
+            .or_else(|| config.background.resolved_path());
         let ui_shell = ShellState::new_with_username_and_widgets(
             theme,
             config.lock.user_hint.clone(),
@@ -167,12 +173,11 @@ impl CurtainApp {
                 .map(|path| path.display().to_string())
                 .unwrap_or_else(|| "defaults".to_string()),
             background_mode = config.background.effective_mode().as_str(),
-            background_image = config
-                .background
-                .resolved_path()
+            background_image = background_path
                 .as_deref()
                 .map(|path| path.display().to_string()),
             background_output_overrides = config.background.outputs.len(),
+            background_slideshow_images = slideshow.as_ref().map(BackgroundSlideshow::len),
             "loaded curtain config"
         );
 
@@ -199,8 +204,9 @@ impl CurtainApp {
             daemon_socket: options.daemon_socket,
             control_socket: options.control_socket,
             config_path: options.config_path,
-            background_path: config.background.resolved_path(),
+            background_path,
             background_outputs: config.background.outputs.clone(),
+            slideshow,
             auth_events,
             auth_sender,
             background_sender,
@@ -311,11 +317,19 @@ impl CurtainApp {
 
     pub(crate) fn animation_poll_interval(&self) -> Duration {
         let shell_interval = self.ui_shell.animation_poll_interval();
-        let Some(backspace_repeat) = self.backspace_repeat.as_ref() else {
-            return shell_interval;
-        };
+        let now = Instant::now();
+        let repeat_interval = self
+            .backspace_repeat
+            .as_ref()
+            .map(|backspace_repeat| backspace_repeat.due_in(now))
+            .unwrap_or(shell_interval);
+        let slideshow_interval = self
+            .slideshow
+            .as_ref()
+            .and_then(|slideshow| slideshow.next_due_in(now))
+            .unwrap_or(shell_interval);
 
-        shell_interval.min(backspace_repeat.due_in(Instant::now()))
+        shell_interval.min(repeat_interval).min(slideshow_interval)
     }
 
     pub(crate) fn failure_reason(&self) -> Option<&str> {
@@ -370,6 +384,10 @@ impl CurtainApp {
     }
 
     pub(crate) fn background_path_for_surface(&self, index: usize) -> Option<&Path> {
+        if self.slideshow.is_some() {
+            return self.background_path.as_deref();
+        }
+
         let output_name = self
             .output_state
             .info(&self.lock_surfaces[index].output)

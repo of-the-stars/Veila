@@ -1,4 +1,8 @@
-use std::path::PathBuf;
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+    time::Duration,
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -37,6 +41,78 @@ pub enum BackgroundScaling {
     Center,
     Tile,
     Stretch,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum BackgroundSlideshowOrder {
+    #[default]
+    Sequence,
+    Random,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct BackgroundSlideshowConfig {
+    #[serde(default = "default_background_slideshow_enabled")]
+    pub enabled: bool,
+    #[serde(default)]
+    pub directory: Option<PathBuf>,
+    #[serde(default)]
+    pub files: Vec<PathBuf>,
+    #[serde(default)]
+    pub order: BackgroundSlideshowOrder,
+    #[serde(default = "default_background_slideshow_change_every_seconds")]
+    pub change_every_seconds: u64,
+}
+
+impl Default for BackgroundSlideshowConfig {
+    fn default() -> Self {
+        Self {
+            enabled: default_background_slideshow_enabled(),
+            directory: None,
+            files: Vec::new(),
+            order: BackgroundSlideshowOrder::Sequence,
+            change_every_seconds: default_background_slideshow_change_every_seconds(),
+        }
+    }
+}
+
+impl BackgroundSlideshowConfig {
+    pub fn has_sources(&self) -> bool {
+        self.directory.is_some() || !self.files.is_empty()
+    }
+
+    pub fn change_interval(&self) -> Duration {
+        Duration::from_secs(self.change_every_seconds.max(1))
+    }
+
+    pub fn candidate_paths(&self) -> io::Result<Vec<PathBuf>> {
+        let mut paths = Vec::new();
+
+        for path in &self.files {
+            let path = expand_home_path(path);
+            if path.is_file() && !paths.contains(&path) {
+                paths.push(path);
+            }
+        }
+
+        if let Some(directory) = self.directory.as_deref().map(expand_home_path) {
+            let mut entries: Vec<_> = fs::read_dir(directory)?
+                .filter_map(Result::ok)
+                .map(|entry| entry.path())
+                .filter(|path| path.is_file() && supported_slideshow_path(path))
+                .collect();
+            entries.sort_unstable();
+
+            for path in entries {
+                if !paths.contains(&path) {
+                    paths.push(path);
+                }
+            }
+        }
+
+        Ok(paths)
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -166,6 +242,8 @@ pub struct BackgroundConfig {
     pub path: Option<PathBuf>,
     #[serde(default)]
     pub outputs: Vec<BackgroundOutputConfig>,
+    #[serde(default)]
+    pub slideshow: Option<BackgroundSlideshowConfig>,
     #[serde(default = "default_background_color")]
     pub color: RgbColor,
     #[serde(default)]
@@ -190,6 +268,7 @@ impl Default for BackgroundConfig {
             mode: Some(BackgroundMode::Gradient),
             path: None,
             outputs: Vec::new(),
+            slideshow: None,
             color: default_background_color(),
             scaling: BackgroundScaling::Fill,
             gradient: Some(BackgroundGradientConfig::default()),
@@ -211,14 +290,14 @@ impl BackgroundConfig {
             Some(BackgroundMode::Layered) => BackgroundMode::Layered,
             Some(BackgroundMode::Radial) => BackgroundMode::Radial,
             Some(mode) => mode,
-            None if self.path.is_some() => BackgroundMode::File,
+            None if self.path.is_some() || self.slideshow_enabled() => BackgroundMode::File,
             None => BackgroundMode::Gradient,
         }
     }
 
     pub fn resolved_path(&self) -> Option<PathBuf> {
         match self.effective_mode() {
-            BackgroundMode::File => self.path.clone(),
+            BackgroundMode::File => self.path.as_deref().map(expand_home_path),
             BackgroundMode::Gradient => None,
             BackgroundMode::Layered => None,
             BackgroundMode::Radial => None,
@@ -251,8 +330,28 @@ impl BackgroundConfig {
     pub fn resolved_path_for_output(&self, output_name: Option<&str>) -> Option<PathBuf> {
         output_name
             .and_then(|name| self.outputs.iter().find(|output| output.name == name))
-            .map(|output| output.path.clone())
+            .map(|output| expand_home_path(&output.path))
             .or_else(|| self.resolved_path())
+    }
+
+    pub fn slideshow_enabled(&self) -> bool {
+        self.slideshow
+            .as_ref()
+            .is_some_and(|slideshow| slideshow.enabled && slideshow.has_sources())
+    }
+
+    pub fn resolved_slideshow_paths(&self) -> io::Result<Vec<PathBuf>> {
+        self.slideshow
+            .as_ref()
+            .filter(|slideshow| slideshow.enabled && slideshow.has_sources())
+            .map(BackgroundSlideshowConfig::candidate_paths)
+            .transpose()
+            .map(|paths| paths.unwrap_or_default())
+    }
+
+    pub fn resolved_slideshow_initial_path(&self) -> io::Result<Option<PathBuf>> {
+        self.resolved_slideshow_paths()
+            .map(|paths| paths.into_iter().next())
     }
 }
 
@@ -264,6 +363,14 @@ pub struct BackgroundOutputConfig {
 
 const fn default_background_color() -> RgbColor {
     RgbColor::rgb(32, 40, 51)
+}
+
+const fn default_background_slideshow_enabled() -> bool {
+    true
+}
+
+const fn default_background_slideshow_change_every_seconds() -> u64 {
+    300
 }
 
 const fn default_background_blur_radius() -> u8 {
@@ -328,4 +435,29 @@ const fn default_layered_blob_y() -> u8 {
 
 const fn default_layered_blob_size() -> u8 {
     36
+}
+
+fn supported_slideshow_path(path: &Path) -> bool {
+    matches!(
+        path.extension()
+            .and_then(|extension| extension.to_str())
+            .map(|extension| extension.to_ascii_lowercase()),
+        Some(extension) if matches!(extension.as_str(), "jpg" | "jpeg" | "png" | "webp")
+    )
+}
+
+fn expand_home_path(path: &Path) -> PathBuf {
+    if path == Path::new("~") {
+        return std::env::var_os("HOME")
+            .map(PathBuf::from)
+            .unwrap_or_else(|| path.to_path_buf());
+    }
+
+    if let Ok(rest) = path.strip_prefix("~")
+        && let Some(home) = std::env::var_os("HOME")
+    {
+        return PathBuf::from(home).join(rest);
+    }
+
+    path.to_path_buf()
 }

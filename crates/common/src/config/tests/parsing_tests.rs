@@ -209,6 +209,123 @@ fn infers_file_mode_from_legacy_background_path() {
 }
 
 #[test]
+fn expands_home_in_background_paths() {
+    let home = std::env::var("HOME").expect("HOME should be set for path expansion");
+    let config = AppConfig::from_toml_str(
+        r#"
+            [background]
+            mode = "file"
+            path = "~/Pictures/wallpapers/default.jpg"
+
+            [[background.outputs]]
+            name = "DP-1"
+            path = "~/Pictures/wallpapers/left.jpg"
+        "#,
+    )
+    .expect("config should parse");
+
+    assert_eq!(
+        config.background.resolved_path().as_deref(),
+        Some(
+            std::path::PathBuf::from(&home)
+                .join("Pictures/wallpapers/default.jpg")
+                .as_path()
+        )
+    );
+    assert_eq!(
+        config
+            .background
+            .resolved_path_for_output(Some("DP-1"))
+            .as_deref(),
+        Some(
+            std::path::PathBuf::from(&home)
+                .join("Pictures/wallpapers/left.jpg")
+                .as_path()
+        )
+    );
+}
+
+#[test]
+fn infers_file_mode_from_background_slideshow() {
+    let config = AppConfig::from_toml_str(
+        r#"
+            [background.slideshow]
+            files = ["/tmp/one.jpg", "/tmp/two.png"]
+        "#,
+    )
+    .expect("config should parse");
+
+    assert_eq!(config.background.effective_mode(), BackgroundMode::File);
+    assert!(config.background.resolved_path().is_none());
+    assert!(config.background.slideshow_enabled());
+}
+
+#[test]
+fn resolves_background_slideshow_files_and_directory() {
+    let temp_dir =
+        std::env::temp_dir().join(format!("veila-background-slideshow-{}", std::process::id()));
+    let slideshow_dir = temp_dir.join("slides");
+    std::fs::create_dir_all(&slideshow_dir).expect("slideshow dir");
+
+    let explicit = temp_dir.join("explicit.jpg");
+    let duplicate = slideshow_dir.join("00-duplicate.jpg");
+    let second = slideshow_dir.join("01-second.png");
+    let ignored = slideshow_dir.join("notes.txt");
+
+    std::fs::write(&explicit, b"jpg").expect("explicit file");
+    std::fs::write(&duplicate, b"jpg").expect("duplicate file");
+    std::fs::write(&second, b"png").expect("second file");
+    std::fs::write(&ignored, b"txt").expect("ignored file");
+
+    let config = AppConfig::from_toml_str(&format!(
+        r#"
+            [background.slideshow]
+            files = ["{}", "{}"]
+            directory = "{}"
+            order = "random"
+            change_every_seconds = 45
+        "#,
+        explicit.display(),
+        duplicate.display(),
+        slideshow_dir.display()
+    ))
+    .expect("config should parse");
+
+    let slideshow = config
+        .background
+        .slideshow
+        .as_ref()
+        .expect("slideshow config should exist");
+    assert_eq!(
+        slideshow.order,
+        crate::config::BackgroundSlideshowOrder::Random
+    );
+    assert_eq!(slideshow.change_interval().as_secs(), 45);
+    assert_eq!(
+        config
+            .background
+            .resolved_slideshow_paths()
+            .expect("slideshow paths should resolve"),
+        vec![explicit.clone(), duplicate.clone(), second.clone()]
+    );
+    assert_eq!(
+        config
+            .background
+            .resolved_slideshow_initial_path()
+            .expect("slideshow initial path should resolve")
+            .as_deref(),
+        Some(explicit.as_path())
+    );
+
+    std::fs::remove_file(explicit).ok();
+    std::fs::remove_file(duplicate).ok();
+    std::fs::remove_file(second).ok();
+    std::fs::remove_file(ignored).ok();
+    std::fs::remove_dir(slideshow_dir).ok();
+    std::fs::remove_dir(temp_dir).ok();
+}
+
+#[test]
 fn parses_background_file_scaling_mode() {
     let config = AppConfig::from_toml_str(
         r#"

@@ -4,7 +4,10 @@ use veila_common::AppConfig;
 use veila_renderer::background::BackgroundAsset;
 use veila_ui::ShellTheme;
 
-use crate::state::{CurtainApp, background_generated, background_treatment};
+use crate::{
+    background::BackgroundSlideshow,
+    state::{CurtainApp, background_generated, background_treatment},
+};
 
 impl CurtainApp {
     pub(crate) fn reload_config(&mut self, queue_handle: &QueueHandle<Self>) {
@@ -32,7 +35,11 @@ impl CurtainApp {
             }
         };
         let background_generated = background_generated(&config.background);
-        let background_path = config.background.resolved_path();
+        let slideshow = BackgroundSlideshow::load(&config.background);
+        let background_path = slideshow
+            .as_ref()
+            .map(|slideshow| slideshow.current_path().to_path_buf())
+            .or_else(|| config.background.resolved_path());
 
         self.background_color = theme.background;
         self.background_asset = background_asset;
@@ -40,6 +47,7 @@ impl CurtainApp {
         self.background_treatment = background_treatment(&config.background);
         self.background_path = background_path.clone();
         self.background_outputs = config.background.outputs.clone();
+        self.slideshow = slideshow;
         self.ui_output_mode = config.visuals.output_ui_mode();
         self.ui_output_name = config.visuals.ui_output_name().map(str::to_owned);
         self.lock_wait_timeout =
@@ -56,12 +64,8 @@ impl CurtainApp {
             self.battery_snapshot.clone(),
             self.now_playing_snapshot.clone(),
         );
-        self.background_render_started = false;
+        self.reset_background_source_state();
         for surface in &mut self.lock_surfaces {
-            surface.background_path = None;
-            surface.background = None;
-            surface.scene_base = None;
-            surface.scene_base_revision = 0;
             surface.static_overlay = None;
             surface.static_overlay_revision = 0;
         }
@@ -77,6 +81,7 @@ impl CurtainApp {
                 .as_deref()
                 .map(|path| path.display().to_string()),
             background_output_overrides = config.background.outputs.len(),
+            background_slideshow_images = self.slideshow.as_ref().map(BackgroundSlideshow::len),
             "reloaded curtain config"
         );
 

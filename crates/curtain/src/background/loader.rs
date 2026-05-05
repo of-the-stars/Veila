@@ -82,6 +82,39 @@ pub(crate) fn spawn_loader(
     });
 }
 
+pub(crate) fn spawn_preloader(
+    path: PathBuf,
+    fallback: ClearColor,
+    treatment: BackgroundTreatment,
+    sizes: Vec<FrameSize>,
+) {
+    thread::spawn(move || {
+        let unique_sizes = unique_sizes(sizes);
+        let cached_sizes: Vec<_> = load_cached_buffers(&path, treatment, &unique_sizes)
+            .iter()
+            .map(|(size, _)| *size)
+            .collect();
+
+        if cached_sizes.len() == unique_sizes.len() {
+            return;
+        }
+
+        match load_buffers(&path, fallback, treatment, unique_sizes, &cached_sizes) {
+            Ok((_asset, rendered_buffers)) => {
+                if !rendered_buffers.is_empty() {
+                    store_cached_buffers(&path, treatment, &rendered_buffers);
+                }
+            }
+            Err(error) => {
+                tracing::debug!(
+                    path = %path.display(),
+                    "failed to preload slideshow wallpaper buffers: {error:#}"
+                );
+            }
+        }
+    });
+}
+
 fn load_buffers(
     path: &Path,
     fallback: ClearColor,

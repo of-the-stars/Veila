@@ -1,8 +1,10 @@
 mod loader;
+mod slideshow;
 
 pub(crate) use loader::BackgroundEvent;
+pub(crate) use slideshow::BackgroundSlideshow;
 
-use loader::spawn_loader;
+use loader::{spawn_loader, spawn_preloader};
 use smithay_client_toolkit::reexports::client::QueueHandle;
 use veila_renderer::FrameSize;
 
@@ -120,6 +122,7 @@ impl CurtainApp {
                 self.background_sender.clone(),
             );
         }
+        self.preload_next_slideshow_background();
     }
 
     fn background_render_specs(&self) -> Option<Vec<BackgroundRenderSpec>> {
@@ -149,6 +152,62 @@ impl CurtainApp {
         }
 
         Some(specs)
+    }
+
+    pub(crate) fn preload_next_slideshow_background(&self) {
+        let Some(path) = self
+            .slideshow
+            .as_ref()
+            .and_then(BackgroundSlideshow::next_preload_path)
+        else {
+            return;
+        };
+
+        let sizes: Vec<_> = self
+            .lock_surfaces
+            .iter()
+            .filter_map(|surface| {
+                surface
+                    .size
+                    .map(|(width, height)| FrameSize::new(width, height))
+            })
+            .collect();
+        if sizes.is_empty() {
+            return;
+        }
+
+        spawn_preloader(
+            path,
+            self.background_color,
+            self.background_treatment,
+            sizes,
+        );
+    }
+
+    pub(crate) fn reset_background_source_state(&mut self) {
+        self.background_render_started = false;
+        for surface in &mut self.lock_surfaces {
+            surface.background_path = None;
+            surface.background = None;
+            surface.scene_base = None;
+            surface.scene_base_revision = 0;
+        }
+    }
+
+    pub(crate) fn advance_background_slideshow(&mut self, queue_handle: &QueueHandle<Self>) {
+        let Some(path) = self
+            .slideshow
+            .as_mut()
+            .and_then(|slideshow| slideshow.advance(std::time::Instant::now()))
+        else {
+            return;
+        };
+
+        tracing::info!(path = %path.display(), "advanced lockscreen slideshow background");
+        self.background_path = Some(path);
+        self.reset_background_source_state();
+        self.render_all_surfaces(queue_handle);
+        self.maybe_start_background_render();
     }
 }
 
