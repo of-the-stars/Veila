@@ -13,6 +13,7 @@ use crate::{
 
 use super::super::{
     battery::BatteryHandle,
+    helpers::selected_initial_background_path,
     helpers::{activate_and_log, build_daemon_health, build_daemon_status, reload_config_response},
     mpris::NowPlayingHandle,
     runtime::ActiveRuntime,
@@ -56,11 +57,14 @@ pub(crate) async fn handle_control_connection(
     let (response, stop_requested) = match message {
         DaemonControlMessage::LockNow { wait_ready } => {
             if !state.is_active() {
+                let initial_background_path =
+                    selected_initial_background_path(&loaded_config.config);
                 match activate_and_log(
                     "forwarded",
                     session_proxy,
                     state,
                     options.config_path.as_deref(),
+                    initial_background_path.as_deref(),
                     weather_snapshot,
                     battery_snapshot,
                     now_playing_snapshot,

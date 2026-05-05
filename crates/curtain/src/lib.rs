@@ -31,6 +31,7 @@ pub struct CurtainOptions {
     pub daemon_socket: Option<PathBuf>,
     pub control_socket: Option<PathBuf>,
     pub config_path: Option<PathBuf>,
+    pub initial_background_path: Option<PathBuf>,
     pub preview_png: Option<PathBuf>,
     pub preview_size: Option<veila_renderer::FrameSize>,
     pub preview_artwork: Option<PathBuf>,
@@ -93,6 +94,11 @@ impl CurtainOptions {
 
             if let Some(path) = parse_option_value(&arg, "--config", &mut args)? {
                 options.config_path = Some(PathBuf::from(path));
+                continue;
+            }
+
+            if let Some(path) = parse_option_value(&arg, "--initial-background-path", &mut args)? {
+                options.initial_background_path = Some(PathBuf::from(path));
                 continue;
             }
 

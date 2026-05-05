@@ -19,11 +19,13 @@ use veila_common::{
     ipc::{CurtainControlMessage, encode_message},
 };
 
+#[allow(clippy::too_many_arguments)]
 pub async fn spawn_curtain(
     notify_socket: &Path,
     daemon_socket: &Path,
     control_socket: &Path,
     config_path: Option<&Path>,
+    initial_background_path: Option<&Path>,
     weather_snapshot: Option<&WeatherSnapshot>,
     battery_snapshot: Option<&BatterySnapshot>,
     now_playing_snapshot: Option<&NowPlayingSnapshot>,
@@ -35,6 +37,12 @@ pub async fn spawn_curtain(
     command.arg(format!("--control-socket={}", control_socket.display()));
     if let Some(config_path) = config_path {
         command.arg(format!("--config={}", config_path.display()));
+    }
+    if let Some(initial_background_path) = initial_background_path {
+        command.arg(format!(
+            "--initial-background-path={}",
+            initial_background_path.display()
+        ));
     }
     if let Some(weather_snapshot) = weather_snapshot {
         command.arg(format!(

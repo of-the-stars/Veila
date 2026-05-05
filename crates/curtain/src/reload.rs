@@ -35,7 +35,7 @@ impl CurtainApp {
             }
         };
         let background_generated = background_generated(&config.background);
-        let slideshow = BackgroundSlideshow::load(&config.background);
+        let slideshow = BackgroundSlideshow::load(&config.background, None);
         let background_path = slideshow
             .as_ref()
             .map(|slideshow| slideshow.current_path().to_path_buf())

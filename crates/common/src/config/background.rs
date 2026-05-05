@@ -1,7 +1,7 @@
 use std::{
     fs, io,
     path::{Path, PathBuf},
-    time::Duration,
+    time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
 use serde::{Deserialize, Serialize};
@@ -350,8 +350,24 @@ impl BackgroundConfig {
     }
 
     pub fn resolved_slideshow_initial_path(&self) -> io::Result<Option<PathBuf>> {
-        self.resolved_slideshow_paths()
-            .map(|paths| paths.into_iter().next())
+        self.resolved_slideshow_initial_path_with_seed(slideshow_seed())
+    }
+
+    pub fn resolved_slideshow_initial_path_with_seed(
+        &self,
+        seed: u64,
+    ) -> io::Result<Option<PathBuf>> {
+        let paths = self.resolved_slideshow_paths()?;
+        if paths.is_empty() {
+            return Ok(None);
+        }
+
+        let index = match self.slideshow.as_ref().map(|slideshow| slideshow.order) {
+            Some(BackgroundSlideshowOrder::Random) => (seed as usize) % paths.len(),
+            _ => 0,
+        };
+
+        Ok(paths.get(index).cloned())
     }
 }
 
@@ -460,4 +476,11 @@ fn expand_home_path(path: &Path) -> PathBuf {
     }
 
     path.to_path_buf()
+}
+
+fn slideshow_seed() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_nanos() as u64)
+        .unwrap_or(0)
 }

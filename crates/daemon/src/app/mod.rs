@@ -25,7 +25,7 @@ use self::events::{
     handle_auth_connection, handle_auth_result, handle_control_connection, handle_curtain_exit,
     handle_lock_signal, handle_now_playing_update, handle_unlock_signal, shutdown_runtime,
 };
-use self::helpers::{activate_and_log, current_username};
+use self::helpers::{activate_and_log, current_username, selected_initial_background_path};
 use self::runtime::{
     ActiveRuntime, accept_auth_connection, accept_control_connection, receive_auth_result,
     wait_for_curtain_exit,
@@ -75,11 +75,14 @@ pub async fn run(
     if options.lock_now {
         tracing::info!("manual lock requested via --lock-now");
         let now_playing_snapshot = runtime.now_playing.current_snapshot();
+        let initial_background_path =
+            selected_initial_background_path(&runtime.loaded_config.config);
         activate_and_log(
             "manual",
             &session_proxy,
             &mut runtime.state,
             options.config_path.as_deref(),
+            initial_background_path.as_deref(),
             runtime.weather.current_snapshot().as_ref(),
             runtime.battery.current_snapshot().as_ref(),
             now_playing_snapshot.as_ref(),
@@ -104,11 +107,14 @@ pub async fn run(
                 let weather_snapshot = runtime.weather.current_snapshot();
                 let battery_snapshot = runtime.battery.current_snapshot();
                 let now_playing_snapshot = runtime.now_playing.current_snapshot();
+                let initial_background_path =
+                    selected_initial_background_path(&runtime.loaded_config.config);
                 let (auth_policy, slots) = runtime.slots_with_policy();
                 handle_lock_signal(
                     "logind",
                     &session_proxy,
                     options.config_path.as_deref(),
+                    initial_background_path.as_deref(),
                     weather_snapshot.as_ref(),
                     battery_snapshot.as_ref(),
                     now_playing_snapshot.as_ref(),
@@ -128,11 +134,14 @@ pub async fn run(
                 let weather_snapshot = runtime.weather.current_snapshot();
                 let battery_snapshot = runtime.battery.current_snapshot();
                 let now_playing_snapshot = runtime.now_playing.current_snapshot();
+                let initial_background_path =
+                    selected_initial_background_path(&runtime.loaded_config.config);
                 let (auth_policy, slots) = runtime.slots_with_policy();
                 handle_curtain_exit(
                     result?,
                     &session_proxy,
                     options.config_path.as_deref(),
+                    initial_background_path.as_deref(),
                     weather_snapshot.as_ref(),
                     battery_snapshot.as_ref(),
                     now_playing_snapshot.as_ref(),

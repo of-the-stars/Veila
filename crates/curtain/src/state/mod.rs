@@ -147,7 +147,10 @@ impl CurtainApp {
         .context("failed to prepare fallback background")?;
         let background_generated = background_generated(&config.background);
         let background_treatment = background_treatment(&config.background);
-        let slideshow = BackgroundSlideshow::load(&config.background);
+        let slideshow = BackgroundSlideshow::load(
+            &config.background,
+            options.initial_background_path.as_deref(),
+        );
         let background_path = slideshow
             .as_ref()
             .map(|slideshow| slideshow.current_path().to_path_buf())

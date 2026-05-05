@@ -261,6 +261,63 @@ fn infers_file_mode_from_background_slideshow() {
 }
 
 #[test]
+fn resolves_random_background_slideshow_initial_path_from_seed() {
+    let temp_dir = std::env::temp_dir().join(format!(
+        "veila-background-slideshow-seed-{}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&temp_dir).expect("temp dir");
+    let first = temp_dir.join("one.jpg");
+    let second = temp_dir.join("two.jpg");
+    let third = temp_dir.join("three.jpg");
+    std::fs::write(&first, b"jpg").expect("first file");
+    std::fs::write(&second, b"jpg").expect("second file");
+    std::fs::write(&third, b"jpg").expect("third file");
+
+    let config = AppConfig::from_toml_str(&format!(
+        r#"
+            [background.slideshow]
+            files = ["{}", "{}", "{}"]
+            order = "random"
+        "#,
+        first.display(),
+        second.display(),
+        third.display()
+    ))
+    .expect("config should parse");
+
+    assert_eq!(
+        config
+            .background
+            .resolved_slideshow_initial_path_with_seed(0)
+            .expect("initial slideshow path should resolve")
+            .as_deref(),
+        Some(first.as_path())
+    );
+    assert_eq!(
+        config
+            .background
+            .resolved_slideshow_initial_path_with_seed(1)
+            .expect("initial slideshow path should resolve")
+            .as_deref(),
+        Some(second.as_path())
+    );
+    assert_eq!(
+        config
+            .background
+            .resolved_slideshow_initial_path_with_seed(2)
+            .expect("initial slideshow path should resolve")
+            .as_deref(),
+        Some(third.as_path())
+    );
+
+    std::fs::remove_file(first).ok();
+    std::fs::remove_file(second).ok();
+    std::fs::remove_file(third).ok();
+    std::fs::remove_dir(temp_dir).ok();
+}
+
+#[test]
 fn resolves_background_slideshow_files_and_directory() {
     let temp_dir =
         std::env::temp_dir().join(format!("veila-background-slideshow-{}", std::process::id()));
@@ -311,7 +368,7 @@ fn resolves_background_slideshow_files_and_directory() {
     assert_eq!(
         config
             .background
-            .resolved_slideshow_initial_path()
+            .resolved_slideshow_initial_path_with_seed(0)
             .expect("slideshow initial path should resolve")
             .as_deref(),
         Some(explicit.as_path())

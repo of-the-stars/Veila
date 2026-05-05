@@ -15,7 +15,7 @@ pub(crate) struct BackgroundSlideshow {
 }
 
 impl BackgroundSlideshow {
-    pub(crate) fn load(background: &BackgroundConfig) -> Option<Self> {
+    pub(crate) fn load(background: &BackgroundConfig, initial_path: Option<&Path>) -> Option<Self> {
         if !background.slideshow_enabled() {
             return None;
         }
@@ -34,10 +34,14 @@ impl BackgroundSlideshow {
         }
 
         let order = slideshow.order;
-        let mut sequence: Vec<_> = (0..paths.len()).collect();
-        if order == BackgroundSlideshowOrder::Random && sequence.len() > 1 {
-            shuffle_tail(&mut sequence);
-        }
+        let initial_path = initial_path
+            .map(ToOwned::to_owned)
+            .or_else(|| background.resolved_slideshow_initial_path().ok().flatten());
+        let initial_index = initial_path
+            .as_deref()
+            .and_then(|initial_path| paths.iter().position(|path| path.as_path() == initial_path))
+            .unwrap_or(0);
+        let sequence = slideshow_sequence(paths.len(), order, initial_index);
 
         let next_change_at =
             (paths.len() > 1).then(|| Instant::now() + slideshow.change_interval());
@@ -94,25 +98,41 @@ impl BackgroundSlideshow {
     }
 
     fn reset_sequence(&mut self) {
+        let current_index = self.sequence[self.sequence.len() - 1];
+        self.sequence = slideshow_sequence(self.paths.len(), self.order, current_index);
         self.position = 0;
-        if self.order == BackgroundSlideshowOrder::Sequence || self.sequence.len() < 2 {
-            return;
-        }
-
-        let previous_last = *self.sequence.last().unwrap_or(&0);
-        self.sequence = (0..self.paths.len()).collect();
-        shuffle_tail(&mut self.sequence);
-        if self.sequence[0] == previous_last {
-            self.sequence.swap(0, 1);
-        }
     }
 }
 
-fn shuffle_tail(sequence: &mut [usize]) {
+fn slideshow_sequence(
+    len: usize,
+    order: BackgroundSlideshowOrder,
+    initial_index: usize,
+) -> Vec<usize> {
+    let mut sequence = Vec::with_capacity(len);
+    sequence.push(initial_index);
+
+    match order {
+        BackgroundSlideshowOrder::Sequence => {
+            for offset in 1..len {
+                sequence.push((initial_index + offset) % len);
+            }
+        }
+        BackgroundSlideshowOrder::Random => {
+            let mut tail: Vec<_> = (0..len).filter(|index| *index != initial_index).collect();
+            shuffle(&mut tail);
+            sequence.extend(tail);
+        }
+    }
+
+    sequence
+}
+
+fn shuffle(sequence: &mut [usize]) {
     let mut state = shuffle_seed();
     for index in (1..sequence.len()).rev() {
-        let offset = next_u64(&mut state) as usize % index;
-        sequence.swap(index, 1 + offset);
+        let candidate = next_u64(&mut state) as usize % (index + 1);
+        sequence.swap(index, candidate);
     }
 }
 
@@ -138,17 +158,29 @@ mod tests {
         time::{Duration, Instant},
     };
 
-    use super::{BackgroundSlideshow, shuffle_tail};
+    use super::{BackgroundSlideshow, shuffle, slideshow_sequence};
 
     #[test]
-    fn random_shuffle_keeps_first_item_stable() {
+    fn random_shuffle_keeps_all_items() {
         let mut sequence = vec![0, 1, 2, 3];
-        shuffle_tail(&mut sequence);
+        shuffle(&mut sequence);
 
-        assert_eq!(sequence[0], 0);
         assert_eq!(sequence.len(), 4);
+        assert!(sequence.contains(&0));
         assert!(sequence.contains(&1));
         assert!(sequence.contains(&2));
+        assert!(sequence.contains(&3));
+    }
+
+    #[test]
+    fn random_sequence_keeps_initial_item_first() {
+        let sequence =
+            slideshow_sequence(4, veila_common::config::BackgroundSlideshowOrder::Random, 2);
+
+        assert_eq!(sequence[0], 2);
+        assert_eq!(sequence.len(), 4);
+        assert!(sequence.contains(&0));
+        assert!(sequence.contains(&1));
         assert!(sequence.contains(&3));
     }
 

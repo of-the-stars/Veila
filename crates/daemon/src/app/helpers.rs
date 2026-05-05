@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context, Result, anyhow};
@@ -31,6 +31,7 @@ pub(super) async fn activate_and_install(
     session_proxy: &logind::SessionProxy<'_>,
     state: &mut LockState,
     config_path: Option<&std::path::Path>,
+    initial_background_path: Option<&Path>,
     weather_snapshot: Option<&WeatherSnapshot>,
     battery_snapshot: Option<&BatterySnapshot>,
     now_playing_snapshot: Option<&NowPlayingSnapshot>,
@@ -43,6 +44,7 @@ pub(super) async fn activate_and_install(
         session_proxy,
         state,
         config_path,
+        initial_background_path,
         weather_snapshot,
         battery_snapshot,
         now_playing_snapshot,
@@ -59,6 +61,7 @@ pub(super) async fn activate_and_log(
     session_proxy: &logind::SessionProxy<'_>,
     state: &mut LockState,
     config_path: Option<&std::path::Path>,
+    initial_background_path: Option<&Path>,
     weather_snapshot: Option<&WeatherSnapshot>,
     battery_snapshot: Option<&BatterySnapshot>,
     now_playing_snapshot: Option<&NowPlayingSnapshot>,
@@ -72,6 +75,7 @@ pub(super) async fn activate_and_log(
         session_proxy,
         state,
         config_path,
+        initial_background_path,
         weather_snapshot,
         battery_snapshot,
         now_playing_snapshot,
@@ -86,6 +90,14 @@ pub(super) async fn activate_and_log(
         "lock timing summary"
     );
     Ok(())
+}
+
+pub(super) fn selected_initial_background_path(config: &AppConfig) -> Option<PathBuf> {
+    config
+        .background
+        .resolved_slideshow_initial_path()
+        .ok()
+        .flatten()
 }
 
 pub(super) fn current_username() -> Result<String> {

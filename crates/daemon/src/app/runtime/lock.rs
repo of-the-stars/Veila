@@ -19,11 +19,13 @@ use veila_common::{BatterySnapshot, NowPlayingSnapshot, WeatherSnapshot};
 
 use super::state::{ActiveRuntime, LockActivation, reset_runtime, update_locked_hint};
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) async fn activate_lock(
     trigger: &'static str,
     session_proxy: &logind::SessionProxy<'_>,
     state: &mut LockState,
     config_path: Option<&std::path::Path>,
+    initial_background_path: Option<&std::path::Path>,
     weather_snapshot: Option<&WeatherSnapshot>,
     battery_snapshot: Option<&BatterySnapshot>,
     now_playing_snapshot: Option<&NowPlayingSnapshot>,
@@ -45,6 +47,7 @@ pub(crate) async fn activate_lock(
         &auth_socket_path,
         &control_socket_path,
         config_path,
+        initial_background_path,
         weather_snapshot,
         battery_snapshot,
         now_playing_snapshot,
