@@ -13,10 +13,13 @@ use crate::{
 
 use super::super::{
     battery::BatteryHandle,
-    helpers::selected_initial_background_path,
-    helpers::{activate_and_log, build_daemon_health, build_daemon_status, reload_config_response},
+    helpers::{
+        activate_and_log, build_daemon_health, build_daemon_status, reload_config_response,
+        select_initial_background_path,
+    },
     mpris::NowPlayingHandle,
     runtime::ActiveRuntime,
+    state::BackgroundShuffleState,
     state::RuntimeSlots,
     weather::WeatherHandle,
 };
@@ -36,6 +39,7 @@ pub(crate) async fn handle_control_connection(
     weather: &WeatherHandle,
     battery: &BatteryHandle,
     now_playing: &NowPlayingHandle,
+    background_shuffle: &mut Option<BackgroundShuffleState>,
     slots: RuntimeSlots<'_>,
     auth_policy: &mut AuthPolicy,
 ) -> Result<bool> {
@@ -58,7 +62,7 @@ pub(crate) async fn handle_control_connection(
         DaemonControlMessage::LockNow { wait_ready } => {
             if !state.is_active() {
                 let initial_background_path =
-                    selected_initial_background_path(&loaded_config.config);
+                    select_initial_background_path(&loaded_config.config, background_shuffle);
                 match activate_and_log(
                     "forwarded",
                     session_proxy,

@@ -25,7 +25,7 @@ use self::events::{
     handle_auth_connection, handle_auth_result, handle_control_connection, handle_curtain_exit,
     handle_lock_signal, handle_now_playing_update, handle_unlock_signal, shutdown_runtime,
 };
-use self::helpers::{activate_and_log, current_username, selected_initial_background_path};
+use self::helpers::{activate_and_log, current_username};
 use self::runtime::{
     ActiveRuntime, accept_auth_connection, accept_control_connection, receive_auth_result,
     wait_for_curtain_exit,
@@ -75,8 +75,7 @@ pub async fn run(
     if options.lock_now {
         tracing::info!("manual lock requested via --lock-now");
         let now_playing_snapshot = runtime.now_playing.current_snapshot();
-        let initial_background_path =
-            selected_initial_background_path(&runtime.loaded_config.config);
+        let initial_background_path = runtime.select_initial_background_path();
         activate_and_log(
             "manual",
             &session_proxy,
@@ -107,8 +106,7 @@ pub async fn run(
                 let weather_snapshot = runtime.weather.current_snapshot();
                 let battery_snapshot = runtime.battery.current_snapshot();
                 let now_playing_snapshot = runtime.now_playing.current_snapshot();
-                let initial_background_path =
-                    selected_initial_background_path(&runtime.loaded_config.config);
+                let initial_background_path = runtime.select_initial_background_path();
                 let (auth_policy, slots) = runtime.slots_with_policy();
                 handle_lock_signal(
                     "logind",
@@ -134,8 +132,7 @@ pub async fn run(
                 let weather_snapshot = runtime.weather.current_snapshot();
                 let battery_snapshot = runtime.battery.current_snapshot();
                 let now_playing_snapshot = runtime.now_playing.current_snapshot();
-                let initial_background_path =
-                    selected_initial_background_path(&runtime.loaded_config.config);
+                let initial_background_path = runtime.select_initial_background_path();
                 let (auth_policy, slots) = runtime.slots_with_policy();
                 handle_curtain_exit(
                     result?,
@@ -172,7 +169,7 @@ pub async fn run(
                 let weather_snapshot = weather.current_snapshot();
                 let battery_snapshot = battery.current_snapshot();
                 let now_playing_snapshot = runtime.now_playing.current_snapshot();
-                let (loaded_config, last_reload_result, last_reload_unix_ms, auth_policy, slots) = runtime.control_inputs();
+                let (loaded_config, last_reload_result, last_reload_unix_ms, auth_policy, background_shuffle, slots) = runtime.control_inputs();
                 if handle_control_connection(
                     result?,
                     &options,
@@ -187,6 +184,7 @@ pub async fn run(
                     &weather,
                     &battery,
                     &now_playing,
+                    background_shuffle,
                     slots,
                     auth_policy,
                 ).await? {
@@ -217,7 +215,7 @@ pub async fn run(
                                     let weather = runtime.weather.clone();
                                     let battery = runtime.battery.clone();
                                     let now_playing = runtime.now_playing.clone();
-                                    let (loaded_config, last_reload_result, last_reload_unix_ms, auth_policy, slots) = runtime.control_inputs();
+                                    let (loaded_config, last_reload_result, last_reload_unix_ms, auth_policy, _background_shuffle, slots) = runtime.control_inputs();
                                     match helpers::apply_loaded_config(
                                         slots.state,
                                         slots.control_socket_path.as_deref(),
@@ -274,7 +272,7 @@ pub async fn run(
                                 let weather = runtime.weather.clone();
                                 let battery = runtime.battery.clone();
                                 let now_playing = runtime.now_playing.clone();
-                                let (loaded_config, last_reload_result, last_reload_unix_ms, auth_policy, slots) = runtime.control_inputs();
+                                let (loaded_config, last_reload_result, last_reload_unix_ms, auth_policy, _background_shuffle, slots) = runtime.control_inputs();
                                 match helpers::apply_loaded_config(
                                     slots.state,
                                     slots.control_socket_path.as_deref(),
@@ -323,7 +321,7 @@ pub async fn run(
                                 let weather = runtime.weather.clone();
                                 let battery = runtime.battery.clone();
                                 let now_playing = runtime.now_playing.clone();
-                                let (loaded_config, last_reload_result, last_reload_unix_ms, auth_policy, slots) = runtime.control_inputs();
+                                let (loaded_config, last_reload_result, last_reload_unix_ms, auth_policy, _background_shuffle, slots) = runtime.control_inputs();
                                 match helpers::apply_loaded_config(
                                     slots.state,
                                     slots.control_socket_path.as_deref(),

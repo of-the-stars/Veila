@@ -1,5 +1,7 @@
-use std::path::PathBuf;
-use std::time::Duration;
+use std::{
+    path::PathBuf,
+    time::{Duration, SystemTime, UNIX_EPOCH},
+};
 
 use tokio::{
     net::UnixListener,
@@ -33,6 +35,7 @@ pub(super) struct AppRuntime {
     pub(super) auth_results: Option<UnboundedReceiver<AuthResult>>,
     pub(super) auth_sender: Option<UnboundedSender<AuthResult>>,
     pub(super) auth_state: AuthState,
+    pub(super) background_shuffle: Option<BackgroundShuffleState>,
 }
 
 impl AppRuntime {
@@ -61,7 +64,15 @@ impl AppRuntime {
             auth_results: None,
             auth_sender: None,
             auth_state: AuthState::new(auth_policy),
+            background_shuffle: None,
         }
+    }
+
+    pub(super) fn select_initial_background_path(&mut self) -> Option<PathBuf> {
+        super::helpers::select_initial_background_path(
+            &self.loaded_config.config,
+            &mut self.background_shuffle,
+        )
     }
 
     pub(super) fn slots(&mut self) -> RuntimeSlots<'_> {
@@ -88,6 +99,7 @@ impl AppRuntime {
         &mut Option<String>,
         &mut Option<u64>,
         &mut AuthPolicy,
+        &mut Option<BackgroundShuffleState>,
         RuntimeSlots<'_>,
     ) {
         let Self {
@@ -95,6 +107,7 @@ impl AppRuntime {
             last_reload_result,
             last_reload_unix_ms,
             auth_policy,
+            background_shuffle,
             state,
             curtain,
             auth_listener,
@@ -111,6 +124,7 @@ impl AppRuntime {
             last_reload_result,
             last_reload_unix_ms,
             auth_policy,
+            background_shuffle,
             RuntimeSlots {
                 state,
                 curtain,
@@ -123,6 +137,73 @@ impl AppRuntime {
             },
         )
     }
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(super) struct BackgroundShuffleState {
+    paths: Vec<PathBuf>,
+    remaining: Vec<PathBuf>,
+    last: Option<PathBuf>,
+}
+
+impl BackgroundShuffleState {
+    pub(super) fn next_path(&mut self, paths: &[PathBuf]) -> Option<PathBuf> {
+        if paths.is_empty() {
+            self.paths.clear();
+            self.remaining.clear();
+            self.last = None;
+            return None;
+        }
+
+        if self.paths != paths {
+            self.paths = paths.to_vec();
+            self.remaining.clear();
+            self.last = self
+                .last
+                .take()
+                .filter(|last| self.paths.iter().any(|path| path == last));
+        }
+
+        if self.remaining.is_empty() {
+            self.remaining = self.paths.clone();
+            shuffle_paths(&mut self.remaining);
+            if self.remaining.len() > 1
+                && let Some(last) = self.last.as_ref()
+                && self.remaining.first() == Some(last)
+                && let Some(next_distinct_index) =
+                    self.remaining.iter().position(|path| path != last)
+            {
+                self.remaining.swap(0, next_distinct_index);
+            }
+        }
+
+        let next = self.remaining.remove(0);
+        self.last = Some(next.clone());
+        Some(next)
+    }
+}
+
+fn shuffle_paths(paths: &mut [PathBuf]) {
+    let mut state = shuffle_seed();
+    for index in (1..paths.len()).rev() {
+        let candidate = next_u64(&mut state) as usize % (index + 1);
+        paths.swap(index, candidate);
+    }
+}
+
+fn shuffle_seed() -> u64 {
+    let seed = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_nanos() as u64)
+        .unwrap_or(0);
+    seed ^ 0xA076_1D64_78BD_642F
+}
+
+fn next_u64(state: &mut u64) -> u64 {
+    *state ^= *state << 13;
+    *state ^= *state >> 7;
+    *state ^= *state << 17;
+    *state
 }
 
 pub(super) struct RuntimeSlots<'a> {
@@ -179,5 +260,39 @@ impl<'a>
             auth_sender,
             auth_state,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::BackgroundShuffleState;
+
+    #[test]
+    fn random_shuffle_cycle_avoids_immediate_repeats() {
+        let paths = vec![
+            "/tmp/one.jpg".into(),
+            "/tmp/two.jpg".into(),
+            "/tmp/three.jpg".into(),
+        ];
+        let mut shuffle = BackgroundShuffleState::default();
+        let first = shuffle.next_path(&paths).expect("first path");
+        let second = shuffle.next_path(&paths).expect("second path");
+        let third = shuffle.next_path(&paths).expect("third path");
+        let fourth = shuffle.next_path(&paths).expect("fourth path");
+
+        assert_ne!(first, second);
+        assert_ne!(second, third);
+        assert_ne!(third, fourth);
+    }
+
+    #[test]
+    fn random_shuffle_resets_when_path_set_changes() {
+        let first_paths = vec!["/tmp/one.jpg".into(), "/tmp/two.jpg".into()];
+        let second_paths = vec!["/tmp/three.jpg".into(), "/tmp/four.jpg".into()];
+        let mut shuffle = BackgroundShuffleState::default();
+        let _ = shuffle.next_path(&first_paths).expect("first path");
+        let next = shuffle.next_path(&second_paths).expect("changed path");
+
+        assert!(second_paths.contains(&next));
     }
 }

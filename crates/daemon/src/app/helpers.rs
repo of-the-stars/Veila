@@ -13,6 +13,7 @@ use super::{
     mpris::NowPlayingHandle,
     prewarm,
     runtime::{ActiveRuntime, activate_lock},
+    state::BackgroundShuffleState,
     watch::effective_auto_reload_debounce_ms,
     weather::WeatherHandle,
 };
@@ -92,14 +93,6 @@ pub(super) async fn activate_and_log(
     Ok(())
 }
 
-pub(super) fn selected_initial_background_path(config: &AppConfig) -> Option<PathBuf> {
-    config
-        .background
-        .resolved_slideshow_initial_path()
-        .ok()
-        .flatten()
-}
-
 pub(super) fn current_username() -> Result<String> {
     let uid = Uid::current();
     let Some(user) = User::from_uid(uid).context("failed to resolve current username")? else {
@@ -107,6 +100,38 @@ pub(super) fn current_username() -> Result<String> {
     };
 
     Ok(user.name)
+}
+
+pub(super) fn select_initial_background_path(
+    config: &AppConfig,
+    background_shuffle: &mut Option<BackgroundShuffleState>,
+) -> Option<PathBuf> {
+    let background = &config.background;
+    if !background.slideshow_enabled() {
+        *background_shuffle = None;
+        return None;
+    }
+
+    let paths = background.resolved_slideshow_paths().ok()?;
+    if paths.is_empty() {
+        *background_shuffle = None;
+        return None;
+    }
+
+    match background
+        .slideshow
+        .as_ref()
+        .map(|slideshow| slideshow.order)
+    {
+        Some(veila_common::config::BackgroundSlideshowOrder::Random) => {
+            let shuffle = background_shuffle.get_or_insert_with(Default::default);
+            shuffle.next_path(&paths)
+        }
+        _ => {
+            *background_shuffle = None;
+            paths.into_iter().next()
+        }
+    }
 }
 
 pub(super) fn build_daemon_status(
