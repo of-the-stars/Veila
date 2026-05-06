@@ -112,6 +112,8 @@ impl CurtainApp {
                 );
             }
         }
+
+        self.log_memory_snapshot("ready");
     }
 
     pub(super) fn resolve_surface_size(&self, index: usize, requested: (u32, u32)) -> (u32, u32) {

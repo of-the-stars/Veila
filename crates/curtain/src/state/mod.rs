@@ -1,4 +1,5 @@
 mod interaction;
+mod memory;
 mod power;
 mod profiler;
 mod repeat;
@@ -129,6 +130,8 @@ pub(crate) struct CurtainApp {
     pub(crate) render_profiler: RenderProfiler,
     pub(crate) backspace_repeat: Option<KeyRepeatState>,
     pub(crate) screen_off: ScreenOffState,
+    pub(crate) post_ready_nonfirst_renders: u32,
+    pub(crate) post_ready_memory_logged: bool,
 }
 
 impl CurtainApp {
@@ -275,6 +278,8 @@ impl CurtainApp {
             render_profiler: RenderProfiler::default(),
             backspace_repeat: None,
             screen_off: ScreenOffState::new(screen_off_delay),
+            post_ready_nonfirst_renders: 0,
+            post_ready_memory_logged: false,
             lock_acquisition_started: false,
         })
     }

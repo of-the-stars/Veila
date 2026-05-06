@@ -154,6 +154,8 @@ impl CurtainApp {
             );
         }
 
+        self.note_memory_after_render(first_frame);
+
         Ok(())
     }
 
@@ -236,6 +238,8 @@ impl CurtainApp {
                 "rendered curtain frame"
             );
         }
+
+        self.note_memory_after_render(first_frame);
 
         Ok(())
     }
