@@ -5,6 +5,32 @@ use veila_common::BatterySnapshot;
 
 use crate::adapters::logind;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum SuspendSkipReason {
+    AuthInFlight,
+    OnAcPower,
+    NoBatteryDetected,
+    MediaPlaying,
+}
+
+impl SuspendSkipReason {
+    pub(super) const fn as_str(self) -> &'static str {
+        match self {
+            Self::AuthInFlight => "auth-in-flight",
+            Self::OnAcPower => "on-ac-power",
+            Self::NoBatteryDetected => "no-battery-detected",
+            Self::MediaPlaying => "media-playing",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum SuspendDecision {
+    Pending,
+    Ready,
+    Skipped(SuspendSkipReason),
+}
+
 #[derive(Debug, Clone)]
 pub(super) struct LockedSuspendState {
     delay: Option<Duration>,
@@ -12,6 +38,7 @@ pub(super) struct LockedSuspendState {
     skip_while_media_playing: bool,
     last_activity_at: Option<Instant>,
     suspend_requested: bool,
+    last_reported_skip_reason: Option<SuspendSkipReason>,
 }
 
 impl LockedSuspendState {
@@ -26,6 +53,7 @@ impl LockedSuspendState {
             skip_while_media_playing,
             last_activity_at: None,
             suspend_requested: false,
+            last_reported_skip_reason: None,
         }
     }
 
@@ -41,6 +69,7 @@ impl LockedSuspendState {
         self.battery_only = battery_only;
         self.skip_while_media_playing = skip_while_media_playing;
         self.suspend_requested = false;
+        self.last_reported_skip_reason = None;
         self.last_activity_at = if !active_lock || delay.is_none() {
             None
         } else {
@@ -55,11 +84,13 @@ impl LockedSuspendState {
 
         self.last_activity_at = Some(now);
         self.suspend_requested = false;
+        self.last_reported_skip_reason = None;
     }
 
     pub(super) fn clear(&mut self) {
         self.last_activity_at = None;
         self.suspend_requested = false;
+        self.last_reported_skip_reason = None;
     }
 
     pub(super) fn note_activity(&mut self, now: Instant) {
@@ -69,42 +100,77 @@ impl LockedSuspendState {
 
         self.last_activity_at = Some(now);
         self.suspend_requested = false;
+        self.last_reported_skip_reason = None;
     }
 
-    pub(super) fn should_suspend(
+    pub(super) fn evaluate(
         &self,
         now: Instant,
         active_lock: bool,
         auth_in_flight: bool,
         battery_snapshot: Option<&BatterySnapshot>,
         media_playing: bool,
-    ) -> bool {
-        if !active_lock || auth_in_flight || self.suspend_requested {
-            return false;
-        }
-
-        if self.battery_only && !on_battery_power(battery_snapshot) {
-            return false;
-        }
-
-        if self.skip_while_media_playing && media_playing {
-            return false;
+    ) -> SuspendDecision {
+        if !active_lock || self.suspend_requested {
+            return SuspendDecision::Pending;
         }
 
         let Some(delay) = self.delay else {
-            return false;
+            return SuspendDecision::Pending;
         };
         let Some(last_activity_at) = self.last_activity_at else {
-            return false;
+            return SuspendDecision::Pending;
         };
 
-        now >= last_activity_at
+        let deadline = last_activity_at
             .checked_add(delay)
-            .unwrap_or(last_activity_at)
+            .unwrap_or(last_activity_at);
+        if now < deadline {
+            return SuspendDecision::Pending;
+        }
+
+        if auth_in_flight {
+            return SuspendDecision::Skipped(SuspendSkipReason::AuthInFlight);
+        }
+
+        if self.battery_only {
+            match battery_power_state(battery_snapshot) {
+                BatteryPowerState::OnBattery => {}
+                BatteryPowerState::Charging => {
+                    return SuspendDecision::Skipped(SuspendSkipReason::OnAcPower);
+                }
+                BatteryPowerState::Unavailable => {
+                    return SuspendDecision::Skipped(SuspendSkipReason::NoBatteryDetected);
+                }
+            }
+        }
+
+        if self.skip_while_media_playing && media_playing {
+            return SuspendDecision::Skipped(SuspendSkipReason::MediaPlaying);
+        }
+
+        SuspendDecision::Ready
+    }
+
+    pub(super) fn note_skip_reason(
+        &mut self,
+        reason: SuspendSkipReason,
+    ) -> Option<SuspendSkipReason> {
+        if self.last_reported_skip_reason == Some(reason) {
+            return None;
+        }
+
+        self.last_reported_skip_reason = Some(reason);
+        Some(reason)
+    }
+
+    pub(super) fn clear_reported_skip_reason(&mut self) {
+        self.last_reported_skip_reason = None;
     }
 
     pub(super) fn mark_requested(&mut self) {
         self.suspend_requested = true;
+        self.last_reported_skip_reason = None;
     }
 }
 
@@ -112,8 +178,19 @@ pub(super) fn suspend_delay_seconds(config: &veila_common::AppConfig) -> Option<
     config.lock.suspend_seconds.filter(|seconds| *seconds > 0)
 }
 
-fn on_battery_power(snapshot: Option<&BatterySnapshot>) -> bool {
-    snapshot.is_some_and(|snapshot| !snapshot.charging)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum BatteryPowerState {
+    OnBattery,
+    Charging,
+    Unavailable,
+}
+
+fn battery_power_state(snapshot: Option<&BatterySnapshot>) -> BatteryPowerState {
+    match snapshot {
+        Some(snapshot) if !snapshot.charging => BatteryPowerState::OnBattery,
+        Some(_) => BatteryPowerState::Charging,
+        None => BatteryPowerState::Unavailable,
+    }
 }
 
 pub(super) async fn request_system_suspend(connection: &zbus::Connection) -> Result<()> {
@@ -132,7 +209,7 @@ mod tests {
 
     use veila_common::BatterySnapshot;
 
-    use super::LockedSuspendState;
+    use super::{LockedSuspendState, SuspendDecision, SuspendSkipReason};
 
     #[test]
     fn does_not_suspend_while_auth_is_in_flight() {
@@ -140,8 +217,14 @@ mod tests {
         let mut state = LockedSuspendState::new(Some(Duration::from_secs(5)), false, false);
         state.arm(now);
 
-        assert!(!state.should_suspend(now + Duration::from_secs(6), true, true, None, false));
-        assert!(state.should_suspend(now + Duration::from_secs(6), true, false, None, false));
+        assert_eq!(
+            state.evaluate(now + Duration::from_secs(6), true, true, None, false),
+            SuspendDecision::Skipped(SuspendSkipReason::AuthInFlight)
+        );
+        assert_eq!(
+            state.evaluate(now + Duration::from_secs(6), true, false, None, false),
+            SuspendDecision::Ready
+        );
     }
 
     #[test]
@@ -152,7 +235,10 @@ mod tests {
         state.mark_requested();
         state.note_activity(now + Duration::from_secs(6));
 
-        assert!(!state.should_suspend(now + Duration::from_secs(7), true, false, None, false));
+        assert_eq!(
+            state.evaluate(now + Duration::from_secs(7), true, false, None, false),
+            SuspendDecision::Pending
+        );
     }
 
     #[test]
@@ -161,27 +247,36 @@ mod tests {
         let mut state = LockedSuspendState::new(Some(Duration::from_secs(5)), true, false);
         state.arm(now);
 
-        assert!(!state.should_suspend(now + Duration::from_secs(6), true, false, None, false));
-        assert!(!state.should_suspend(
-            now + Duration::from_secs(6),
-            true,
-            false,
-            Some(&BatterySnapshot {
-                percent: 80,
-                charging: true,
-            }),
-            false,
-        ));
-        assert!(state.should_suspend(
-            now + Duration::from_secs(6),
-            true,
-            false,
-            Some(&BatterySnapshot {
-                percent: 80,
-                charging: false,
-            }),
-            false,
-        ));
+        assert_eq!(
+            state.evaluate(now + Duration::from_secs(6), true, false, None, false),
+            SuspendDecision::Skipped(SuspendSkipReason::NoBatteryDetected)
+        );
+        assert_eq!(
+            state.evaluate(
+                now + Duration::from_secs(6),
+                true,
+                false,
+                Some(&BatterySnapshot {
+                    percent: 80,
+                    charging: true,
+                }),
+                false,
+            ),
+            SuspendDecision::Skipped(SuspendSkipReason::OnAcPower)
+        );
+        assert_eq!(
+            state.evaluate(
+                now + Duration::from_secs(6),
+                true,
+                false,
+                Some(&BatterySnapshot {
+                    percent: 80,
+                    charging: false,
+                }),
+                false,
+            ),
+            SuspendDecision::Ready
+        );
     }
 
     #[test]
@@ -190,7 +285,36 @@ mod tests {
         let mut state = LockedSuspendState::new(Some(Duration::from_secs(5)), false, true);
         state.arm(now);
 
-        assert!(!state.should_suspend(now + Duration::from_secs(6), true, false, None, true));
-        assert!(state.should_suspend(now + Duration::from_secs(6), true, false, None, false));
+        assert_eq!(
+            state.evaluate(now + Duration::from_secs(6), true, false, None, true),
+            SuspendDecision::Skipped(SuspendSkipReason::MediaPlaying)
+        );
+        assert_eq!(
+            state.evaluate(now + Duration::from_secs(6), true, false, None, false),
+            SuspendDecision::Ready
+        );
+    }
+
+    #[test]
+    fn skip_reason_logging_only_reports_reason_changes_once() {
+        let mut state = LockedSuspendState::new(Some(Duration::from_secs(5)), false, true);
+
+        assert_eq!(
+            state.note_skip_reason(SuspendSkipReason::MediaPlaying),
+            Some(SuspendSkipReason::MediaPlaying)
+        );
+        assert_eq!(
+            state.note_skip_reason(SuspendSkipReason::MediaPlaying),
+            None
+        );
+        assert_eq!(
+            state.note_skip_reason(SuspendSkipReason::OnAcPower),
+            Some(SuspendSkipReason::OnAcPower)
+        );
+        state.clear_reported_skip_reason();
+        assert_eq!(
+            state.note_skip_reason(SuspendSkipReason::OnAcPower),
+            Some(SuspendSkipReason::OnAcPower)
+        );
     }
 }

@@ -233,16 +233,43 @@ pub async fn run(
                 ).await;
             }
             _ = auto_reload_tick.tick() => {
-                if runtime.suspend_state.should_suspend(
+                let suspend_decision = runtime.suspend_state.evaluate(
                     std::time::Instant::now(),
                     runtime.state.is_active(),
                     runtime.auth_state.in_flight(),
                     runtime.battery.current_snapshot().as_ref(),
                     runtime.now_playing.currently_playing(),
-                ) {
-                    runtime.suspend_state.mark_requested();
-                    match suspend::request_system_suspend(&connection).await {
-                        Ok(()) => {
+                );
+                match suspend_decision {
+                    suspend::SuspendDecision::Ready => {
+                        runtime.suspend_state.clear_reported_skip_reason();
+                        runtime.suspend_state.mark_requested();
+                        match suspend::request_system_suspend(&connection).await {
+                            Ok(()) => {
+                                tracing::info!(
+                                    suspend_seconds = runtime.loaded_config.config.lock.suspend_seconds,
+                                    suspend_only_on_battery = runtime
+                                        .loaded_config
+                                        .config
+                                        .lock
+                                        .suspend_only_on_battery,
+                                    skip_suspend_while_media_playing = runtime
+                                        .loaded_config
+                                        .config
+                                        .lock
+                                        .skip_suspend_while_media_playing,
+                                    "requesting system suspend after locked inactivity"
+                                );
+                            }
+                            Err(error) => {
+                                tracing::warn!(
+                                    "failed to request system suspend after locked inactivity: {error:#}"
+                                );
+                            }
+                        }
+                    }
+                    suspend::SuspendDecision::Skipped(reason) => {
+                        if let Some(reason) = runtime.suspend_state.note_skip_reason(reason) {
                             tracing::info!(
                                 suspend_seconds = runtime.loaded_config.config.lock.suspend_seconds,
                                 suspend_only_on_battery = runtime
@@ -255,14 +282,13 @@ pub async fn run(
                                     .config
                                     .lock
                                     .skip_suspend_while_media_playing,
-                                "requesting system suspend after locked inactivity"
+                                reason = reason.as_str(),
+                                "skipping locked idle suspend"
                             );
                         }
-                        Err(error) => {
-                            tracing::warn!(
-                                "failed to request system suspend after locked inactivity: {error:#}"
-                            );
-                        }
+                    }
+                    suspend::SuspendDecision::Pending => {
+                        runtime.suspend_state.clear_reported_skip_reason();
                     }
                 }
 
