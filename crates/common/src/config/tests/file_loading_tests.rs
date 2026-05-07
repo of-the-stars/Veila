@@ -50,18 +50,13 @@ fn loads_config_from_file() {
             input_radius = 20
             input_border_width = 3
             avatar_size = 92
-            avatar_offset_y = 18
             avatar_placeholder_padding = 12
             avatar_icon_color = "#E8EEF9"
             avatar_ring_color = "#94B2FF"
             avatar_ring_width = 3
             username_color = "#D7E3FFB8"
             username_size = 3
-            username_offset_y = -12
-            avatar_gap = 14
-            username_gap = 28
             status_gap = 18
-            clock_gap = 10
             auth_stack_offset = 16
             header_top_offset = -12
             identity_gap = 26
@@ -83,6 +78,30 @@ fn loads_config_from_file() {
             eye_icon_color = "#F4F8FFB8"
             status_color = "#FFE0A0E0"
             input_mask_color = "#A9C4FF"
+
+            [visuals.avatar]
+            halign = "center"
+            valign = "center"
+            x = 0
+            y = 32
+
+            [visuals.username]
+            halign = "center"
+            valign = "center"
+            x = 0
+            y = 220
+
+            [visuals.clock]
+            halign = "left"
+            valign = "top"
+            x = 24
+            y = 40
+
+            [visuals.date]
+            halign = "left"
+            valign = "top"
+            x = 24
+            y = 156
         "##,
     )
     .expect("config file");
@@ -152,7 +171,6 @@ fn loads_config_from_file() {
     assert_eq!(loaded.config.visuals.input_radius(), 20);
     assert_eq!(loaded.config.visuals.input_border_width(), Some(3));
     assert_eq!(loaded.config.visuals.avatar_size(), Some(92));
-    assert_eq!(loaded.config.visuals.avatar_offset_y(), Some(18));
     assert_eq!(loaded.config.visuals.avatar_placeholder_padding(), Some(12));
     assert_eq!(
         loaded.config.visuals.avatar_icon_color(),
@@ -168,11 +186,7 @@ fn loads_config_from_file() {
         Some(RgbColor::rgba(215, 227, 255, 184))
     );
     assert_eq!(loaded.config.visuals.username_size(), Some(3));
-    assert_eq!(loaded.config.visuals.username_offset_y(), Some(-12));
-    assert_eq!(loaded.config.visuals.avatar_gap(), Some(14));
-    assert_eq!(loaded.config.visuals.username_gap(), Some(28));
     assert_eq!(loaded.config.visuals.status_gap(), Some(18));
-    assert_eq!(loaded.config.visuals.clock_gap(), Some(10));
     assert_eq!(loaded.config.visuals.auth_stack_offset(), Some(16));
     assert_eq!(loaded.config.visuals.header_top_offset(), Some(-12));
     assert_eq!(loaded.config.visuals.identity_gap(), Some(26));
@@ -204,6 +218,42 @@ fn loads_config_from_file() {
     assert_eq!(
         loaded.config.visuals.clock_color(),
         Some(RgbColor::rgba(248, 251, 255, 245))
+    );
+    assert_eq!(
+        loaded.config.visuals.avatar_position(),
+        WidgetPositionConfig {
+            halign: Some(HorizontalAlign::Center),
+            valign: Some(VerticalAlign::Center),
+            x: Some(0),
+            y: Some(32),
+        }
+    );
+    assert_eq!(
+        loaded.config.visuals.username_position(),
+        WidgetPositionConfig {
+            halign: Some(HorizontalAlign::Center),
+            valign: Some(VerticalAlign::Center),
+            x: Some(0),
+            y: Some(220),
+        }
+    );
+    assert_eq!(
+        loaded.config.visuals.clock_position(),
+        WidgetPositionConfig {
+            halign: Some(HorizontalAlign::Left),
+            valign: Some(VerticalAlign::Top),
+            x: Some(24),
+            y: Some(40),
+        }
+    );
+    assert_eq!(
+        loaded.config.visuals.date_position(),
+        WidgetPositionConfig {
+            halign: Some(HorizontalAlign::Left),
+            valign: Some(VerticalAlign::Top),
+            x: Some(24),
+            y: Some(156),
+        }
     );
     assert_eq!(
         loaded.config.visuals.date_color(),

@@ -1,11 +1,12 @@
 use veila_common::{
-    CenterStackStyle, ClockAlignment, InputAlignment, LayerAlignment, LayerVerticalAlignment,
+    CenterStackStyle, ClockAlignment, HorizontalAlign, InputAlignment, LayerAlignment,
+    LayerVerticalAlignment, VerticalAlign,
 };
 
 use super::{
     AnchorOffsets, AuthGroupHeights, FooterHeights, InputPlacement, LayerPlacement,
-    RoleAnchorInput, SceneMetrics, hero_block_x, layer_center_x, layer_rect, role_anchors,
-    role_anchors_with_groups,
+    RoleAnchorInput, SceneMetrics, anchored_block_x, anchored_block_y, hero_block_x,
+    layer_center_x, layer_rect, role_anchors, role_anchors_with_groups,
 };
 
 #[test]
@@ -343,6 +344,22 @@ fn applies_clock_horizontal_offset() {
         hero_block_x(1280, 300, ClockAlignment::TopRight, None, Some(-20)),
         907
     );
+}
+
+#[test]
+fn anchors_explicit_widget_positions() {
+    assert_eq!(anchored_block_x(1280, 300, HorizontalAlign::Left, 20), 20);
+    assert_eq!(
+        anchored_block_x(1280, 300, HorizontalAlign::Center, 24),
+        514
+    );
+    assert_eq!(
+        anchored_block_x(1280, 300, HorizontalAlign::Right, -18),
+        962
+    );
+    assert_eq!(anchored_block_y(720, 120, VerticalAlign::Top, 32), 32);
+    assert_eq!(anchored_block_y(720, 120, VerticalAlign::Center, -10), 290);
+    assert_eq!(anchored_block_y(720, 120, VerticalAlign::Bottom, -40), 560);
 }
 
 #[test]

@@ -1,4 +1,6 @@
-use veila_common::{CenterStackStyle, ClockAlignment, InputAlignment};
+use veila_common::{
+    CenterStackStyle, ClockAlignment, HorizontalAlign, InputAlignment, VerticalAlign,
+};
 
 use super::types::{RoleAnchorInput, RoleAnchors};
 
@@ -224,6 +226,32 @@ pub fn hero_block_x(
     };
 
     (base_x + offset_x.unwrap_or(0)).clamp(0, (frame_width - block_width).max(0))
+}
+
+pub fn anchored_block_x(
+    frame_width: i32,
+    block_width: i32,
+    halign: HorizontalAlign,
+    offset_x: i32,
+) -> i32 {
+    match halign {
+        HorizontalAlign::Left => offset_x,
+        HorizontalAlign::Center => frame_width / 2 - block_width / 2 + offset_x,
+        HorizontalAlign::Right => frame_width - block_width + offset_x,
+    }
+}
+
+pub fn anchored_block_y(
+    frame_height: i32,
+    block_height: i32,
+    valign: VerticalAlign,
+    offset_y: i32,
+) -> i32 {
+    match valign {
+        VerticalAlign::Top => offset_y,
+        VerticalAlign::Center => frame_height / 2 - block_height / 2 + offset_y,
+        VerticalAlign::Bottom => frame_height - block_height + offset_y,
+    }
 }
 
 pub fn top_role_top(frame_height: i32, header_top_offset: Option<i32>) -> i32 {

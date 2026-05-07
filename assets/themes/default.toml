@@ -68,16 +68,22 @@ font_size = 2
 
 [visuals.avatar]
 size = 160
-gap = 24
 background_color = "rgba(255, 255, 255, 0.08)"
 placeholder_padding = 28
+halign = "center"
+valign = "center"
+x = 0
+y = 40
 
 [visuals.username]
 font_family = "Google Sans Flex"
 font_weight = 400
 color = "rgba(255, 255, 255, 0.84)"
 size = 4
-gap = 28
+halign = "center"
+valign = "center"
+x = 0
+y = 220
 
 [visuals.clock]
 format = "24h"
@@ -88,13 +94,20 @@ font_family = "Geom"
 font_weight = 600
 color = "rgba(255, 255, 255, 0.4)"
 size = 14
-gap = 20
+halign = "center"
+valign = "top"
+x = 0
+y = 40
 
 [visuals.date]
 color = "rgba(255, 255, 255, 0.4)"
 font_family = "Geom"
 font_weight = 600
 size = 2
+halign = "center"
+valign = "top"
+x = 0
+y = 140
 
 [visuals.placeholder]
 color = "rgba(255, 255, 255, 0.9)"

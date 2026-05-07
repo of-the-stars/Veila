@@ -1,12 +1,12 @@
 use veila_common::{
     AppConfig, AvatarVisualConfig, BatteryVisualConfig, CenterStackOrder, CenterStackStyle,
-    ClockAlignment, ClockFormat, ClockStyle, ClockVisualConfig, ConfigColor, DateVisualConfig,
-    EyeVisualConfig, FontStyle, InputRevealMode, InputVisualConfig, InputVisualEntry,
+    ClockFormat, ClockStyle, ClockVisualConfig, ConfigColor, DateVisualConfig, EyeVisualConfig,
+    FontStyle, HorizontalAlign, InputRevealMode, InputVisualConfig, InputVisualEntry,
     KeyboardVisualConfig, LayerAlignment, LayerHeight, LayerMode, LayerStyle,
     LayerVerticalAlignment, LayerVisualConfig, LayerWidth, LayoutVisualConfig,
     NowPlayingBackgroundConfig, NowPlayingVisualConfig, PaletteVisualConfig,
     PlaceholderVisualConfig, RevealVisualConfig, StatusVisualConfig, UsernameVisualConfig,
-    WeatherAlignment, WeatherVisualConfig,
+    VerticalAlign, WeatherAlignment, WeatherVisualConfig, WidgetPositionConfig,
 };
 use veila_renderer::ClearColor;
 
@@ -40,13 +40,12 @@ fn input_alpha_uses_rgba_values() {
     config.visuals.avatar = Some(AvatarVisualConfig {
         enabled: Some(true),
         size: Some(92),
-        offset_y: Some(18),
-        gap: Some(14),
         background_color: Some(ConfigColor::rgba(24, 30, 42, 92)),
         placeholder_padding: Some(14),
         ring_color: Some(ConfigColor::rgb(148, 178, 255)),
         ring_width: Some(3),
         icon_color: Some(ConfigColor::rgb(232, 238, 249)),
+        position: WidgetPositionConfig::default(),
     });
     config.visuals.username = Some(UsernameVisualConfig {
         enabled: Some(true),
@@ -55,8 +54,7 @@ fn input_alpha_uses_rgba_values() {
         font_style: Some(FontStyle::Italic),
         color: Some(ConfigColor::rgba(215, 227, 255, 184)),
         size: Some(3),
-        offset_y: Some(-12),
-        gap: Some(28),
+        position: WidgetPositionConfig::default(),
     });
     config.visuals.clock = Some(ClockVisualConfig {
         enabled: Some(true),
@@ -64,17 +62,13 @@ fn input_alpha_uses_rgba_values() {
         font_weight: Some(700),
         font_style: Some(FontStyle::Italic),
         style: Some(ClockStyle::Stacked),
-        alignment: Some(ClockAlignment::TopLeft),
-        center_in_layer: Some(true),
-        offset_x: Some(24),
-        offset_y: Some(-16),
         format: Some(ClockFormat::TwelveHour),
         meridiem_size: Some(3),
         meridiem_offset_x: Some(6),
         meridiem_offset_y: Some(-2),
         color: Some(ConfigColor::rgba(248, 251, 255, 245)),
         size: Some(4),
-        gap: Some(10),
+        position: WidgetPositionConfig::default(),
     });
     config.visuals.date = Some(DateVisualConfig {
         enabled: Some(true),
@@ -83,6 +77,7 @@ fn input_alpha_uses_rgba_values() {
         font_style: Some(FontStyle::Italic),
         color: Some(ConfigColor::rgba(200, 212, 236, 189)),
         size: Some(3),
+        position: WidgetPositionConfig::default(),
     });
     config.visuals.placeholder = Some(PlaceholderVisualConfig {
         enabled: Some(true),
@@ -252,7 +247,8 @@ fn input_alpha_uses_rgba_values() {
     assert_eq!(theme.input_height, Some(54));
     assert_eq!(theme.input_border_width, Some(3));
     assert_eq!(theme.avatar_size, Some(92));
-    assert_eq!(theme.avatar_offset_y, Some(18));
+    assert_eq!(theme.avatar_offset_y, Some(0));
+    assert_eq!(theme.avatar_position, None);
     assert_eq!(theme.avatar_placeholder_padding, Some(14));
     assert_eq!(
         theme.avatar_icon_color,
@@ -271,11 +267,12 @@ fn input_alpha_uses_rgba_values() {
     assert_eq!(theme.username_font_weight, Some(600));
     assert_eq!(theme.username_font_style, Some(FontStyle::Italic));
     assert_eq!(theme.username_size, Some(3));
-    assert_eq!(theme.username_offset_y, Some(-12));
-    assert_eq!(theme.avatar_gap, Some(14));
+    assert_eq!(theme.username_offset_y, Some(0));
+    assert_eq!(theme.username_position, None);
+    assert_eq!(theme.avatar_gap, Some(24));
     assert_eq!(theme.username_gap, Some(28));
     assert_eq!(theme.status_gap, Some(18));
-    assert_eq!(theme.clock_gap, Some(10));
+    assert_eq!(theme.clock_gap, Some(20));
     assert_eq!(theme.auth_stack_offset, Some(16));
     assert_eq!(theme.header_top_offset, Some(-12));
     assert_eq!(theme.identity_gap, Some(26));
@@ -287,10 +284,14 @@ fn input_alpha_uses_rgba_values() {
     assert_eq!(theme.clock_font_weight, Some(700));
     assert_eq!(theme.clock_font_style, Some(FontStyle::Italic));
     assert_eq!(theme.clock_style, ClockStyle::Stacked);
-    assert_eq!(theme.clock_alignment, ClockAlignment::TopLeft);
-    assert!(theme.clock_center_in_layer);
-    assert_eq!(theme.clock_offset_x, Some(24));
-    assert_eq!(theme.clock_offset_y, Some(-16));
+    assert_eq!(
+        theme.clock_alignment,
+        veila_common::ClockAlignment::TopCenter
+    );
+    assert!(!theme.clock_center_in_layer);
+    assert_eq!(theme.clock_offset_x, Some(0));
+    assert_eq!(theme.clock_offset_y, Some(0));
+    assert_eq!(theme.clock_position, None);
     assert_eq!(theme.clock_format, ClockFormat::TwelveHour);
     assert_eq!(theme.clock_meridiem_size, Some(3));
     assert_eq!(theme.clock_meridiem_offset_x, Some(6));
@@ -303,6 +304,7 @@ fn input_alpha_uses_rgba_values() {
     assert_eq!(theme.date_font_weight, Some(600));
     assert_eq!(theme.date_font_style, Some(FontStyle::Italic));
     assert_eq!(theme.date_color, Some(ClearColor::rgba(200, 212, 236, 189)));
+    assert_eq!(theme.date_position, None);
     assert_eq!(theme.clock_size, Some(4));
     assert_eq!(theme.date_size, Some(3));
     assert_eq!(
@@ -449,6 +451,88 @@ fn input_alpha_uses_rgba_values() {
     assert_eq!(
         theme.input_mask_color,
         Some(ClearColor::opaque(169, 196, 255))
+    );
+}
+
+#[test]
+fn explicit_clock_and_date_positions_override_legacy_header_layout() {
+    let config = AppConfig::from_toml_str(
+        r#"
+            [visuals.clock]
+            halign = "left"
+            valign = "bottom"
+            x = 20
+            y = -40
+
+            [visuals.date]
+            halign = "right"
+            valign = "top"
+            x = -24
+            y = 32
+        "#,
+    )
+    .expect("position config should parse");
+
+    let theme = ShellTheme::from_config(&config);
+
+    assert_eq!(
+        theme.clock_position,
+        Some(super::WidgetPosition {
+            halign: HorizontalAlign::Left,
+            valign: VerticalAlign::Bottom,
+            x: 20,
+            y: -40,
+        })
+    );
+    assert_eq!(
+        theme.date_position,
+        Some(super::WidgetPosition {
+            halign: HorizontalAlign::Right,
+            valign: VerticalAlign::Top,
+            x: -24,
+            y: 32,
+        })
+    );
+}
+
+#[test]
+fn explicit_avatar_and_username_positions_override_legacy_auth_layout() {
+    let config = AppConfig::from_toml_str(
+        r#"
+            [visuals.avatar]
+            halign = "right"
+            valign = "top"
+            x = -96
+            y = 48
+
+            [visuals.username]
+            halign = "center"
+            valign = "bottom"
+            x = 0
+            y = -72
+        "#,
+    )
+    .expect("position config should parse");
+
+    let theme = ShellTheme::from_config(&config);
+
+    assert_eq!(
+        theme.avatar_position,
+        Some(super::WidgetPosition {
+            halign: HorizontalAlign::Right,
+            valign: VerticalAlign::Top,
+            x: -96,
+            y: 48,
+        })
+    );
+    assert_eq!(
+        theme.username_position,
+        Some(super::WidgetPosition {
+            halign: HorizontalAlign::Center,
+            valign: VerticalAlign::Bottom,
+            x: 0,
+            y: -72,
+        })
     );
 }
 

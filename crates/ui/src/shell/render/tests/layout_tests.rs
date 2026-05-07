@@ -116,3 +116,72 @@ fn left_weather_footer_anchor_uses_real_widget_height() {
 
     assert_eq!(layout.anchors.footer_y, 720 - footer_height - 48);
 }
+
+#[test]
+fn explicit_avatar_and_username_positions_are_removed_from_auth_flow() {
+    let shell = ShellState::new_with_username(
+        ShellTheme {
+            avatar_position: Some(crate::shell::theme::WidgetPosition {
+                halign: HorizontalAlign::Left,
+                valign: VerticalAlign::Top,
+                x: 24,
+                y: 32,
+            }),
+            username_position: Some(crate::shell::theme::WidgetPosition {
+                halign: HorizontalAlign::Left,
+                valign: VerticalAlign::Top,
+                x: 24,
+                y: 200,
+            }),
+            ..ShellTheme::default()
+        },
+        None,
+        Some(String::from("ns")),
+        None,
+        true,
+    );
+
+    let layout = shell.scene_layout(FrameSize::new(1280, 720));
+
+    assert!(layout.floating_avatar);
+    assert!(layout.floating_username.is_some());
+    assert!(
+        layout
+            .model
+            .sections_for_role(LayoutRole::Auth)
+            .all(|section| !matches!(
+                section.widget,
+                SceneWidget::Avatar | SceneWidget::Username(_)
+            ))
+    );
+}
+
+#[test]
+fn username_stays_in_auth_flow_when_only_avatar_is_explicit() {
+    let shell = ShellState::new_with_username(
+        ShellTheme {
+            avatar_position: Some(crate::shell::theme::WidgetPosition {
+                halign: HorizontalAlign::Center,
+                valign: VerticalAlign::Center,
+                x: 12,
+                y: -48,
+            }),
+            ..ShellTheme::default()
+        },
+        None,
+        Some(String::from("ns")),
+        None,
+        true,
+    );
+
+    let layout = shell.scene_layout(FrameSize::new(1280, 720));
+
+    assert!(layout.floating_avatar);
+    assert!(layout.floating_username.is_none());
+    assert!(
+        layout
+            .model
+            .sections_for_role(LayoutRole::Auth)
+            .any(|section| matches!(section.widget, SceneWidget::Username(_)))
+    );
+}

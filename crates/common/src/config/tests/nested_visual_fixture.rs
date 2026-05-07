@@ -6,7 +6,6 @@ pub(super) fn nested_visual_config() -> AppConfig {
             [visuals]
             input_border = "#111111"
             username_color = "#111111"
-            clock_gap = 6
             foreground = "#111111"
 
 [visuals.input]
@@ -32,8 +31,10 @@ border_color = "#DDDDDD1F"
 
             [visuals.avatar]
             size = 192
-            offset_y = 12
-            gap = 14
+            halign = "left"
+            valign = "center"
+            x = 36
+            y = -24
             background_color = "#FFFFFF0F"
             placeholder_padding = 28
             ring_color = "#94B2FF"
@@ -46,18 +47,20 @@ border_color = "#DDDDDD1F"
             font_style = "italic"
             color = "#FFFFFFD6"
             size = 4
-            offset_y = -10
-            gap = 28
+            halign = "right"
+            valign = "bottom"
+            x = -40
+            y = -96
 
             [visuals.clock]
             font_family = "Prototype"
             font_weight = 700
             font_style = "italic"
             style = "stacked"
-            alignment = "top-right"
-            center_in_layer = true
-            offset_x = -18
-            offset_y = 14
+            halign = "left"
+            valign = "bottom"
+            x = 20
+            y = -40
             format = "12h"
             meridiem_size = 3
             meridiem_offset_x = 6
@@ -72,6 +75,10 @@ border_color = "#DDDDDD1F"
             font_style = "italic"
             color = "#FFFFFF66"
             size = 2
+            halign = "right"
+            valign = "top"
+            x = -24
+            y = 32
 
             [visuals.placeholder]
             color = "#FFFFFF99"

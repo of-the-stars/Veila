@@ -27,10 +27,6 @@ enabled = true
 enabled = false
 
 [visuals.clock]
-alignment = "center-center"
-center_in_layer = true
-offset_x = 0
-offset_y = -30
 format = "12h"
 style = "standard"
 meridiem_size = 3
@@ -40,13 +36,20 @@ font_family = "Geom"
 font_weight = 600
 color = "#A6AECD66"
 size = 20
-gap = 20
+halign = "center"
+valign = "center"
+x = 0
+y = -30
 
 [visuals.date]
 font_family = "Google Sans Flex"
 font_weight = 400
 color = "#A6AECDB8"
 size = 3
+halign = "center"
+valign = "center"
+x = 0
+y = 52
 
 [visuals.input]
 center_in_layer = true

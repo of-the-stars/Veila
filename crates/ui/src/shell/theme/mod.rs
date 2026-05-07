@@ -4,12 +4,20 @@ mod tests;
 
 use veila_common::{
     AppConfig, CenterStackStyle, ClockAlignment, ClockFormat, ClockStyle, FontStyle,
-    InputAlignment, InputRevealMode, LayerAlignment, LayerMode, LayerStyle, LayerVerticalAlignment,
-    WeatherAlignment,
+    HorizontalAlign, InputAlignment, InputRevealMode, LayerAlignment, LayerMode, LayerStyle,
+    LayerVerticalAlignment, VerticalAlign, WeatherAlignment,
 };
 use veila_renderer::ClearColor;
 
 use self::color::to_color;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct WidgetPosition {
+    pub halign: HorizontalAlign,
+    pub valign: VerticalAlign,
+    pub x: i32,
+    pub y: i32,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ShellTheme {
@@ -43,6 +51,7 @@ pub struct ShellTheme {
     pub input_border_width: Option<i32>,
     pub avatar_size: Option<i32>,
     pub avatar_offset_y: Option<i32>,
+    pub avatar_position: Option<WidgetPosition>,
     pub avatar_placeholder_padding: Option<i32>,
     pub avatar_icon_color: Option<ClearColor>,
     pub avatar_ring_color: Option<ClearColor>,
@@ -54,6 +63,7 @@ pub struct ShellTheme {
     pub username_color: Option<ClearColor>,
     pub username_size: Option<u32>,
     pub username_offset_y: Option<i32>,
+    pub username_position: Option<WidgetPosition>,
     pub avatar_gap: Option<i32>,
     pub username_gap: Option<i32>,
     pub status_gap: Option<i32>,
@@ -67,6 +77,7 @@ pub struct ShellTheme {
     pub clock_center_in_layer: bool,
     pub clock_offset_x: Option<i32>,
     pub clock_offset_y: Option<i32>,
+    pub clock_position: Option<WidgetPosition>,
     pub clock_font_family: Option<String>,
     pub clock_font_weight: Option<u16>,
     pub clock_font_style: Option<FontStyle>,
@@ -81,6 +92,7 @@ pub struct ShellTheme {
     pub date_font_weight: Option<u16>,
     pub date_font_style: Option<FontStyle>,
     pub date_color: Option<ClearColor>,
+    pub date_position: Option<WidgetPosition>,
     pub clock_size: Option<u32>,
     pub date_size: Option<u32>,
     pub placeholder_enabled: bool,
@@ -195,8 +207,68 @@ impl Default for ShellTheme {
     }
 }
 
+fn resolve_clock_position(config: &AppConfig) -> Option<WidgetPosition> {
+    let position = config.visuals.clock_position();
+    if !position.is_specified() {
+        return None;
+    }
+
+    Some(WidgetPosition {
+        halign: position.halign.unwrap_or(HorizontalAlign::Center),
+        valign: position.valign.unwrap_or(VerticalAlign::Top),
+        x: i32::from(position.x.unwrap_or(0)),
+        y: i32::from(position.y.unwrap_or(0)),
+    })
+}
+
+fn resolve_date_position(config: &AppConfig) -> Option<WidgetPosition> {
+    let position = config.visuals.date_position();
+    if !position.is_specified() {
+        return None;
+    }
+
+    Some(WidgetPosition {
+        halign: position.halign.unwrap_or(HorizontalAlign::Center),
+        valign: position.valign.unwrap_or(VerticalAlign::Top),
+        x: i32::from(position.x.unwrap_or(0)),
+        y: i32::from(position.y.unwrap_or(0)),
+    })
+}
+
+fn resolve_avatar_position(config: &AppConfig) -> Option<WidgetPosition> {
+    let position = config.visuals.avatar_position();
+    if !position.is_specified() {
+        return None;
+    }
+
+    Some(WidgetPosition {
+        halign: position.halign.unwrap_or(HorizontalAlign::Center),
+        valign: position.valign.unwrap_or(VerticalAlign::Center),
+        x: position.x.map(i32::from).unwrap_or(0),
+        y: i32::from(position.y.unwrap_or(0)),
+    })
+}
+
+fn resolve_username_position(config: &AppConfig) -> Option<WidgetPosition> {
+    let position = config.visuals.username_position();
+    if !position.is_specified() {
+        return None;
+    }
+
+    Some(WidgetPosition {
+        halign: position.halign.unwrap_or(HorizontalAlign::Center),
+        valign: position.valign.unwrap_or(VerticalAlign::Center),
+        x: position.x.map(i32::from).unwrap_or(0),
+        y: position.y.map(i32::from).unwrap_or(0),
+    })
+}
+
 impl ShellTheme {
     pub fn from_config(config: &AppConfig) -> Self {
+        let clock_position = resolve_clock_position(config);
+        let date_position = resolve_date_position(config);
+        let avatar_position = resolve_avatar_position(config);
+        let username_position = resolve_username_position(config);
         Self {
             background: to_color(config.background.color),
             avatar_enabled: config.visuals.avatar_enabled(),
@@ -231,7 +303,8 @@ impl ShellTheme {
             input_radius: i32::from(config.visuals.input_radius()),
             input_border_width: config.visuals.input_border_width().map(i32::from),
             avatar_size: config.visuals.avatar_size().map(i32::from),
-            avatar_offset_y: config.visuals.avatar_offset_y().map(i32::from),
+            avatar_offset_y: Some(0),
+            avatar_position,
             avatar_placeholder_padding: config.visuals.avatar_placeholder_padding().map(i32::from),
             avatar_icon_color: config.visuals.avatar_icon_color().map(to_color),
             avatar_ring_color: config.visuals.avatar_ring_color().map(to_color),
@@ -242,20 +315,22 @@ impl ShellTheme {
             username_font_style: config.visuals.username_font_style(),
             username_color: config.visuals.username_color().map(to_color),
             username_size: config.visuals.username_size().map(u32::from),
-            username_offset_y: config.visuals.username_offset_y().map(i32::from),
-            avatar_gap: config.visuals.avatar_gap().map(i32::from),
-            username_gap: config.visuals.username_gap().map(i32::from),
+            username_offset_y: Some(0),
+            username_position,
+            avatar_gap: Some(24),
+            username_gap: Some(28),
             status_gap: config.visuals.status_gap().map(i32::from),
-            clock_gap: config.visuals.clock_gap().map(i32::from),
+            clock_gap: Some(20),
             auth_stack_offset: config.visuals.auth_stack_offset().map(i32::from),
             header_top_offset: config.visuals.header_top_offset().map(i32::from),
             identity_gap: config.visuals.identity_gap().map(i32::from),
             center_stack_style: config.visuals.center_stack_style(),
             clock_enabled: config.visuals.clock_enabled(),
-            clock_alignment: config.visuals.clock_alignment(),
-            clock_center_in_layer: config.visuals.clock_center_in_layer(),
-            clock_offset_x: config.visuals.clock_offset_x().map(i32::from),
-            clock_offset_y: config.visuals.clock_offset_y().map(i32::from),
+            clock_alignment: ClockAlignment::TopCenter,
+            clock_center_in_layer: false,
+            clock_offset_x: Some(0),
+            clock_offset_y: Some(0),
+            clock_position,
             clock_font_family: config.visuals.clock_font_family().map(str::to_owned),
             clock_font_weight: config.visuals.clock_font_weight(),
             clock_font_style: config.visuals.clock_font_style(),
@@ -270,6 +345,7 @@ impl ShellTheme {
             date_font_weight: config.visuals.date_font_weight(),
             date_font_style: config.visuals.date_font_style(),
             date_color: config.visuals.date_color().map(to_color),
+            date_position,
             clock_size: config.visuals.clock_size().map(u32::from),
             date_size: config.visuals.date_size().map(u32::from),
             placeholder_enabled: config.visuals.placeholder_enabled(),

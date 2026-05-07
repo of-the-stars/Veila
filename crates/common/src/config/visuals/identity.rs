@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::RgbColor;
+use super::{RgbColor, WidgetPositionConfig};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AvatarVisualConfig {
@@ -8,10 +8,6 @@ pub struct AvatarVisualConfig {
     pub enabled: Option<bool>,
     #[serde(default)]
     pub size: Option<u16>,
-    #[serde(default)]
-    pub offset_y: Option<i16>,
-    #[serde(default)]
-    pub gap: Option<u16>,
     #[serde(default)]
     pub background_color: Option<RgbColor>,
     #[serde(default)]
@@ -22,6 +18,8 @@ pub struct AvatarVisualConfig {
     pub ring_width: Option<u16>,
     #[serde(default)]
     pub icon_color: Option<RgbColor>,
+    #[serde(flatten)]
+    pub position: WidgetPositionConfig,
 }
 
 impl Default for AvatarVisualConfig {
@@ -29,13 +27,12 @@ impl Default for AvatarVisualConfig {
         Self {
             enabled: Some(true),
             size: Some(192),
-            offset_y: Some(0),
-            gap: Some(24),
             background_color: Some(RgbColor::rgba(255, 255, 255, 15)),
             placeholder_padding: Some(28),
             ring_color: Some(RgbColor::rgb(148, 178, 255)),
             ring_width: Some(0),
             icon_color: Some(RgbColor::rgb(255, 255, 255)),
+            position: WidgetPositionConfig::default(),
         }
     }
 }
@@ -54,10 +51,8 @@ pub struct UsernameVisualConfig {
     pub color: Option<RgbColor>,
     #[serde(default)]
     pub size: Option<u16>,
-    #[serde(default)]
-    pub offset_y: Option<i16>,
-    #[serde(default)]
-    pub gap: Option<u16>,
+    #[serde(flatten)]
+    pub position: WidgetPositionConfig,
 }
 
 impl Default for UsernameVisualConfig {
@@ -69,8 +64,7 @@ impl Default for UsernameVisualConfig {
             font_style: Some(super::input::FontStyle::Normal),
             color: Some(RgbColor::rgba(255, 255, 255, 214)),
             size: Some(4),
-            offset_y: Some(0),
-            gap: Some(28),
+            position: WidgetPositionConfig::default(),
         }
     }
 }
@@ -95,20 +89,6 @@ impl super::VisualConfig {
             .as_ref()
             .and_then(|avatar| avatar.size)
             .or(self.avatar_size)
-    }
-
-    pub fn avatar_gap(&self) -> Option<u16> {
-        self.avatar
-            .as_ref()
-            .and_then(|avatar| avatar.gap)
-            .or(self.avatar_gap)
-    }
-
-    pub fn avatar_offset_y(&self) -> Option<i16> {
-        self.avatar
-            .as_ref()
-            .and_then(|avatar| avatar.offset_y)
-            .or(self.avatar_offset_y)
     }
 
     pub fn avatar_placeholder_padding(&self) -> Option<u16> {
@@ -137,6 +117,13 @@ impl super::VisualConfig {
             .as_ref()
             .and_then(|avatar| avatar.icon_color)
             .or(self.avatar_icon_color)
+    }
+
+    pub fn avatar_position(&self) -> WidgetPositionConfig {
+        self.avatar
+            .as_ref()
+            .map(|avatar| avatar.position)
+            .unwrap_or_default()
     }
 
     pub fn username_color(&self) -> Option<RgbColor> {
@@ -178,17 +165,10 @@ impl super::VisualConfig {
             .or(self.username_size)
     }
 
-    pub fn username_gap(&self) -> Option<u16> {
+    pub fn username_position(&self) -> WidgetPositionConfig {
         self.username
             .as_ref()
-            .and_then(|username| username.gap)
-            .or(self.username_gap)
-    }
-
-    pub fn username_offset_y(&self) -> Option<i16> {
-        self.username
-            .as_ref()
-            .and_then(|username| username.offset_y)
-            .or(self.username_offset_y)
+            .map(|username| username.position)
+            .unwrap_or_default()
     }
 }

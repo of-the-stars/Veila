@@ -23,7 +23,10 @@ pub use layer::{
     LayerAlignment, LayerHeight, LayerHeightKeyword, LayerMode, LayerStyle, LayerVerticalAlignment,
     LayerVisualConfig, LayerWidth, LayerWidthKeyword,
 };
-pub use layout::{CenterStackOrder, CenterStackStyle, LayoutVisualConfig, PaletteVisualConfig};
+pub use layout::{
+    CenterStackOrder, CenterStackStyle, HorizontalAlign, LayoutVisualConfig, PaletteVisualConfig,
+    VerticalAlign, WidgetPositionConfig,
+};
 pub use now_playing::{NowPlayingBackgroundConfig, NowPlayingVisualConfig};
 pub use outputs::{OutputUiMode, OutputVisualConfig};
 pub use weather::{WeatherAlignment, WeatherVisualConfig};
@@ -61,8 +64,6 @@ pub struct VisualConfig {
     #[serde(default)]
     pub avatar_size: Option<u16>,
     #[serde(default)]
-    pub avatar_offset_y: Option<i16>,
-    #[serde(default)]
     pub avatar_placeholder_padding: Option<u16>,
     #[serde(default)]
     pub avatar_icon_color: Option<RgbColor>,
@@ -75,15 +76,7 @@ pub struct VisualConfig {
     #[serde(default)]
     pub username_size: Option<u16>,
     #[serde(default)]
-    pub username_offset_y: Option<i16>,
-    #[serde(default)]
-    pub avatar_gap: Option<u16>,
-    #[serde(default)]
-    pub username_gap: Option<u16>,
-    #[serde(default)]
     pub status_gap: Option<u16>,
-    #[serde(default)]
-    pub clock_gap: Option<u16>,
     #[serde(default)]
     pub auth_stack_offset: Option<i16>,
     #[serde(default)]
@@ -102,12 +95,6 @@ pub struct VisualConfig {
     pub clock_font_style: Option<FontStyle>,
     #[serde(default)]
     pub clock_style: Option<ClockStyle>,
-    #[serde(default)]
-    pub clock_center_in_layer: Option<bool>,
-    #[serde(default)]
-    pub clock_offset_x: Option<i16>,
-    #[serde(default)]
-    pub clock_offset_y: Option<i16>,
     #[serde(default)]
     pub clock_format: Option<ClockFormat>,
     #[serde(default)]
@@ -222,18 +209,13 @@ impl Default for VisualConfig {
             input_radius: 10,
             input_border_width: Some(0),
             avatar_size: Some(192),
-            avatar_offset_y: Some(0),
             avatar_placeholder_padding: Some(28),
             avatar_icon_color: Some(RgbColor::rgb(255, 255, 255)),
             avatar_ring_color: Some(RgbColor::rgb(148, 178, 255)),
             avatar_ring_width: Some(0),
             username_color: Some(RgbColor::rgba(255, 255, 255, 214)),
             username_size: Some(4),
-            username_offset_y: Some(0),
-            avatar_gap: Some(24),
-            username_gap: Some(28),
             status_gap: Some(18),
-            clock_gap: Some(20),
             auth_stack_offset: Some(0),
             header_top_offset: Some(-12),
             identity_gap: Some(18),
@@ -243,9 +225,6 @@ impl Default for VisualConfig {
             clock_font_weight: Some(600),
             clock_font_style: Some(FontStyle::Normal),
             clock_style: Some(ClockStyle::Standard),
-            clock_center_in_layer: Some(false),
-            clock_offset_x: Some(0),
-            clock_offset_y: Some(0),
             clock_format: Some(ClockFormat::TwentyFourHour),
             clock_meridiem_size: Some(3),
             clock_meridiem_offset_x: Some(6),

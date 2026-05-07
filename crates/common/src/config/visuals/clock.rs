@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{RgbColor, input::FontStyle};
+use super::{RgbColor, WidgetPositionConfig, input::FontStyle};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ClockVisualConfig {
@@ -15,14 +15,6 @@ pub struct ClockVisualConfig {
     #[serde(default)]
     pub style: Option<ClockStyle>,
     #[serde(default)]
-    pub alignment: Option<ClockAlignment>,
-    #[serde(default)]
-    pub center_in_layer: Option<bool>,
-    #[serde(default)]
-    pub offset_x: Option<i16>,
-    #[serde(default)]
-    pub offset_y: Option<i16>,
-    #[serde(default)]
     pub format: Option<ClockFormat>,
     #[serde(default)]
     pub meridiem_size: Option<u16>,
@@ -34,8 +26,8 @@ pub struct ClockVisualConfig {
     pub color: Option<RgbColor>,
     #[serde(default)]
     pub size: Option<u16>,
-    #[serde(default)]
-    pub gap: Option<u16>,
+    #[serde(flatten)]
+    pub position: WidgetPositionConfig,
 }
 
 impl Default for ClockVisualConfig {
@@ -46,17 +38,13 @@ impl Default for ClockVisualConfig {
             font_weight: Some(600),
             font_style: Some(FontStyle::Normal),
             style: Some(ClockStyle::Standard),
-            alignment: Some(ClockAlignment::TopCenter),
-            center_in_layer: Some(false),
-            offset_x: Some(0),
-            offset_y: Some(0),
             format: Some(ClockFormat::TwentyFourHour),
             meridiem_size: Some(3),
             meridiem_offset_x: Some(6),
             meridiem_offset_y: Some(7),
             color: Some(RgbColor::rgba(255, 255, 255, 102)),
             size: Some(14),
-            gap: Some(20),
+            position: WidgetPositionConfig::default(),
         }
     }
 }
@@ -106,6 +94,8 @@ pub struct DateVisualConfig {
     pub color: Option<RgbColor>,
     #[serde(default)]
     pub size: Option<u16>,
+    #[serde(flatten)]
+    pub position: WidgetPositionConfig,
 }
 
 impl Default for DateVisualConfig {
@@ -117,18 +107,12 @@ impl Default for DateVisualConfig {
             font_style: Some(FontStyle::Normal),
             color: Some(RgbColor::rgba(255, 255, 255, 128)),
             size: Some(2),
+            position: WidgetPositionConfig::default(),
         }
     }
 }
 
 impl super::VisualConfig {
-    pub fn clock_gap(&self) -> Option<u16> {
-        self.clock
-            .as_ref()
-            .and_then(|clock| clock.gap)
-            .or(self.clock_gap)
-    }
-
     pub fn clock_font_family(&self) -> Option<&str> {
         self.clock
             .as_ref()
@@ -163,35 +147,6 @@ impl super::VisualConfig {
             .and_then(|clock| clock.style)
             .or(self.clock_style)
             .unwrap_or_default()
-    }
-
-    pub fn clock_alignment(&self) -> ClockAlignment {
-        self.clock
-            .as_ref()
-            .and_then(|clock| clock.alignment)
-            .unwrap_or_default()
-    }
-
-    pub fn clock_center_in_layer(&self) -> bool {
-        self.clock
-            .as_ref()
-            .and_then(|clock| clock.center_in_layer)
-            .or(self.clock_center_in_layer)
-            .unwrap_or(false)
-    }
-
-    pub fn clock_offset_x(&self) -> Option<i16> {
-        self.clock
-            .as_ref()
-            .and_then(|clock| clock.offset_x)
-            .or(self.clock_offset_x)
-    }
-
-    pub fn clock_offset_y(&self) -> Option<i16> {
-        self.clock
-            .as_ref()
-            .and_then(|clock| clock.offset_y)
-            .or(self.clock_offset_y)
     }
 
     pub fn clock_format(&self) -> ClockFormat {
@@ -237,6 +192,13 @@ impl super::VisualConfig {
             .or(self.clock_size)
     }
 
+    pub fn clock_position(&self) -> WidgetPositionConfig {
+        self.clock
+            .as_ref()
+            .map(|clock| clock.position)
+            .unwrap_or_default()
+    }
+
     pub fn date_color(&self) -> Option<RgbColor> {
         self.date
             .as_ref()
@@ -270,5 +232,12 @@ impl super::VisualConfig {
             .as_ref()
             .and_then(|date| date.size)
             .or(self.date_size)
+    }
+
+    pub fn date_position(&self) -> WidgetPositionConfig {
+        self.date
+            .as_ref()
+            .map(|date| date.position)
+            .unwrap_or_default()
     }
 }

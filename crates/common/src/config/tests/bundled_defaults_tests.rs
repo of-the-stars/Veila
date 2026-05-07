@@ -82,7 +82,6 @@ fn first_run_defaults_match_bundled_theme() {
         Some(RgbColor::rgba(255, 255, 255, 15))
     );
     assert_eq!(config.visuals.avatar_size(), Some(192));
-    assert_eq!(config.visuals.avatar_offset_y(), Some(0));
     assert_eq!(config.visuals.avatar_placeholder_padding(), Some(28));
     assert_eq!(
         config.visuals.avatar_icon_color(),
@@ -107,11 +106,7 @@ fn first_run_defaults_match_bundled_theme() {
         Some(FontStyle::Normal)
     );
     assert_eq!(config.visuals.username_size(), Some(4));
-    assert_eq!(config.visuals.username_offset_y(), Some(0));
-    assert_eq!(config.visuals.avatar_gap(), Some(24));
-    assert_eq!(config.visuals.username_gap(), Some(28));
     assert_eq!(config.visuals.status_gap(), Some(18));
-    assert_eq!(config.visuals.clock_gap(), Some(20));
     assert_eq!(config.visuals.auth_stack_offset(), Some(0));
     assert_eq!(config.visuals.header_top_offset(), Some(-12));
     assert_eq!(config.visuals.identity_gap(), Some(18));
@@ -127,10 +122,6 @@ fn first_run_defaults_match_bundled_theme() {
     assert_eq!(config.visuals.clock_font_weight(), Some(600));
     assert_eq!(config.visuals.clock_font_style(), Some(FontStyle::Normal));
     assert_eq!(config.visuals.clock_style(), ClockStyle::Standard);
-    assert_eq!(config.visuals.clock_alignment(), ClockAlignment::TopCenter);
-    assert!(!config.visuals.clock_center_in_layer());
-    assert_eq!(config.visuals.clock_offset_x(), Some(0));
-    assert_eq!(config.visuals.clock_offset_y(), Some(0));
     assert_eq!(config.visuals.clock_format(), ClockFormat::TwentyFourHour);
     assert_eq!(config.visuals.clock_meridiem_size(), Some(3));
     assert_eq!(config.visuals.clock_meridiem_offset_x(), Some(6));

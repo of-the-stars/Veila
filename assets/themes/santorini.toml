@@ -29,10 +29,6 @@ enabled = true
 enabled = false
 
 [visuals.clock]
-alignment = "top-left"
-center_in_layer = true
-offset_x = 0
-offset_y = 100
 format = "24h"
 style = "standard"
 meridiem_size = 3
@@ -42,12 +38,19 @@ font_family = "Geom"
 font_weight = 600
 color = "rgba(255, 255, 255, 0.72)"
 size = 14
-gap = 20
+halign = "left"
+valign = "top"
+x = 40
+y = 140
 
 [visuals.date]
 font_family = "Google Sans Flex"
 font_weight = 400
 color = "rgba(255, 255, 255, 0.72)"
+halign = "left"
+valign = "top"
+x = 40
+y = 256
 
 [visuals.input]
 alignment = "center-left"
@@ -78,7 +81,6 @@ color = "rgba(255, 255, 255, 0.8)"
 
 [visuals.avatar]
 size = 192
-gap = 24
 background_color = "rgba(255, 255, 255, 0.08)"
 placeholder_padding = 28
 ring_color = "#ffffff"
@@ -90,7 +92,6 @@ font_family = "Google Sans Flex"
 font_weight = 400
 color = "rgba(255, 255, 255, 0.84)"
 size = 4
-gap = 28
 
 [visuals.keyboard]
 background_size = 46

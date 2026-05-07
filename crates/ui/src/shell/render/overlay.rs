@@ -3,7 +3,10 @@ use veila_renderer::{FrameSize, SoftwareBuffer};
 use super::super::{ShellState, ShellStatus};
 use super::{
     SceneLayout,
-    layout::{LayerPlacement, SceneMetrics, hero_block_x, layer_center_x},
+    layout::{
+        LayerPlacement, SceneMetrics, anchored_block_x, anchored_block_y, hero_block_x,
+        layer_center_x,
+    },
     model::{AuthGroup, LayoutRole, SceneSection, SceneWidget},
     widgets::{
         InputRightAdornment, InputWidget, draw_avatar_widget, draw_block, draw_centered_block,
@@ -27,6 +30,7 @@ impl ShellState {
     pub fn render_static_overlay(&self, buffer: &mut SoftwareBuffer) {
         let layout = self.scene_layout(buffer.size());
         self.render_identity_group(buffer, &layout, false);
+        self.render_floating_identity_widgets(buffer, &layout);
         self.render_role(
             buffer,
             &layout,
@@ -62,6 +66,7 @@ impl ShellState {
             layout.anchors.footer_y,
             true,
         );
+        self.render_floating_header_widgets(buffer, &layout);
         self.render_now_playing_widget(buffer, &layout);
         self.render_top_right_indicators(buffer);
     }
@@ -119,6 +124,98 @@ impl ShellState {
                 layout.anchors.auth_y,
                 dynamic,
             );
+        }
+    }
+
+    fn render_floating_header_widgets(&self, buffer: &mut SoftwareBuffer, layout: &SceneLayout) {
+        if let Some(clock) = layout.floating_clock.as_ref() {
+            let position = self
+                .theme
+                .clock_position
+                .expect("floating clock requires explicit position");
+            let x = anchored_block_x(
+                buffer.size().width as i32,
+                clock.width(),
+                position.halign,
+                position.x,
+            );
+            let y = anchored_block_y(
+                buffer.size().height as i32,
+                clock.height(),
+                position.valign,
+                position.y,
+            );
+            draw_clock_widget(buffer, x, y, clock);
+        }
+
+        if let Some(date) = layout.floating_date.as_ref() {
+            let position = self
+                .theme
+                .date_position
+                .expect("floating date requires resolved position");
+            let x = anchored_block_x(
+                buffer.size().width as i32,
+                date.width as i32,
+                position.halign,
+                position.x,
+            );
+            let y = anchored_block_y(
+                buffer.size().height as i32,
+                date.height as i32,
+                position.valign,
+                position.y,
+            );
+            draw_block(buffer, x, y, date);
+        }
+    }
+
+    fn render_floating_identity_widgets(&self, buffer: &mut SoftwareBuffer, layout: &SceneLayout) {
+        if layout.floating_avatar {
+            let position = self
+                .theme
+                .avatar_position
+                .expect("floating avatar requires explicit position");
+            let size = layout.metrics.avatar_size;
+            let x = anchored_block_x(
+                buffer.size().width as i32,
+                size,
+                position.halign,
+                position.x,
+            );
+            let y = anchored_block_y(
+                buffer.size().height as i32,
+                size,
+                position.valign,
+                position.y,
+            );
+            draw_avatar_widget(
+                buffer,
+                &self.avatar,
+                x + size / 2,
+                y,
+                size as u32,
+                self.avatar_style(),
+            );
+        }
+
+        if let Some(username) = layout.floating_username.as_ref() {
+            let position = self
+                .theme
+                .username_position
+                .expect("floating username requires resolved position");
+            let x = anchored_block_x(
+                buffer.size().width as i32,
+                username.width as i32,
+                position.halign,
+                position.x,
+            );
+            let y = anchored_block_y(
+                buffer.size().height as i32,
+                username.height as i32,
+                position.valign,
+                position.y,
+            );
+            draw_block(buffer, x, y, username);
         }
     }
 

@@ -25,13 +25,20 @@ font_family = "Mail Ray Stuff"
 font_weight = 400
 color = "rgba(255, 255, 255, 0.4)"
 size = 24
-gap = 20
+halign = "center"
+valign = "top"
+x = 0
+y = 40
 
 [visuals.date]
 font_family = "Mail Ray Stuff"
 font_weight = 400
 color = "rgba(255, 255, 255, 0.4)"
 size = 7
+halign = "center"
+valign = "top"
+x = 0
+y = 176
 
 [visuals.input]
 alignment = "bottom-center"
@@ -62,7 +69,6 @@ color = "rgba(255, 255, 255, 0.52)"
 [visuals.avatar]
 enabled = false
 size = 192
-gap = 24
 background_color = "rgba(255, 255, 255, 0.06)"
 placeholder_padding = 28
 icon_color = "#ffffff"
@@ -72,7 +78,6 @@ font_family = "Google Sans Flex"
 font_weight = 400
 color = "rgba(255, 255, 255, 0.84)"
 size = 4
-gap = 28
 
 [visuals.keyboard]
 background_size = 46

@@ -109,10 +109,7 @@ fn parses_partial_config_with_defaults() {
     assert!(config.visuals.avatar_ring_width().is_none());
     assert!(config.visuals.username_color().is_none());
     assert!(config.visuals.username_size().is_none());
-    assert!(config.visuals.avatar_gap().is_none());
-    assert!(config.visuals.username_gap().is_none());
     assert!(config.visuals.status_gap().is_none());
-    assert!(config.visuals.clock_gap().is_none());
     assert!(config.visuals.auth_stack_offset().is_none());
     assert!(config.visuals.header_top_offset().is_none());
     assert!(config.visuals.identity_gap().is_none());
@@ -127,10 +124,6 @@ fn parses_partial_config_with_defaults() {
     assert!(config.visuals.clock_font_family().is_none());
     assert!(config.visuals.clock_font_weight().is_none());
     assert!(config.visuals.clock_font_style().is_none());
-    assert_eq!(config.visuals.clock_alignment(), ClockAlignment::TopCenter);
-    assert!(!config.visuals.clock_center_in_layer());
-    assert_eq!(config.visuals.clock_offset_x(), Some(0));
-    assert_eq!(config.visuals.clock_offset_y(), Some(0));
     assert_eq!(config.visuals.clock_format(), ClockFormat::TwentyFourHour);
     assert!(config.visuals.clock_meridiem_size().is_none());
     assert!(config.visuals.clock_meridiem_offset_x().is_none());

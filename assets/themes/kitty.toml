@@ -28,10 +28,6 @@ enabled = true
 enabled = false
 
 [visuals.clock]
-alignment = "center-center"
-center_in_layer = true
-offset_x = 0
-offset_y = -110
 format = "12h"
 style = "standard"
 meridiem_size = 3
@@ -41,13 +37,20 @@ font_family = "Yoruka"
 font_weight = 400
 color = "rgba(255, 255, 255, 0.8)"
 size = 20
-gap = 20
+halign = "center"
+valign = "center"
+x = 0
+y = -110
 
 [visuals.date]
 font_family = "Yoruka"
 font_weight = 400
 color = "rgba(255, 255, 255, 0.9)"
 size = 3
+halign = "center"
+valign = "center"
+x = 0
+y = 12
 
 [visuals.input]
 center_in_layer = true

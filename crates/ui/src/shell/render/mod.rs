@@ -42,6 +42,10 @@ struct SceneLayout {
     metrics: SceneMetrics,
     model: SceneModel,
     anchors: RoleAnchors,
+    floating_avatar: bool,
+    floating_username: Option<veila_renderer::text::TextBlock>,
+    floating_clock: Option<model::SceneClockBlocks>,
+    floating_date: Option<veila_renderer::text::TextBlock>,
 }
 
 impl ShellState {
@@ -76,13 +80,44 @@ impl ShellState {
                 offset_x: self.theme.input_offset_x,
             },
         );
+        let text_blocks = self.scene_text_blocks(metrics);
+        let floating_avatar = self.theme.avatar_enabled && self.theme.avatar_position.is_some();
+        let floating_username =
+            self.theme.username_enabled && self.theme.username_position.is_some();
+        let clock_in_flow = self.theme.clock_position.is_none();
+        let date_in_flow = self.theme.date_position.is_none();
+        let avatar_in_flow = !floating_avatar;
+        let username_in_flow = !floating_username;
+        let floating_clock = (!clock_in_flow)
+            .then(|| text_blocks.clock.clone())
+            .flatten();
+        let floating_date = (!date_in_flow).then(|| text_blocks.date.clone()).flatten();
         let model = SceneModel::standard(
-            self.scene_text_blocks(metrics),
+            SceneTextBlocks {
+                clock: if clock_in_flow {
+                    text_blocks.clock.clone()
+                } else {
+                    None
+                },
+                date: if date_in_flow {
+                    text_blocks.date.clone()
+                } else {
+                    None
+                },
+                username: if username_in_flow {
+                    text_blocks.username.clone()
+                } else {
+                    None
+                },
+                placeholder: text_blocks.placeholder.clone(),
+                status: text_blocks.status.clone(),
+                weather: text_blocks.weather.clone(),
+            },
             StandardSceneConfig {
                 identity_visible: self.identity_visible(),
                 input_visible: self.input_visible(),
                 input_alignment: self.theme.input_alignment,
-                avatar_enabled: self.theme.avatar_enabled,
+                avatar_enabled: self.theme.avatar_enabled && avatar_in_flow,
                 clock_gap: self.theme.clock_gap,
                 avatar_gap: self.theme.avatar_gap,
                 username_gap: self.theme.username_gap,
@@ -145,6 +180,12 @@ impl ShellState {
             metrics,
             model,
             anchors,
+            floating_avatar,
+            floating_username: floating_username
+                .then(|| text_blocks.username.clone())
+                .flatten(),
+            floating_clock,
+            floating_date,
         }
     }
 

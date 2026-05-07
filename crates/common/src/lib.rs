@@ -14,14 +14,15 @@ pub use config::{
     AppConfig, AvatarVisualConfig, BackgroundSlideshowConfig, BackgroundSlideshowMode,
     BackgroundSlideshowOrder, BatteryConfig, BatteryVisualConfig, CapsLockVisualConfig,
     CenterStackOrder, CenterStackStyle, ClockAlignment, ClockFormat, ClockStyle, ClockVisualConfig,
-    ConfigColor, DateVisualConfig, EyeVisualConfig, FontStyle, GeoCoordinate, InputAlignment,
-    InputRevealMode, InputVisualConfig, InputVisualEntry, KeyboardVisualConfig, LayerAlignment,
-    LayerHeight, LayerMode, LayerStyle, LayerVerticalAlignment, LayerVisualConfig, LayerWidth,
-    LayoutVisualConfig, LoadedConfig, NowPlayingBackgroundConfig, NowPlayingConfig,
+    ConfigColor, DateVisualConfig, EyeVisualConfig, FontStyle, GeoCoordinate, HorizontalAlign,
+    InputAlignment, InputRevealMode, InputVisualConfig, InputVisualEntry, KeyboardVisualConfig,
+    LayerAlignment, LayerHeight, LayerMode, LayerStyle, LayerVerticalAlignment, LayerVisualConfig,
+    LayerWidth, LayoutVisualConfig, LoadedConfig, NowPlayingBackgroundConfig, NowPlayingConfig,
     NowPlayingVisualConfig, OutputUiMode, OutputVisualConfig, PaletteVisualConfig,
     PlaceholderVisualConfig, RevealVisualConfig, RgbColor, StatusVisualConfig,
-    UsernameVisualConfig, WeatherAlignment, WeatherConfig, WeatherUnit, WeatherVisualConfig,
-    active_include_source_paths, active_theme_name, active_theme_source_path, default_config_path,
+    UsernameVisualConfig, VerticalAlign, WeatherAlignment, WeatherConfig, WeatherUnit,
+    WeatherVisualConfig, WidgetPositionConfig, active_include_source_paths, active_theme_name,
+    active_theme_source_path, default_config_path,
 };
 pub use error::{Result, VeilaError};
 pub use now_playing::NowPlayingSnapshot;

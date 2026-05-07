@@ -17,7 +17,6 @@ enabled = true
 enabled = false
 
 [visuals.clock]
-alignment = "center-center"
 format = "24h"
 style = "standard"
 meridiem_size = 3
@@ -27,13 +26,20 @@ font_family = "Google Sans Flex"
 font_weight = 400
 color = "rgba(255, 255, 255, 0.4)"
 size = 14
-gap = 2
+halign = "center"
+valign = "center"
+x = 0
+y = -100
 
 [visuals.date]
 font_family = "Google Sans Flex"
 font_weight = 400
 color = "rgba(255, 255, 255, 0.4)"
 size = 3
+halign = "center"
+valign = "center"
+x = 0
+y = 4
 
 [visuals.input]
 alignment = "center-center"
