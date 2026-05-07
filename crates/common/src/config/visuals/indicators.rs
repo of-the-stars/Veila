@@ -123,10 +123,8 @@ pub struct KeyboardVisualConfig {
     pub color: Option<RgbColor>,
     #[serde(default)]
     pub size: Option<u16>,
-    #[serde(default)]
-    pub top_offset: Option<i16>,
-    #[serde(default)]
-    pub right_offset: Option<i16>,
+    #[serde(flatten)]
+    pub position: WidgetPositionConfig,
 }
 
 impl Default for KeyboardVisualConfig {
@@ -137,8 +135,12 @@ impl Default for KeyboardVisualConfig {
             background_size: Some(46),
             color: Some(RgbColor::rgba(255, 255, 255, 173)),
             size: Some(2),
-            top_offset: Some(-24),
-            right_offset: Some(8),
+            position: WidgetPositionConfig {
+                halign: Some(super::HorizontalAlign::Right),
+                valign: Some(super::VerticalAlign::Top),
+                x: Some(-24),
+                y: Some(17),
+            },
         }
     }
 }
@@ -155,12 +157,8 @@ pub struct BatteryVisualConfig {
     pub color: Option<RgbColor>,
     #[serde(default)]
     pub size: Option<u16>,
-    #[serde(default)]
-    pub top_offset: Option<i16>,
-    #[serde(default)]
-    pub right_offset: Option<i16>,
-    #[serde(default)]
-    pub gap: Option<u16>,
+    #[serde(flatten)]
+    pub position: WidgetPositionConfig,
 }
 
 impl Default for BatteryVisualConfig {
@@ -171,9 +169,12 @@ impl Default for BatteryVisualConfig {
             background_size: Some(46),
             color: Some(RgbColor::rgba(255, 255, 255, 173)),
             size: Some(20),
-            top_offset: Some(-24),
-            right_offset: Some(8),
-            gap: Some(8),
+            position: WidgetPositionConfig {
+                halign: Some(super::HorizontalAlign::Right),
+                valign: Some(super::VerticalAlign::Top),
+                x: Some(-78),
+                y: Some(17),
+            },
         }
     }
 }
@@ -336,18 +337,11 @@ impl super::VisualConfig {
             .or(self.keyboard_size)
     }
 
-    pub fn keyboard_top_offset(&self) -> Option<i16> {
+    pub fn keyboard_position(&self) -> WidgetPositionConfig {
         self.keyboard
             .as_ref()
-            .and_then(|keyboard| keyboard.top_offset)
-            .or(self.keyboard_top_offset)
-    }
-
-    pub fn keyboard_right_offset(&self) -> Option<i16> {
-        self.keyboard
-            .as_ref()
-            .and_then(|keyboard| keyboard.right_offset)
-            .or(self.keyboard_right_offset)
+            .map(|keyboard| keyboard.position)
+            .unwrap_or_default()
     }
 
     pub fn battery_enabled(&self) -> bool {
@@ -385,11 +379,11 @@ impl super::VisualConfig {
             .or(self.battery_size)
     }
 
-    pub fn battery_top_offset(&self) -> Option<i16> {
+    pub fn battery_position(&self) -> WidgetPositionConfig {
         self.battery
             .as_ref()
-            .and_then(|battery| battery.top_offset)
-            .or(self.battery_top_offset)
+            .map(|battery| battery.position)
+            .unwrap_or_default()
     }
 
     pub fn power_status_enabled(&self) -> bool {
@@ -397,19 +391,5 @@ impl super::VisualConfig {
             .as_ref()
             .and_then(|power_status| power_status.enabled)
             .unwrap_or(false)
-    }
-
-    pub fn battery_right_offset(&self) -> Option<i16> {
-        self.battery
-            .as_ref()
-            .and_then(|battery| battery.right_offset)
-            .or(self.battery_right_offset)
-    }
-
-    pub fn battery_gap(&self) -> Option<u16> {
-        self.battery
-            .as_ref()
-            .and_then(|battery| battery.gap)
-            .or(self.battery_gap)
     }
 }

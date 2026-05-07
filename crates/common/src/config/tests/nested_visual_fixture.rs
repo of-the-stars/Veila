@@ -107,17 +107,20 @@ halign = "right"
             background_size = 42
             color = "#E8EEF9AD"
             size = 3
-            top_offset = -12
-            right_offset = 8
+            halign = "right"
+            valign = "top"
+            x = -24
+            y = 29
 
             [visuals.battery]
             background_color = "rgba(18, 22, 30, 0.32)"
             background_size = 42
             color = "#FFFFFFB8"
             size = 18
-            top_offset = -12
-            right_offset = 0
-            gap = 8
+            halign = "right"
+            valign = "top"
+            x = -82
+            y = 29
 
             [visuals.caps_lock]
             enabled = true

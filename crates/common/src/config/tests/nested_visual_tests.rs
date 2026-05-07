@@ -231,8 +231,15 @@ fn loads_nested_visual_tables_with_precedence_for_layer_and_widgets() {
         Some(RgbColor::rgba(232, 238, 249, 173))
     );
     assert_eq!(config.visuals.keyboard_size(), Some(3));
-    assert_eq!(config.visuals.keyboard_top_offset(), Some(-12));
-    assert_eq!(config.visuals.keyboard_right_offset(), Some(8));
+    assert_eq!(
+        config.visuals.keyboard_position(),
+        WidgetPositionConfig {
+            halign: Some(HorizontalAlign::Right),
+            valign: Some(VerticalAlign::Top),
+            x: Some(-24),
+            y: Some(29),
+        }
+    );
     assert_eq!(
         config.visuals.battery_background_color(),
         Some(RgbColor::rgba(18, 22, 30, 82))
@@ -243,9 +250,15 @@ fn loads_nested_visual_tables_with_precedence_for_layer_and_widgets() {
     );
     assert_eq!(config.visuals.battery_background_size(), Some(42));
     assert_eq!(config.visuals.battery_size(), Some(18));
-    assert_eq!(config.visuals.battery_top_offset(), Some(-12));
-    assert_eq!(config.visuals.battery_right_offset(), Some(0));
-    assert_eq!(config.visuals.battery_gap(), Some(8));
+    assert_eq!(
+        config.visuals.battery_position(),
+        WidgetPositionConfig {
+            halign: Some(HorizontalAlign::Right),
+            valign: Some(VerticalAlign::Top),
+            x: Some(-82),
+            y: Some(29),
+        }
+    );
     assert_eq!(config.visuals.weather_size(), Some(3));
     assert_eq!(config.visuals.weather_icon_opacity(), Some(41));
     assert_eq!(

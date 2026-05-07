@@ -88,17 +88,20 @@ background_size = 46
 background_color = "rgba(255, 255, 255, 0.1)"
 color = "rgba(255, 255, 255, 0.9)"
 size = 2
-top_offset = -28
-right_offset = 8
+halign = "right"
+valign = "top"
+x = -24
+y = 13
 
 [visuals.battery]
 background_color = "rgba(255, 255, 255, 0.1)"
 background_size = 46
 color = "rgba(255, 255, 255, 0.9)"
 size = 20
-top_offset = -28
-right_offset = 8
-gap = 8
+halign = "right"
+valign = "top"
+x = -78
+y = 13
 
 [visuals.weather]
 temperature_color = "rgba(255, 255, 255, 0.73)"

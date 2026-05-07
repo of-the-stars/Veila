@@ -120,15 +120,18 @@ fn parses_partial_config_with_defaults() {
     assert!(config.visuals.keyboard_background_color().is_none());
     assert!(config.visuals.keyboard_background_size().is_none());
     assert!(config.visuals.keyboard_size().is_none());
-    assert!(config.visuals.keyboard_top_offset().is_none());
-    assert!(config.visuals.keyboard_right_offset().is_none());
+    assert_eq!(
+        config.visuals.keyboard_position(),
+        WidgetPositionConfig::default()
+    );
     assert!(config.visuals.battery_background_color().is_none());
     assert!(config.visuals.battery_color().is_none());
     assert!(config.visuals.battery_background_size().is_none());
     assert!(config.visuals.battery_size().is_none());
-    assert!(config.visuals.battery_top_offset().is_none());
-    assert!(config.visuals.battery_right_offset().is_none());
-    assert!(config.visuals.battery_gap().is_none());
+    assert_eq!(
+        config.visuals.battery_position(),
+        WidgetPositionConfig::default()
+    );
     assert!(config.visuals.weather_size().is_none());
     assert!(config.visuals.weather_temperature_color().is_none());
     assert!(config.visuals.weather_location_color().is_none());

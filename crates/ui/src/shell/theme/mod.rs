@@ -92,21 +92,18 @@ pub struct ShellTheme {
     pub eye_icon_color: Option<ClearColor>,
     pub caps_lock_enabled: bool,
     pub keyboard_enabled: bool,
+    pub keyboard_position: Option<WidgetPosition>,
     pub keyboard_background_color: ClearColor,
     pub keyboard_background_size: Option<i32>,
     pub keyboard_color: Option<ClearColor>,
     pub keyboard_size: Option<u32>,
-    pub keyboard_top_offset: Option<i32>,
-    pub keyboard_right_offset: Option<i32>,
     pub power_status_enabled: bool,
     pub battery_enabled: bool,
+    pub battery_position: Option<WidgetPosition>,
     pub battery_color: Option<ClearColor>,
     pub battery_background_color: ClearColor,
     pub battery_background_size: Option<i32>,
     pub battery_size: Option<i32>,
-    pub battery_top_offset: Option<i32>,
-    pub battery_right_offset: Option<i32>,
-    pub battery_gap: Option<i32>,
     pub layer_enabled: bool,
     pub layer_mode: LayerMode,
     pub layer_style: LayerStyle,
@@ -240,6 +237,34 @@ fn resolve_status_position(config: &AppConfig) -> Option<WidgetPosition> {
     })
 }
 
+fn resolve_keyboard_position(config: &AppConfig) -> Option<WidgetPosition> {
+    let position = config.visuals.keyboard_position();
+    if !position.is_specified() {
+        return None;
+    }
+
+    Some(WidgetPosition {
+        halign: position.halign.unwrap_or(HorizontalAlign::Right),
+        valign: position.valign.unwrap_or(VerticalAlign::Top),
+        x: i32::from(position.x.unwrap_or(0)),
+        y: i32::from(position.y.unwrap_or(0)),
+    })
+}
+
+fn resolve_battery_position(config: &AppConfig) -> Option<WidgetPosition> {
+    let position = config.visuals.battery_position();
+    if !position.is_specified() {
+        return None;
+    }
+
+    Some(WidgetPosition {
+        halign: position.halign.unwrap_or(HorizontalAlign::Right),
+        valign: position.valign.unwrap_or(VerticalAlign::Top),
+        x: i32::from(position.x.unwrap_or(0)),
+        y: i32::from(position.y.unwrap_or(0)),
+    })
+}
+
 fn resolve_date_position(config: &AppConfig) -> Option<WidgetPosition> {
     let position = config.visuals.date_position();
     if !position.is_specified() {
@@ -288,6 +313,8 @@ impl ShellTheme {
         let date_position = resolve_date_position(config);
         let avatar_position = resolve_avatar_position(config);
         let username_position = resolve_username_position(config);
+        let keyboard_position = resolve_keyboard_position(config);
+        let battery_position = resolve_battery_position(config);
         Self {
             background: to_color(config.background.color),
             avatar_enabled: config.visuals.avatar_enabled(),
@@ -364,6 +391,7 @@ impl ShellTheme {
             eye_icon_color: config.visuals.eye_icon_color().map(to_color),
             caps_lock_enabled: config.visuals.caps_lock_enabled(),
             keyboard_enabled: config.visuals.keyboard_enabled(),
+            keyboard_position,
             keyboard_background_color: config
                 .visuals
                 .keyboard_background_color()
@@ -372,10 +400,9 @@ impl ShellTheme {
             keyboard_background_size: config.visuals.keyboard_background_size().map(i32::from),
             keyboard_color: config.visuals.keyboard_color().map(to_color),
             keyboard_size: config.visuals.keyboard_size().map(u32::from),
-            keyboard_top_offset: config.visuals.keyboard_top_offset().map(i32::from),
-            keyboard_right_offset: config.visuals.keyboard_right_offset().map(i32::from),
             power_status_enabled: config.visuals.power_status_enabled(),
             battery_enabled: config.visuals.battery_enabled(),
+            battery_position,
             battery_color: config.visuals.battery_color().map(to_color),
             battery_background_color: config
                 .visuals
@@ -384,9 +411,6 @@ impl ShellTheme {
                 .unwrap_or_else(|| ClearColor::rgba(18, 22, 30, 82)),
             battery_background_size: config.visuals.battery_background_size().map(i32::from),
             battery_size: config.visuals.battery_size().map(i32::from),
-            battery_top_offset: config.visuals.battery_top_offset().map(i32::from),
-            battery_right_offset: config.visuals.battery_right_offset().map(i32::from),
-            battery_gap: config.visuals.battery_gap().map(i32::from),
             layer_enabled: config.visuals.layer_enabled(),
             layer_mode: config.visuals.layer_mode(),
             layer_style: config.visuals.layer_style(),

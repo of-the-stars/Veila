@@ -113,16 +113,6 @@ pub struct VisualConfig {
     #[serde(default)]
     pub battery_size: Option<u16>,
     #[serde(default)]
-    pub keyboard_top_offset: Option<i16>,
-    #[serde(default)]
-    pub battery_top_offset: Option<i16>,
-    #[serde(default)]
-    pub keyboard_right_offset: Option<i16>,
-    #[serde(default)]
-    pub battery_right_offset: Option<i16>,
-    #[serde(default)]
-    pub battery_gap: Option<u16>,
-    #[serde(default)]
     pub weather_size: Option<u16>,
     #[serde(default)]
     pub status_color: Option<RgbColor>,
@@ -216,11 +206,6 @@ impl Default for VisualConfig {
             battery_background_size: Some(46),
             keyboard_size: Some(2),
             battery_size: Some(20),
-            keyboard_top_offset: Some(-24),
-            battery_top_offset: Some(-24),
-            keyboard_right_offset: Some(8),
-            battery_right_offset: Some(8),
-            battery_gap: Some(8),
             weather_size: Some(2),
             status_color: Some(RgbColor::rgba(255, 224, 160, 224)),
             input_mask_color: Some(RgbColor::rgb(255, 255, 255)),

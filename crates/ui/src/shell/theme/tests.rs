@@ -96,8 +96,12 @@ fn input_alpha_uses_rgba_values() {
         background_size: Some(42),
         color: Some(ConfigColor::rgba(232, 238, 249, 173)),
         size: Some(3),
-        top_offset: Some(-12),
-        right_offset: Some(8),
+        position: WidgetPositionConfig {
+            halign: Some(HorizontalAlign::Right),
+            valign: Some(VerticalAlign::Top),
+            x: Some(-24),
+            y: Some(29),
+        },
     });
     config.visuals.battery = Some(BatteryVisualConfig {
         enabled: Some(true),
@@ -105,9 +109,12 @@ fn input_alpha_uses_rgba_values() {
         background_size: Some(42),
         color: Some(ConfigColor::rgba(255, 255, 255, 184)),
         size: Some(18),
-        top_offset: Some(-12),
-        right_offset: Some(0),
-        gap: Some(8),
+        position: WidgetPositionConfig {
+            halign: Some(HorizontalAlign::Right),
+            valign: Some(VerticalAlign::Top),
+            x: Some(-82),
+            y: Some(29),
+        },
     });
     config.visuals.layer = Some(LayerVisualConfig {
         enabled: Some(true),
@@ -294,8 +301,15 @@ fn input_alpha_uses_rgba_values() {
         Some(ClearColor::rgba(232, 238, 249, 173))
     );
     assert_eq!(theme.keyboard_size, Some(3));
-    assert_eq!(theme.keyboard_top_offset, Some(-12));
-    assert_eq!(theme.keyboard_right_offset, Some(8));
+    assert_eq!(
+        theme.keyboard_position,
+        Some(super::WidgetPosition {
+            halign: HorizontalAlign::Right,
+            valign: VerticalAlign::Top,
+            x: -24,
+            y: 29,
+        })
+    );
     assert_eq!(
         theme.battery_background_color,
         ClearColor::rgba(18, 22, 30, 82)
@@ -306,9 +320,15 @@ fn input_alpha_uses_rgba_values() {
     );
     assert_eq!(theme.battery_background_size, Some(42));
     assert_eq!(theme.battery_size, Some(18));
-    assert_eq!(theme.battery_top_offset, Some(-12));
-    assert_eq!(theme.battery_right_offset, Some(0));
-    assert_eq!(theme.battery_gap, Some(8));
+    assert_eq!(
+        theme.battery_position,
+        Some(super::WidgetPosition {
+            halign: HorizontalAlign::Right,
+            valign: VerticalAlign::Top,
+            x: -82,
+            y: 29,
+        })
+    );
     assert!(theme.layer_enabled);
     assert_eq!(theme.layer_mode, LayerMode::Blur);
     assert_eq!(theme.layer_style, LayerStyle::Diagonal);

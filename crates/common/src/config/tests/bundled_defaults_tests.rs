@@ -140,8 +140,15 @@ fn first_run_defaults_match_bundled_theme() {
     );
     assert_eq!(config.visuals.keyboard_background_size(), Some(46));
     assert_eq!(config.visuals.keyboard_size(), Some(2));
-    assert_eq!(config.visuals.keyboard_top_offset(), Some(-24));
-    assert_eq!(config.visuals.keyboard_right_offset(), Some(8));
+    assert_eq!(
+        config.visuals.keyboard_position(),
+        WidgetPositionConfig {
+            halign: Some(HorizontalAlign::Right),
+            valign: Some(VerticalAlign::Top),
+            x: Some(-24),
+            y: Some(17),
+        }
+    );
     assert_eq!(
         config.visuals.battery_background_color(),
         Some(RgbColor::rgba(255, 255, 255, 13))
@@ -152,9 +159,15 @@ fn first_run_defaults_match_bundled_theme() {
     );
     assert_eq!(config.visuals.battery_background_size(), Some(46));
     assert_eq!(config.visuals.battery_size(), Some(20));
-    assert_eq!(config.visuals.battery_top_offset(), Some(-24));
-    assert_eq!(config.visuals.battery_right_offset(), Some(8));
-    assert_eq!(config.visuals.battery_gap(), Some(8));
+    assert_eq!(
+        config.visuals.battery_position(),
+        WidgetPositionConfig {
+            halign: Some(HorizontalAlign::Right),
+            valign: Some(VerticalAlign::Top),
+            x: Some(-78),
+            y: Some(17),
+        }
+    );
     assert!(!config.visuals.layer_enabled());
     assert_eq!(config.visuals.layer_mode(), LayerMode::Blur);
     assert_eq!(config.visuals.layer_style(), LayerStyle::Panel);

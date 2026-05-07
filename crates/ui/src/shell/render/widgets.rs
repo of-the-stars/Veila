@@ -168,6 +168,33 @@ pub(super) fn draw_top_right_block(
     );
 }
 
+pub(super) fn draw_chip_block(
+    buffer: &mut SoftwareBuffer,
+    x: i32,
+    y: i32,
+    background: ClearColor,
+    background_size: Option<i32>,
+    block: &TextBlock,
+) {
+    let chip_diameter =
+        top_right_chip_diameter(background_size, block.width as i32, block.height as i32);
+    let max_x = (buffer.size().width as i32 - chip_diameter).max(0);
+    let max_y = (buffer.size().height as i32 - chip_diameter).max(0);
+    let x = x.clamp(0, max_x);
+    let y = y.clamp(0, max_y);
+
+    draw_pill(
+        buffer,
+        Rect::new(x, y, chip_diameter, chip_diameter),
+        PillStyle::new(background).with_radius(chip_diameter / 2),
+    );
+    block.draw(
+        buffer,
+        x + (chip_diameter - block.width as i32) / 2,
+        y + (chip_diameter - block.height as i32) / 2,
+    );
+}
+
 pub(super) fn top_right_chip_diameter(
     background_size: Option<i32>,
     content_width: i32,
@@ -182,10 +209,9 @@ pub(super) fn top_right_chip_diameter(
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(super) fn draw_top_right_icon_chip(
+pub(super) fn draw_icon_chip(
     buffer: &mut SoftwareBuffer,
-    right_padding: i32,
-    right_offset: i32,
+    x: i32,
     y: i32,
     background: ClearColor,
     background_size: Option<i32>,
@@ -195,9 +221,9 @@ pub(super) fn draw_top_right_icon_chip(
 ) {
     let chip_diameter = top_right_chip_diameter(background_size, icon_size, icon_size);
     let max_x = (buffer.size().width as i32 - chip_diameter).max(0);
-    let x =
-        (buffer.size().width as i32 - right_padding - chip_diameter + right_offset).clamp(0, max_x);
-    let y = y.max(8);
+    let max_y = (buffer.size().height as i32 - chip_diameter).max(0);
+    let x = x.clamp(0, max_x);
+    let y = y.clamp(0, max_y);
 
     draw_pill(
         buffer,
