@@ -1,4 +1,5 @@
 use super::*;
+use crate::StatusDisplayMode;
 
 #[test]
 fn parses_widget_enable_flags() {
@@ -92,6 +93,40 @@ fn weather_visuals_stay_active_when_any_part_is_enabled() {
 #[test]
 fn power_status_indicator_defaults_to_disabled() {
     assert!(!AppConfig::default().visuals.power_status_enabled());
+}
+
+#[test]
+fn status_mode_defaults_to_inline() {
+    assert_eq!(
+        AppConfig::default().visuals.status_mode(),
+        StatusDisplayMode::Inline
+    );
+}
+
+#[test]
+fn parses_explicit_status_mode() {
+    let config = AppConfig::from_toml_str(
+        r#"
+            [visuals.status]
+            mode = "external"
+        "#,
+    )
+    .expect("config should parse");
+
+    assert_eq!(config.visuals.status_mode(), StatusDisplayMode::External);
+}
+
+#[test]
+fn parses_hidden_status_mode() {
+    let config = AppConfig::from_toml_str(
+        r#"
+            [visuals.status]
+            mode = "hidden"
+        "#,
+    )
+    .expect("config should parse");
+
+    assert_eq!(config.visuals.status_mode(), StatusDisplayMode::Hidden);
 }
 
 #[test]

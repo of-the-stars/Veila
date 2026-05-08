@@ -4,9 +4,10 @@ use veila_common::{
     FontStyle, GridVisualConfig, HorizontalAlign, InputRevealMode, InputVisualConfig,
     InputVisualEntry, KeyboardVisualConfig, NowPlayingArtworkVisualConfig,
     NowPlayingTextVisualConfig, NowPlayingVisualConfig, PaletteVisualConfig,
-    PlaceholderVisualConfig, PowerStatusVisualConfig, RevealVisualConfig, StatusVisualConfig,
-    UsernameVisualConfig, VerticalAlign, WeatherIconVisualConfig, WeatherLocationVisualConfig,
-    WeatherTemperatureVisualConfig, WeatherVisualConfig, WidgetPositionConfig,
+    PlaceholderVisualConfig, PowerStatusVisualConfig, RevealVisualConfig, StatusDisplayMode,
+    StatusVisualConfig, UsernameVisualConfig, VerticalAlign, WeatherIconVisualConfig,
+    WeatherLocationVisualConfig, WeatherTemperatureVisualConfig, WeatherVisualConfig,
+    WidgetPositionConfig,
 };
 use veila_renderer::ClearColor;
 
@@ -523,6 +524,7 @@ fn input_alpha_uses_rgba_values() {
         theme.status_color,
         Some(ClearColor::rgba(255, 224, 160, 224))
     );
+    assert_eq!(theme.status_mode, StatusDisplayMode::Inline);
     assert_eq!(
         theme.input_mask_color,
         Some(ClearColor::opaque(169, 196, 255))
@@ -622,6 +624,7 @@ fn explicit_input_and_status_positions_override_auth_flow_layout() {
             y = -64
 
             [visuals.status]
+            mode = "external"
             halign = "right"
             valign = "top"
             x = -32
@@ -650,6 +653,7 @@ fn explicit_input_and_status_positions_override_auth_flow_layout() {
             y: 48,
         })
     );
+    assert_eq!(theme.status_mode, StatusDisplayMode::External);
 }
 
 #[test]

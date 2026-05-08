@@ -13,8 +13,6 @@ bottom_right = "#6F4CFF"
 user_hint = "Password"
 show_username = true
 
-
-
 [weather]
 enabled = false
 
@@ -23,8 +21,8 @@ size = 40
 opacity = 80
 halign = "left"
 valign = "bottom"
-x = 30
-y = -112
+x = 40
+y = -122
 
 [visuals.weather.temperature]
 font_size = 6
@@ -34,8 +32,8 @@ letter_spacing = 0
 color = "rgba(255, 255, 255, 0.73)"
 halign = "left"
 valign = "bottom"
-x = 30
-y = -66
+x = 40
+y = -76
 
 [visuals.weather.location]
 font_size = 3
@@ -44,8 +42,8 @@ font_weight = 400
 color = "rgba(214, 227, 255, 0.58)"
 halign = "left"
 valign = "bottom"
-x = 30
-y = -34
+x = 40
+y = -44
 
 [visuals.input]
 background_color = "rgba(255, 255, 255, 0.08)"
@@ -63,7 +61,7 @@ x = 0
 y = 80
 
 [visuals.avatar]
-size = 160
+size = 150
 background_color = "rgba(255, 255, 255, 0.08)"
 placeholder_padding = 28
 halign = "center"
@@ -109,12 +107,13 @@ y = 140
 color = "rgba(255, 255, 255, 0.9)"
 
 [visuals.status]
-rejected_color = "rgba(255, 213, 213, 0.88)"
+mode = "inline"
+rejected_color = "rgba(255, 213, 213, 0.98)"
 pending_color = "rgba(236, 236, 236, 0.88)"
 halign = "center"
-valign = "bottom"
+valign = "center"
 x = 0
-y = -24
+y = 135
 
 [visuals.eye]
 color = "rgba(255, 255, 255, 0.72)"
@@ -146,7 +145,7 @@ font_weight = 400
 halign = "right"
 valign = "bottom"
 x = -52
-y = -88
+y = -84
 
 [visuals.now_playing.title]
 width = 318
@@ -157,7 +156,7 @@ font_weight = 400
 halign = "right"
 valign = "bottom"
 x = -52
-y = -56
+y = -60
 
 [visuals.keyboard]
 background_size = 46
@@ -181,3 +180,19 @@ halign = "right"
 valign = "top"
 x = -78
 y = 21
+
+# Now Playing Background
+[[visuals.backdrop]]
+enabled = true
+mode = "blur"
+color = "rgba(255, 255, 255, 0.05)"
+blur_strength = 12
+radius = 10
+border_color = "#FFFFFF18"
+width = 390
+height = 60
+halign = "right"
+valign = "bottom"
+x = -50
+y = -48
+z = 0

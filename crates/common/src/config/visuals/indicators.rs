@@ -2,6 +2,17 @@ use serde::{Deserialize, Serialize};
 
 use super::{FontStyle, RgbColor, WidgetPositionConfig};
 
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub enum StatusDisplayMode {
+    #[default]
+    #[serde(rename = "inline")]
+    Inline,
+    #[serde(rename = "external")]
+    External,
+    #[serde(rename = "hidden")]
+    Hidden,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct PlaceholderVisualConfig {
     #[serde(default)]
@@ -56,6 +67,8 @@ pub struct StatusVisualConfig {
     #[serde(default)]
     pub enabled: Option<bool>,
     #[serde(default)]
+    pub mode: Option<StatusDisplayMode>,
+    #[serde(default)]
     pub color: Option<RgbColor>,
     #[serde(default)]
     pub pending_color: Option<RgbColor>,
@@ -69,6 +82,7 @@ impl Default for StatusVisualConfig {
     fn default() -> Self {
         Self {
             enabled: Some(true),
+            mode: Some(StatusDisplayMode::Inline),
             color: Some(RgbColor::rgba(255, 224, 160, 224)),
             pending_color: None,
             rejected_color: None,
@@ -258,6 +272,13 @@ impl super::VisualConfig {
             .as_ref()
             .and_then(|status| status.color)
             .or(self.status_color)
+    }
+
+    pub fn status_mode(&self) -> StatusDisplayMode {
+        self.status
+            .as_ref()
+            .and_then(|status| status.mode)
+            .unwrap_or(StatusDisplayMode::Inline)
     }
 
     pub fn status_enabled(&self) -> bool {

@@ -4,7 +4,7 @@ mod tests;
 
 use veila_common::{
     AppConfig, BackdropMode, ClockAlignment, ClockFormat, ClockStyle, FontStyle, GridVisualConfig,
-    HorizontalAlign, InputRevealMode, VerticalAlign,
+    HorizontalAlign, InputRevealMode, StatusDisplayMode, VerticalAlign,
 };
 use veila_renderer::ClearColor;
 
@@ -76,6 +76,7 @@ pub struct ShellTheme {
     pub avatar_gap: Option<i32>,
     pub username_gap: Option<i32>,
     pub status_position: Option<WidgetPosition>,
+    pub status_mode: StatusDisplayMode,
     pub clock_gap: Option<i32>,
     pub clock_enabled: bool,
     pub clock_alignment: ClockAlignment,
@@ -506,6 +507,7 @@ impl ShellTheme {
             avatar_gap: Some(24),
             username_gap: Some(28),
             status_position: resolve_status_position(config),
+            status_mode: config.visuals.status_mode(),
             clock_gap: Some(20),
             clock_enabled: config.visuals.clock_enabled(),
             clock_alignment: ClockAlignment::TopCenter,

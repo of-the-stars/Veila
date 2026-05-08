@@ -6,7 +6,9 @@ use std::{
 use veila_common::{
     BatterySnapshot, NowPlayingSnapshot, WeatherCondition, WeatherSnapshot, WeatherUnit,
 };
-use veila_common::{ClockFormat, InputRevealMode};
+use veila_common::{
+    ClockFormat, HorizontalAlign, InputRevealMode, StatusDisplayMode, VerticalAlign,
+};
 use veila_renderer::icon::BatteryIcon;
 use veila_renderer::{FrameSize, SoftwareBuffer};
 
@@ -355,6 +357,82 @@ fn pending_inline_status_text_uses_short_copy_after_delay() {
     assert_eq!(
         shell.inline_input_status_text().as_deref(),
         Some("Checking...")
+    );
+}
+
+#[test]
+fn explicit_input_position_keeps_inline_status_when_mode_is_inline() {
+    let mut shell = ShellState::new(
+        ShellTheme {
+            input_position: Some(crate::shell::theme::WidgetPosition {
+                halign: HorizontalAlign::Center,
+                valign: VerticalAlign::Bottom,
+                x: 0,
+                y: -64,
+            }),
+            ..ShellTheme::default()
+        },
+        None,
+        None,
+        false,
+    );
+
+    let _ = shell.handle_key(ShellKey::Character('a'));
+    let _ = shell.handle_key(ShellKey::Enter);
+    thread::sleep(Duration::from_millis(1_050));
+
+    assert!(shell.advance_animated_state());
+    assert_eq!(
+        shell.inline_input_status_text().as_deref(),
+        Some("Checking...")
+    );
+}
+
+#[test]
+fn external_status_mode_disables_inline_status_text() {
+    let mut shell = ShellState::new(
+        ShellTheme {
+            status_mode: StatusDisplayMode::External,
+            ..ShellTheme::default()
+        },
+        None,
+        None,
+        false,
+    );
+
+    let _ = shell.handle_key(ShellKey::Character('a'));
+    let _ = shell.handle_key(ShellKey::Enter);
+    thread::sleep(Duration::from_millis(1_050));
+
+    assert!(shell.advance_animated_state());
+    assert_eq!(shell.inline_input_status_text(), None);
+    assert_eq!(
+        shell.status_text().as_deref(),
+        Some("Checking authentication")
+    );
+}
+
+#[test]
+fn hidden_status_mode_suppresses_auth_feedback() {
+    let mut shell = ShellState::new(
+        ShellTheme {
+            status_mode: StatusDisplayMode::Hidden,
+            ..ShellTheme::default()
+        },
+        None,
+        None,
+        false,
+    );
+
+    let _ = shell.handle_key(ShellKey::Character('a'));
+    let _ = shell.handle_key(ShellKey::Enter);
+    thread::sleep(Duration::from_millis(1_050));
+
+    assert!(shell.advance_animated_state());
+    assert_eq!(shell.inline_input_status_text(), None);
+    assert_eq!(
+        shell.status_text().as_deref(),
+        Some("Checking authentication")
     );
 }
 

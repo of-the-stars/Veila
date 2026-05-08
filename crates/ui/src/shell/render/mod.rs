@@ -12,6 +12,7 @@ mod widgets;
 pub(super) use cache::TextLayoutCache;
 
 use veila_common::BackdropMode;
+use veila_common::StatusDisplayMode;
 use veila_renderer::{
     SoftwareBuffer,
     layer::{BackdropLayerMode, BackdropLayerShape, BackdropLayerStyle, draw_backdrop_layer},
@@ -59,13 +60,17 @@ impl ShellState {
         let identity_visible = self.identity_visible();
         let input_visible = self.input_visible();
         let text_blocks = self.scene_text_blocks(metrics);
+        let status_mode_external = self.theme.status_mode == StatusDisplayMode::External;
         let floating_avatar = self.theme.avatar_enabled && self.theme.avatar_position.is_some();
         let floating_username =
             self.theme.username_enabled && self.theme.username_position.is_some();
         let floating_input = self.theme.input_position.is_some() && input_visible;
-        let floating_status_follows_input =
-            self.theme.input_position.is_some() && self.theme.status_position.is_none();
-        let floating_status_explicit = self.theme.status_position.is_some();
+        let floating_status_follows_input = status_mode_external
+            && input_visible
+            && self.theme.input_position.is_some()
+            && self.theme.status_position.is_none();
+        let floating_status_explicit =
+            status_mode_external && input_visible && self.theme.status_position.is_some();
         let clock_in_flow = self.theme.clock_position.is_none();
         let date_in_flow = self.theme.date_position.is_none();
         let avatar_in_flow = !floating_avatar;
@@ -233,8 +238,7 @@ impl ShellState {
     fn scene_text_blocks(&self, metrics: SceneMetrics) -> SceneTextBlocks {
         let identity_visible = self.identity_visible();
         let input_visible = self.input_visible();
-        let status_uses_external_position =
-            self.theme.status_position.is_some() || self.theme.input_position.is_some();
+        let status_mode_external = self.theme.status_mode == StatusDisplayMode::External;
         let clock_text = self.clock.primary_text(self.theme.clock_style);
         let clock_secondary_text = self.clock.secondary_text(self.theme.clock_style);
         let clock_style = self.clock_text_style(metrics);
@@ -247,7 +251,7 @@ impl ShellState {
         let username_text = self.username_text.as_deref();
         let username_style = self.username_text_style();
         let placeholder_style = self.placeholder_text_style();
-        let status_text = if input_visible && status_uses_external_position {
+        let status_text = if input_visible && status_mode_external {
             self.status_text()
         } else {
             (!input_visible).then(|| self.status_text()).flatten()
@@ -295,7 +299,7 @@ impl ShellState {
                 ),
                 placeholder_style,
                 status_text: if input_visible {
-                    if status_uses_external_position {
+                    if status_mode_external {
                         self.theme
                             .status_enabled
                             .then_some(())

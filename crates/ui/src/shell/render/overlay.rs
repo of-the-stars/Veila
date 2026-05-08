@@ -663,8 +663,7 @@ impl ShellState {
     pub(crate) fn inline_input_status_text(&self) -> Option<String> {
         if !self.input_visible()
             || !self.theme.status_enabled
-            || self.theme.status_position.is_some()
-            || self.theme.input_position.is_some()
+            || self.theme.status_mode != veila_common::StatusDisplayMode::Inline
         {
             return None;
         }

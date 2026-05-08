@@ -1,6 +1,6 @@
 use super::*;
 use crate::shell::theme::{Backdrop, WidgetPosition};
-use veila_common::{BackdropMode, WeatherUnit};
+use veila_common::{BackdropMode, StatusDisplayMode, WeatherUnit};
 
 #[test]
 fn backdrop_rect_supports_center_and_right_alignment() {
@@ -231,6 +231,7 @@ fn explicit_input_and_status_positions_are_removed_from_auth_flow() {
                 x: 0,
                 y: -72,
             }),
+            status_mode: StatusDisplayMode::External,
             status_position: Some(crate::shell::theme::WidgetPosition {
                 halign: HorizontalAlign::Right,
                 valign: VerticalAlign::Top,
@@ -266,7 +267,7 @@ fn explicit_input_and_status_positions_are_removed_from_auth_flow() {
 }
 
 #[test]
-fn status_follows_explicit_input_when_status_position_is_unset() {
+fn inline_status_stays_inside_explicit_input_by_default() {
     let shell = ShellState::new_with_username(
         ShellTheme {
             input_position: Some(crate::shell::theme::WidgetPosition {
@@ -292,8 +293,69 @@ fn status_follows_explicit_input_when_status_position_is_unset() {
     let layout = shell.scene_layout(FrameSize::new(1280, 720));
 
     assert!(layout.floating_input);
+    assert!(layout.floating_status.is_none());
+    assert!(!layout.floating_status_follows_input);
+}
+
+#[test]
+fn external_status_follows_explicit_input_when_status_position_is_unset() {
+    let shell = ShellState::new_with_username(
+        ShellTheme {
+            input_position: Some(crate::shell::theme::WidgetPosition {
+                halign: HorizontalAlign::Left,
+                valign: VerticalAlign::Bottom,
+                x: 24,
+                y: -64,
+            }),
+            status_mode: StatusDisplayMode::External,
+            ..ShellTheme::default()
+        },
+        None,
+        Some(String::from("ns")),
+        None,
+        true,
+    );
+    let mut shell = shell;
+    shell.status = ShellStatus::Rejected {
+        retry_until: None,
+        displayed_retry_seconds: None,
+        failed_attempts: Some(1),
+    };
+
+    let layout = shell.scene_layout(FrameSize::new(1280, 720));
+
+    assert!(layout.floating_input);
     assert!(layout.floating_status.is_some());
     assert!(layout.floating_status_follows_input);
+    assert!(
+        layout
+            .model
+            .sections_for_role(LayoutRole::Auth)
+            .all(|section| !matches!(section.widget, SceneWidget::Status(_)))
+    );
+}
+
+#[test]
+fn hidden_status_mode_removes_auth_feedback_from_layout() {
+    let mut shell = ShellState::new_with_username(
+        ShellTheme {
+            status_mode: StatusDisplayMode::Hidden,
+            ..ShellTheme::default()
+        },
+        None,
+        Some(String::from("ns")),
+        None,
+        true,
+    );
+    shell.status = ShellStatus::Rejected {
+        retry_until: None,
+        displayed_retry_seconds: None,
+        failed_attempts: Some(1),
+    };
+
+    let layout = shell.scene_layout(FrameSize::new(1280, 720));
+
+    assert!(layout.floating_status.is_none());
     assert!(
         layout
             .model
