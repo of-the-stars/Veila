@@ -1,5 +1,6 @@
 mod backdrop;
 mod clock;
+mod grid;
 mod identity;
 mod indicators;
 mod input;
@@ -14,6 +15,7 @@ use super::RgbColor;
 
 pub use backdrop::{BackdropMode, BackdropVisualConfig};
 pub use clock::{ClockAlignment, ClockFormat, ClockStyle, ClockVisualConfig, DateVisualConfig};
+pub use grid::GridVisualConfig;
 pub use identity::{AvatarVisualConfig, UsernameVisualConfig};
 pub use indicators::{
     BatteryVisualConfig, CapsLockVisualConfig, EyeVisualConfig, KeyboardVisualConfig,
@@ -151,6 +153,8 @@ pub struct VisualConfig {
     #[serde(default)]
     pub power_status: Option<PowerStatusVisualConfig>,
     #[serde(default)]
+    pub grid: Option<GridVisualConfig>,
+    #[serde(default)]
     pub weather: Option<WeatherVisualConfig>,
     #[serde(default)]
     pub backdrop: Vec<BackdropVisualConfig>,
@@ -224,6 +228,7 @@ impl Default for VisualConfig {
             keyboard: Some(KeyboardVisualConfig::default()),
             battery: Some(BatteryVisualConfig::default()),
             power_status: Some(PowerStatusVisualConfig::default()),
+            grid: Some(GridVisualConfig::default()),
             weather: Some(WeatherVisualConfig::default()),
             backdrop: Vec::new(),
             now_playing: Some(NowPlayingVisualConfig::default()),

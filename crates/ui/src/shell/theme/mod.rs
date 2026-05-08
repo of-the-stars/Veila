@@ -3,12 +3,13 @@ mod color;
 mod tests;
 
 use veila_common::{
-    AppConfig, BackdropMode, ClockAlignment, ClockFormat, ClockStyle, FontStyle, HorizontalAlign,
-    InputRevealMode, VerticalAlign,
+    AppConfig, BackdropMode, ClockAlignment, ClockFormat, ClockStyle, FontStyle, GridVisualConfig,
+    HorizontalAlign, InputRevealMode, VerticalAlign,
 };
 use veila_renderer::ClearColor;
 
 use self::color::to_color;
+use super::PreviewGrid;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct WidgetPosition {
@@ -119,6 +120,7 @@ pub struct ShellTheme {
     pub battery_background_size: Option<i32>,
     pub battery_size: Option<i32>,
     pub backdrops: Vec<Backdrop>,
+    pub grid: Option<PreviewGrid>,
     pub weather_enabled: bool,
     pub weather_icon_enabled: bool,
     pub weather_icon_position: Option<WidgetPosition>,
@@ -332,6 +334,29 @@ fn resolve_backdrops(config: &AppConfig) -> Vec<Backdrop> {
     backdrops
 }
 
+fn resolve_grid(config: &AppConfig) -> Option<PreviewGrid> {
+    if !config.visuals.grid_enabled() {
+        return None;
+    }
+
+    let GridVisualConfig {
+        cell_size,
+        color,
+        major_every,
+        major_color,
+        ..
+    } = config.visuals.grid.clone().unwrap_or_default();
+
+    Some(PreviewGrid {
+        cell_size: i32::from(cell_size.unwrap_or(40)).clamp(8, 240),
+        color: to_color(color.unwrap_or(veila_common::RgbColor::rgba(255, 255, 255, 20))),
+        major_every: i32::from(major_every.unwrap_or(4)).clamp(2, 12),
+        major_color: to_color(
+            major_color.unwrap_or(veila_common::RgbColor::rgba(255, 255, 255, 38)),
+        ),
+    })
+}
+
 fn resolve_now_playing_artwork_position(config: &AppConfig) -> Option<WidgetPosition> {
     let position = config.visuals.now_playing_artwork_position();
     if !position.is_specified() {
@@ -429,6 +454,7 @@ impl ShellTheme {
         let power_status_position = resolve_power_status_position(config);
         let battery_position = resolve_battery_position(config);
         let backdrops = resolve_backdrops(config);
+        let grid = resolve_grid(config);
         let now_playing_artwork_position = resolve_now_playing_artwork_position(config);
         let now_playing_artist_position = resolve_now_playing_artist_position(config);
         let now_playing_title_position = resolve_now_playing_title_position(config);
@@ -530,6 +556,7 @@ impl ShellTheme {
             battery_background_size: config.visuals.battery_background_size().map(i32::from),
             battery_size: config.visuals.battery_size().map(i32::from),
             backdrops,
+            grid,
             weather_enabled: config.visuals.weather_enabled(),
             weather_icon_enabled: config.visuals.weather_icon_enabled(),
             weather_icon_position,

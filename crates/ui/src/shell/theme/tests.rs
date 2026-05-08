@@ -1,12 +1,12 @@
 use veila_common::{
     AppConfig, AvatarVisualConfig, BackdropMode, BackdropVisualConfig, BatteryVisualConfig,
     ClockFormat, ClockStyle, ClockVisualConfig, ConfigColor, DateVisualConfig, EyeVisualConfig,
-    FontStyle, HorizontalAlign, InputRevealMode, InputVisualConfig, InputVisualEntry,
-    KeyboardVisualConfig, NowPlayingArtworkVisualConfig, NowPlayingTextVisualConfig,
-    NowPlayingVisualConfig, PaletteVisualConfig, PlaceholderVisualConfig, PowerStatusVisualConfig,
-    RevealVisualConfig, StatusVisualConfig, UsernameVisualConfig, VerticalAlign,
-    WeatherIconVisualConfig, WeatherLocationVisualConfig, WeatherTemperatureVisualConfig,
-    WeatherVisualConfig, WidgetPositionConfig,
+    FontStyle, GridVisualConfig, HorizontalAlign, InputRevealMode, InputVisualConfig,
+    InputVisualEntry, KeyboardVisualConfig, NowPlayingArtworkVisualConfig,
+    NowPlayingTextVisualConfig, NowPlayingVisualConfig, PaletteVisualConfig,
+    PlaceholderVisualConfig, PowerStatusVisualConfig, RevealVisualConfig, StatusVisualConfig,
+    UsernameVisualConfig, VerticalAlign, WeatherIconVisualConfig, WeatherLocationVisualConfig,
+    WeatherTemperatureVisualConfig, WeatherVisualConfig, WidgetPositionConfig,
 };
 use veila_renderer::ClearColor;
 
@@ -125,6 +125,13 @@ fn input_alpha_uses_rgba_values() {
             x: Some(36),
             y: Some(-28),
         },
+    });
+    config.visuals.grid = Some(GridVisualConfig {
+        enabled: Some(true),
+        cell_size: Some(48),
+        color: Some(ConfigColor::rgba(255, 255, 255, 18)),
+        major_every: Some(5),
+        major_color: Some(ConfigColor::rgba(255, 255, 255, 44)),
     });
     config.visuals.backdrop = vec![BackdropVisualConfig {
         enabled: Some(true),
@@ -392,6 +399,15 @@ fn input_alpha_uses_rgba_values() {
         }
     );
     assert_eq!(theme.backdrops[0].z, 2);
+    assert_eq!(
+        theme.grid,
+        Some(crate::shell::PreviewGrid {
+            cell_size: 48,
+            color: ClearColor::rgba(255, 255, 255, 18),
+            major_every: 5,
+            major_color: ClearColor::rgba(255, 255, 255, 44),
+        })
+    );
     assert!(theme.weather_icon_enabled);
     assert!(theme.weather_temperature_enabled);
     assert!(theme.weather_location_enabled);

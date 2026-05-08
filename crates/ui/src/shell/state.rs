@@ -183,6 +183,7 @@ impl ShellState {
             now_playing: now_playing_widget_data(now_playing_snapshot),
             now_playing_transition: None,
             avatar: load_avatar(avatar_path),
+            preview_grid_enabled: false,
             text_layout_cache: RefCell::new(TextLayoutCache::default()),
         }
     }
@@ -219,6 +220,10 @@ impl ShellState {
 
         self.power_status_text = text;
         true
+    }
+
+    pub fn set_preview_grid_enabled(&mut self, enabled: bool) {
+        self.preview_grid_enabled = enabled;
     }
 
     pub fn set_now_playing_snapshot(&mut self, snapshot: Option<NowPlayingSnapshot>) {

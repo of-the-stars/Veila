@@ -59,6 +59,14 @@ struct NowPlayingTransition {
     started_at: Instant,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PreviewGrid {
+    pub cell_size: i32,
+    pub color: veila_renderer::ClearColor,
+    pub major_every: i32,
+    pub major_color: veila_renderer::ClearColor,
+}
+
 #[derive(Debug, Clone)]
 pub struct ShellState {
     secret: String,
@@ -83,6 +91,7 @@ pub struct ShellState {
     now_playing: Option<NowPlayingWidgetData>,
     now_playing_transition: Option<NowPlayingTransition>,
     avatar: AvatarAsset,
+    preview_grid_enabled: bool,
     text_layout_cache: RefCell<TextLayoutCache>,
 }
 

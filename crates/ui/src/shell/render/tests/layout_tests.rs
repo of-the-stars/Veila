@@ -67,6 +67,37 @@ fn backdrop_rect_supports_center_and_right_alignment() {
 }
 
 #[test]
+fn preview_grid_renders_centered_major_and_minor_lines() {
+    let mut shell = ShellState::new(
+        ShellTheme {
+            grid: Some(crate::shell::PreviewGrid {
+                cell_size: 40,
+                color: ClearColor::rgba(255, 255, 255, 20),
+                major_every: 4,
+                major_color: ClearColor::rgba(255, 255, 255, 38),
+            }),
+            ..ShellTheme::default()
+        },
+        None,
+        None,
+        true,
+    );
+    shell.set_preview_grid_enabled(true);
+
+    let mut buffer = SoftwareBuffer::new(FrameSize::new(200, 120)).expect("buffer");
+    buffer.clear(ClearColor::opaque(0, 0, 0));
+    shell.render_overlay(&mut buffer);
+
+    let center = &buffer.pixels()[(5 * 200 + 100) * 4..(5 * 200 + 100) * 4 + 4];
+    let minor = &buffer.pixels()[(5 * 200 + 140) * 4..(5 * 200 + 140) * 4 + 4];
+    let background = &buffer.pixels()[(19 * 200 + 119) * 4..(19 * 200 + 119) * 4 + 4];
+
+    assert_eq!(center, &[38, 38, 38, 255]);
+    assert_eq!(minor, &[20, 20, 20, 255]);
+    assert_eq!(background, &[0, 0, 0, 255]);
+}
+
+#[test]
 fn floating_weather_does_not_shift_auth_or_use_footer_role() {
     let theme = ShellTheme {
         weather_enabled: true,

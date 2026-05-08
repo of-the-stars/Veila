@@ -101,6 +101,7 @@ pub(crate) fn render_preview(options: CurtainOptions) -> Result<()> {
     if let Some(preview_time) = options.preview_time {
         shell.set_preview_time(preview_clock_datetime(preview_time));
     }
+    shell.set_preview_grid_enabled(true);
     shell.set_keyboard_layout_label(preview_keyboard_layout_label(&options));
     render_shell(&shell, &mut buffer);
     buffer

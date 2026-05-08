@@ -67,6 +67,38 @@ fn power_status_indicator_defaults_to_disabled() {
 }
 
 #[test]
+fn grid_overlay_defaults_to_disabled() {
+    assert!(!AppConfig::default().visuals.grid_enabled());
+}
+
+#[test]
+fn parses_preview_grid_overlay() {
+    let config = AppConfig::from_toml_str(
+        r##"
+            [visuals.grid]
+            enabled = true
+            cell_size = 48
+            color = "#FFFFFF12"
+            major_every = 5
+            major_color = "#FFFFFF2C"
+        "##,
+    )
+    .expect("config should parse");
+
+    assert!(config.visuals.grid_enabled());
+    assert_eq!(config.visuals.grid_cell_size(), 48);
+    assert_eq!(
+        config.visuals.grid_color(),
+        Some(RgbColor::rgba(255, 255, 255, 18))
+    );
+    assert_eq!(config.visuals.grid_major_every(), 5);
+    assert_eq!(
+        config.visuals.grid_major_color(),
+        Some(RgbColor::rgba(255, 255, 255, 44))
+    );
+}
+
+#[test]
 fn parses_power_status_widget_position() {
     let config = AppConfig::from_toml_str(
         r#"

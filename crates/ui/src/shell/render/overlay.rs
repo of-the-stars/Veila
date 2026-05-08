@@ -1,4 +1,7 @@
-use veila_renderer::{FrameSize, SoftwareBuffer, shape::Rect};
+use veila_renderer::{
+    FrameSize, SoftwareBuffer,
+    shape::{Rect, fill_rect},
+};
 
 use super::super::{ShellState, ShellStatus};
 use super::{
@@ -69,6 +72,7 @@ impl ShellState {
         self.render_floating_weather_widgets(buffer, &layout);
         self.render_now_playing_widget(buffer, &layout);
         self.render_top_right_indicators(buffer);
+        self.render_preview_grid_overlay(buffer);
     }
 
     fn render_role(
@@ -299,6 +303,91 @@ impl ShellState {
             );
             draw_block(buffer, x, y, location);
         }
+    }
+
+    fn render_preview_grid_overlay(&self, buffer: &mut SoftwareBuffer) {
+        if !self.preview_grid_enabled {
+            return;
+        }
+
+        let Some(grid) = self.theme.grid else {
+            return;
+        };
+
+        let width = buffer.size().width as i32;
+        let height = buffer.size().height as i32;
+        let center_x = width / 2;
+        let center_y = height / 2;
+
+        let mut x = center_x;
+        let mut index = 0;
+        while x < width {
+            self.draw_grid_vertical_line(buffer, x, height, index, grid);
+            index += 1;
+            x += grid.cell_size;
+        }
+
+        let mut x = center_x - grid.cell_size;
+        let mut index = 1;
+        while x >= 0 {
+            self.draw_grid_vertical_line(buffer, x, height, index, grid);
+            index += 1;
+            x -= grid.cell_size;
+        }
+
+        let mut y = center_y;
+        let mut index = 0;
+        while y < height {
+            self.draw_grid_horizontal_line(buffer, y, width, index, grid);
+            index += 1;
+            y += grid.cell_size;
+        }
+
+        let mut y = center_y - grid.cell_size;
+        let mut index = 1;
+        while y >= 0 {
+            self.draw_grid_horizontal_line(buffer, y, width, index, grid);
+            index += 1;
+            y -= grid.cell_size;
+        }
+    }
+
+    fn draw_grid_vertical_line(
+        &self,
+        buffer: &mut SoftwareBuffer,
+        x: i32,
+        height: i32,
+        index: i32,
+        grid: crate::shell::PreviewGrid,
+    ) {
+        fill_rect(
+            buffer,
+            Rect::new(x, 0, 1, height),
+            if index % grid.major_every == 0 {
+                grid.major_color
+            } else {
+                grid.color
+            },
+        );
+    }
+
+    fn draw_grid_horizontal_line(
+        &self,
+        buffer: &mut SoftwareBuffer,
+        y: i32,
+        width: i32,
+        index: i32,
+        grid: crate::shell::PreviewGrid,
+    ) {
+        fill_rect(
+            buffer,
+            Rect::new(0, y, width, 1),
+            if index % grid.major_every == 0 {
+                grid.major_color
+            } else {
+                grid.color
+            },
+        );
     }
 
     fn floating_input_rect(&self, layout: &SceneLayout, size: FrameSize) -> Option<Rect> {
