@@ -2,9 +2,11 @@ mod color;
 #[cfg(test)]
 mod tests;
 
+use std::collections::HashMap;
+
 use veila_common::{
     AppConfig, BackdropMode, ClockAlignment, ClockFormat, ClockStyle, FontStyle, GridVisualConfig,
-    HorizontalAlign, InputRevealMode, StatusDisplayMode, VerticalAlign,
+    HorizontalAlign, InputRevealMode, StatusDisplayMode, VerticalAlign, WidgetPositionConfig,
 };
 use veila_renderer::ClearColor;
 
@@ -17,9 +19,16 @@ pub struct WidgetPosition {
     pub valign: VerticalAlign,
     pub x: i32,
     pub y: i32,
+    pub target: WidgetPositionTarget,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WidgetPositionTarget {
+    Screen,
+    Backdrop(usize),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Backdrop {
     pub mode: BackdropMode,
     pub color: ClearColor,
@@ -185,160 +194,185 @@ impl Default for ShellTheme {
     }
 }
 
-fn resolve_clock_position(config: &AppConfig) -> Option<WidgetPosition> {
-    let position = config.visuals.clock_position();
+fn resolve_position(
+    position: WidgetPositionConfig,
+    default_halign: HorizontalAlign,
+    default_valign: VerticalAlign,
+    named_backdrops: &HashMap<String, usize>,
+) -> Option<WidgetPosition> {
     if !position.is_specified() {
         return None;
     }
 
     Some(WidgetPosition {
-        halign: position.halign.unwrap_or(HorizontalAlign::Center),
-        valign: position.valign.unwrap_or(VerticalAlign::Top),
+        halign: position.halign.unwrap_or(default_halign),
+        valign: position.valign.unwrap_or(default_valign),
         x: i32::from(position.x.unwrap_or(0)),
         y: i32::from(position.y.unwrap_or(0)),
+        target: position
+            .relative_to
+            .as_deref()
+            .and_then(|name| named_backdrops.get(name).copied())
+            .map_or(WidgetPositionTarget::Screen, WidgetPositionTarget::Backdrop),
     })
 }
 
-fn resolve_input_position(config: &AppConfig) -> Option<WidgetPosition> {
-    let position = config.visuals.input_position();
-    if !position.is_specified() {
-        return None;
-    }
-
-    Some(WidgetPosition {
-        halign: position.halign.unwrap_or(HorizontalAlign::Center),
-        valign: position.valign.unwrap_or(VerticalAlign::Center),
-        x: i32::from(position.x.unwrap_or(0)),
-        y: i32::from(position.y.unwrap_or(0)),
-    })
+fn resolve_clock_position(
+    config: &AppConfig,
+    named_backdrops: &HashMap<String, usize>,
+) -> Option<WidgetPosition> {
+    resolve_position(
+        config.visuals.clock_position(),
+        HorizontalAlign::Center,
+        VerticalAlign::Top,
+        named_backdrops,
+    )
 }
 
-fn resolve_status_position(config: &AppConfig) -> Option<WidgetPosition> {
-    let position = config.visuals.status_position();
-    if !position.is_specified() {
-        return None;
-    }
-
-    Some(WidgetPosition {
-        halign: position.halign.unwrap_or(HorizontalAlign::Center),
-        valign: position.valign.unwrap_or(VerticalAlign::Center),
-        x: i32::from(position.x.unwrap_or(0)),
-        y: i32::from(position.y.unwrap_or(0)),
-    })
+fn resolve_input_position(
+    config: &AppConfig,
+    named_backdrops: &HashMap<String, usize>,
+) -> Option<WidgetPosition> {
+    resolve_position(
+        config.visuals.input_position(),
+        HorizontalAlign::Center,
+        VerticalAlign::Center,
+        named_backdrops,
+    )
 }
 
-fn resolve_keyboard_position(config: &AppConfig) -> Option<WidgetPosition> {
-    let position = config.visuals.keyboard_position();
-    if !position.is_specified() {
-        return None;
-    }
-
-    Some(WidgetPosition {
-        halign: position.halign.unwrap_or(HorizontalAlign::Right),
-        valign: position.valign.unwrap_or(VerticalAlign::Top),
-        x: i32::from(position.x.unwrap_or(0)),
-        y: i32::from(position.y.unwrap_or(0)),
-    })
+fn resolve_status_position(
+    config: &AppConfig,
+    named_backdrops: &HashMap<String, usize>,
+) -> Option<WidgetPosition> {
+    resolve_position(
+        config.visuals.status_position(),
+        HorizontalAlign::Center,
+        VerticalAlign::Center,
+        named_backdrops,
+    )
 }
 
-fn resolve_battery_position(config: &AppConfig) -> Option<WidgetPosition> {
-    let position = config.visuals.battery_position();
-    if !position.is_specified() {
-        return None;
-    }
-
-    Some(WidgetPosition {
-        halign: position.halign.unwrap_or(HorizontalAlign::Right),
-        valign: position.valign.unwrap_or(VerticalAlign::Top),
-        x: i32::from(position.x.unwrap_or(0)),
-        y: i32::from(position.y.unwrap_or(0)),
-    })
+fn resolve_keyboard_position(
+    config: &AppConfig,
+    named_backdrops: &HashMap<String, usize>,
+) -> Option<WidgetPosition> {
+    resolve_position(
+        config.visuals.keyboard_position(),
+        HorizontalAlign::Right,
+        VerticalAlign::Top,
+        named_backdrops,
+    )
 }
 
-fn resolve_weather_icon_position(config: &AppConfig) -> Option<WidgetPosition> {
-    let position = config.visuals.weather_icon_position();
-    if !position.is_specified() {
-        return None;
-    }
-
-    Some(WidgetPosition {
-        halign: position.halign.unwrap_or(HorizontalAlign::Left),
-        valign: position.valign.unwrap_or(VerticalAlign::Bottom),
-        x: i32::from(position.x.unwrap_or(0)),
-        y: i32::from(position.y.unwrap_or(0)),
-    })
+fn resolve_battery_position(
+    config: &AppConfig,
+    named_backdrops: &HashMap<String, usize>,
+) -> Option<WidgetPosition> {
+    resolve_position(
+        config.visuals.battery_position(),
+        HorizontalAlign::Right,
+        VerticalAlign::Top,
+        named_backdrops,
+    )
 }
 
-fn resolve_weather_temperature_position(config: &AppConfig) -> Option<WidgetPosition> {
-    let position = config.visuals.weather_temperature_position();
-    if !position.is_specified() {
-        return None;
-    }
-
-    Some(WidgetPosition {
-        halign: position.halign.unwrap_or(HorizontalAlign::Left),
-        valign: position.valign.unwrap_or(VerticalAlign::Bottom),
-        x: i32::from(position.x.unwrap_or(0)),
-        y: i32::from(position.y.unwrap_or(0)),
-    })
+fn resolve_weather_icon_position(
+    config: &AppConfig,
+    named_backdrops: &HashMap<String, usize>,
+) -> Option<WidgetPosition> {
+    resolve_position(
+        config.visuals.weather_icon_position(),
+        HorizontalAlign::Left,
+        VerticalAlign::Bottom,
+        named_backdrops,
+    )
 }
 
-fn resolve_weather_location_position(config: &AppConfig) -> Option<WidgetPosition> {
-    let position = config.visuals.weather_location_position();
-    if !position.is_specified() {
-        return None;
-    }
-
-    Some(WidgetPosition {
-        halign: position.halign.unwrap_or(HorizontalAlign::Left),
-        valign: position.valign.unwrap_or(VerticalAlign::Bottom),
-        x: i32::from(position.x.unwrap_or(0)),
-        y: i32::from(position.y.unwrap_or(0)),
-    })
+fn resolve_weather_temperature_position(
+    config: &AppConfig,
+    named_backdrops: &HashMap<String, usize>,
+) -> Option<WidgetPosition> {
+    resolve_position(
+        config.visuals.weather_temperature_position(),
+        HorizontalAlign::Left,
+        VerticalAlign::Bottom,
+        named_backdrops,
+    )
 }
 
-fn resolve_power_status_position(config: &AppConfig) -> Option<WidgetPosition> {
-    let position = config.visuals.power_status_position();
-    if !position.is_specified() {
-        return None;
-    }
-
-    Some(WidgetPosition {
-        halign: position.halign.unwrap_or(HorizontalAlign::Right),
-        valign: position.valign.unwrap_or(VerticalAlign::Top),
-        x: i32::from(position.x.unwrap_or(0)),
-        y: i32::from(position.y.unwrap_or(0)),
-    })
+fn resolve_weather_location_position(
+    config: &AppConfig,
+    named_backdrops: &HashMap<String, usize>,
+) -> Option<WidgetPosition> {
+    resolve_position(
+        config.visuals.weather_location_position(),
+        HorizontalAlign::Left,
+        VerticalAlign::Bottom,
+        named_backdrops,
+    )
 }
 
-fn resolve_backdrops(config: &AppConfig) -> Vec<Backdrop> {
+fn resolve_power_status_position(
+    config: &AppConfig,
+    named_backdrops: &HashMap<String, usize>,
+) -> Option<WidgetPosition> {
+    resolve_position(
+        config.visuals.power_status_position(),
+        HorizontalAlign::Right,
+        VerticalAlign::Top,
+        named_backdrops,
+    )
+}
+
+fn resolve_backdrops(config: &AppConfig) -> (Vec<Backdrop>, HashMap<String, usize>) {
     let mut backdrops = config
         .visuals
         .backdrop
         .iter()
         .filter(|backdrop| backdrop.enabled.unwrap_or(true))
-        .map(|backdrop| Backdrop {
-            mode: backdrop.mode.unwrap_or_default(),
-            color: to_color(backdrop.color.unwrap_or(config.visuals.panel)),
-            blur_strength: backdrop.blur_strength.unwrap_or(12).min(24),
-            radius: i32::from(backdrop.radius.unwrap_or(0)).clamp(0, 160),
-            border_color: backdrop.border_color.map(to_color),
-            border_width: i32::from(backdrop.border_width.unwrap_or(0)).clamp(0, 16),
-            full_width: backdrop.full_width.unwrap_or(false),
-            full_height: backdrop.full_height.unwrap_or(false),
-            width: i32::from(backdrop.width.unwrap_or(560)).max(1),
-            height: i32::from(backdrop.height.unwrap_or(600)).max(1),
-            position: WidgetPosition {
-                halign: backdrop.position.halign.unwrap_or(HorizontalAlign::Center),
-                valign: backdrop.position.valign.unwrap_or(VerticalAlign::Top),
-                x: i32::from(backdrop.position.x.unwrap_or(0)),
-                y: i32::from(backdrop.position.y.unwrap_or(0)),
-            },
-            z: i32::from(backdrop.z.unwrap_or(0)),
+        .map(|backdrop| {
+            (
+                backdrop.name.clone(),
+                Backdrop {
+                    mode: backdrop.mode.unwrap_or_default(),
+                    color: to_color(backdrop.color.unwrap_or(config.visuals.panel)),
+                    blur_strength: backdrop.blur_strength.unwrap_or(12).min(24),
+                    radius: i32::from(backdrop.radius.unwrap_or(0)).clamp(0, 160),
+                    border_color: backdrop.border_color.map(to_color),
+                    border_width: i32::from(backdrop.border_width.unwrap_or(0)).clamp(0, 16),
+                    full_width: backdrop.full_width.unwrap_or(false),
+                    full_height: backdrop.full_height.unwrap_or(false),
+                    width: i32::from(backdrop.width.unwrap_or(560)).max(1),
+                    height: i32::from(backdrop.height.unwrap_or(600)).max(1),
+                    position: WidgetPosition {
+                        halign: backdrop.position.halign.unwrap_or(HorizontalAlign::Center),
+                        valign: backdrop.position.valign.unwrap_or(VerticalAlign::Top),
+                        x: i32::from(backdrop.position.x.unwrap_or(0)),
+                        y: i32::from(backdrop.position.y.unwrap_or(0)),
+                        target: WidgetPositionTarget::Screen,
+                    },
+                    z: i32::from(backdrop.z.unwrap_or(0)),
+                },
+            )
         })
         .collect::<Vec<_>>();
-    backdrops.sort_by_key(|backdrop| backdrop.z);
-    backdrops
+    backdrops.sort_by_key(|(_, backdrop)| backdrop.z);
+
+    let mut named_backdrops = HashMap::new();
+    for (index, (name, _)) in backdrops.iter().enumerate() {
+        if let Some(name) = name.as_ref() {
+            named_backdrops.entry(name.clone()).or_insert(index);
+        }
+    }
+
+    (
+        backdrops
+            .into_iter()
+            .map(|(_, backdrop)| backdrop)
+            .collect(),
+        named_backdrops,
+    )
 }
 
 fn resolve_grid(config: &AppConfig) -> Option<PreviewGrid> {
@@ -364,107 +398,99 @@ fn resolve_grid(config: &AppConfig) -> Option<PreviewGrid> {
     })
 }
 
-fn resolve_now_playing_artwork_position(config: &AppConfig) -> Option<WidgetPosition> {
-    let position = config.visuals.now_playing_artwork_position();
-    if !position.is_specified() {
-        return None;
-    }
-
-    Some(WidgetPosition {
-        halign: position.halign.unwrap_or(HorizontalAlign::Right),
-        valign: position.valign.unwrap_or(VerticalAlign::Bottom),
-        x: i32::from(position.x.unwrap_or(0)),
-        y: i32::from(position.y.unwrap_or(0)),
-    })
+fn resolve_now_playing_artwork_position(
+    config: &AppConfig,
+    named_backdrops: &HashMap<String, usize>,
+) -> Option<WidgetPosition> {
+    resolve_position(
+        config.visuals.now_playing_artwork_position(),
+        HorizontalAlign::Right,
+        VerticalAlign::Bottom,
+        named_backdrops,
+    )
 }
 
-fn resolve_now_playing_artist_position(config: &AppConfig) -> Option<WidgetPosition> {
-    let position = config.visuals.now_playing_artist_position();
-    if !position.is_specified() {
-        return None;
-    }
-
-    Some(WidgetPosition {
-        halign: position.halign.unwrap_or(HorizontalAlign::Right),
-        valign: position.valign.unwrap_or(VerticalAlign::Bottom),
-        x: i32::from(position.x.unwrap_or(0)),
-        y: i32::from(position.y.unwrap_or(0)),
-    })
+fn resolve_now_playing_artist_position(
+    config: &AppConfig,
+    named_backdrops: &HashMap<String, usize>,
+) -> Option<WidgetPosition> {
+    resolve_position(
+        config.visuals.now_playing_artist_position(),
+        HorizontalAlign::Right,
+        VerticalAlign::Bottom,
+        named_backdrops,
+    )
 }
 
-fn resolve_now_playing_title_position(config: &AppConfig) -> Option<WidgetPosition> {
-    let position = config.visuals.now_playing_title_position();
-    if !position.is_specified() {
-        return None;
-    }
-
-    Some(WidgetPosition {
-        halign: position.halign.unwrap_or(HorizontalAlign::Right),
-        valign: position.valign.unwrap_or(VerticalAlign::Bottom),
-        x: i32::from(position.x.unwrap_or(0)),
-        y: i32::from(position.y.unwrap_or(0)),
-    })
+fn resolve_now_playing_title_position(
+    config: &AppConfig,
+    named_backdrops: &HashMap<String, usize>,
+) -> Option<WidgetPosition> {
+    resolve_position(
+        config.visuals.now_playing_title_position(),
+        HorizontalAlign::Right,
+        VerticalAlign::Bottom,
+        named_backdrops,
+    )
 }
 
-fn resolve_date_position(config: &AppConfig) -> Option<WidgetPosition> {
-    let position = config.visuals.date_position();
-    if !position.is_specified() {
-        return None;
-    }
-
-    Some(WidgetPosition {
-        halign: position.halign.unwrap_or(HorizontalAlign::Center),
-        valign: position.valign.unwrap_or(VerticalAlign::Top),
-        x: i32::from(position.x.unwrap_or(0)),
-        y: i32::from(position.y.unwrap_or(0)),
-    })
+fn resolve_date_position(
+    config: &AppConfig,
+    named_backdrops: &HashMap<String, usize>,
+) -> Option<WidgetPosition> {
+    resolve_position(
+        config.visuals.date_position(),
+        HorizontalAlign::Center,
+        VerticalAlign::Top,
+        named_backdrops,
+    )
 }
 
-fn resolve_avatar_position(config: &AppConfig) -> Option<WidgetPosition> {
-    let position = config.visuals.avatar_position();
-    if !position.is_specified() {
-        return None;
-    }
-
-    Some(WidgetPosition {
-        halign: position.halign.unwrap_or(HorizontalAlign::Center),
-        valign: position.valign.unwrap_or(VerticalAlign::Center),
-        x: position.x.map(i32::from).unwrap_or(0),
-        y: i32::from(position.y.unwrap_or(0)),
-    })
+fn resolve_avatar_position(
+    config: &AppConfig,
+    named_backdrops: &HashMap<String, usize>,
+) -> Option<WidgetPosition> {
+    resolve_position(
+        config.visuals.avatar_position(),
+        HorizontalAlign::Center,
+        VerticalAlign::Center,
+        named_backdrops,
+    )
 }
 
-fn resolve_username_position(config: &AppConfig) -> Option<WidgetPosition> {
-    let position = config.visuals.username_position();
-    if !position.is_specified() {
-        return None;
-    }
-
-    Some(WidgetPosition {
-        halign: position.halign.unwrap_or(HorizontalAlign::Center),
-        valign: position.valign.unwrap_or(VerticalAlign::Center),
-        x: position.x.map(i32::from).unwrap_or(0),
-        y: position.y.map(i32::from).unwrap_or(0),
-    })
+fn resolve_username_position(
+    config: &AppConfig,
+    named_backdrops: &HashMap<String, usize>,
+) -> Option<WidgetPosition> {
+    resolve_position(
+        config.visuals.username_position(),
+        HorizontalAlign::Center,
+        VerticalAlign::Center,
+        named_backdrops,
+    )
 }
 
 impl ShellTheme {
     pub fn from_config(config: &AppConfig) -> Self {
-        let clock_position = resolve_clock_position(config);
-        let date_position = resolve_date_position(config);
-        let avatar_position = resolve_avatar_position(config);
-        let username_position = resolve_username_position(config);
-        let keyboard_position = resolve_keyboard_position(config);
-        let weather_icon_position = resolve_weather_icon_position(config);
-        let weather_temperature_position = resolve_weather_temperature_position(config);
-        let weather_location_position = resolve_weather_location_position(config);
-        let power_status_position = resolve_power_status_position(config);
-        let battery_position = resolve_battery_position(config);
-        let backdrops = resolve_backdrops(config);
+        let (backdrops, named_backdrops) = resolve_backdrops(config);
+        let clock_position = resolve_clock_position(config, &named_backdrops);
+        let date_position = resolve_date_position(config, &named_backdrops);
+        let avatar_position = resolve_avatar_position(config, &named_backdrops);
+        let username_position = resolve_username_position(config, &named_backdrops);
+        let keyboard_position = resolve_keyboard_position(config, &named_backdrops);
+        let weather_icon_position = resolve_weather_icon_position(config, &named_backdrops);
+        let weather_temperature_position =
+            resolve_weather_temperature_position(config, &named_backdrops);
+        let weather_location_position = resolve_weather_location_position(config, &named_backdrops);
+        let power_status_position = resolve_power_status_position(config, &named_backdrops);
+        let battery_position = resolve_battery_position(config, &named_backdrops);
         let grid = resolve_grid(config);
-        let now_playing_artwork_position = resolve_now_playing_artwork_position(config);
-        let now_playing_artist_position = resolve_now_playing_artist_position(config);
-        let now_playing_title_position = resolve_now_playing_title_position(config);
+        let now_playing_artwork_position =
+            resolve_now_playing_artwork_position(config, &named_backdrops);
+        let now_playing_artist_position =
+            resolve_now_playing_artist_position(config, &named_backdrops);
+        let now_playing_title_position =
+            resolve_now_playing_title_position(config, &named_backdrops);
         Self {
             background: to_color(config.background.color),
             avatar_enabled: config.visuals.avatar_enabled(),
@@ -488,7 +514,7 @@ impl ShellTheme {
             reveal_font_weight: config.visuals.reveal_font_weight(),
             reveal_font_style: config.visuals.reveal_font_style(),
             reveal_font_size: config.visuals.reveal_font_size().map(u32::from),
-            input_position: resolve_input_position(config),
+            input_position: resolve_input_position(config, &named_backdrops),
             input_width: config.visuals.input_width().map(i32::from),
             input_height: config.visuals.input_height().map(i32::from),
             input_radius: i32::from(config.visuals.input_radius()),
@@ -510,7 +536,7 @@ impl ShellTheme {
             username_position,
             avatar_gap: Some(24),
             username_gap: Some(28),
-            status_position: resolve_status_position(config),
+            status_position: resolve_status_position(config, &named_backdrops),
             status_mode: config.visuals.status_mode(),
             clock_gap: Some(20),
             clock_enabled: config.visuals.clock_enabled(),

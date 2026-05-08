@@ -1,10 +1,7 @@
 use veila_renderer::{FrameSize, SoftwareBuffer, shape::Rect, text::TextBlock};
 
 use super::super::{NowPlayingWidgetData, ShellState};
-use super::{
-    NOW_PLAYING_MAX_TEXT_WIDTH, NOW_PLAYING_MIN_TEXT_WIDTH, SceneLayout, TextLayoutCache,
-    layout::{anchored_block_x, anchored_block_y},
-};
+use super::{NOW_PLAYING_MAX_TEXT_WIDTH, NOW_PLAYING_MIN_TEXT_WIDTH, SceneLayout, TextLayoutCache};
 
 impl ShellState {
     pub(super) fn render_now_playing_widget(
@@ -122,17 +119,11 @@ impl ShellState {
             .now_playing_artwork_size
             .unwrap_or(44)
             .clamp(32, 160);
-        let x = anchored_block_x(size.width as i32, artwork_size, position.halign, position.x);
-        let y = anchored_block_y(
-            size.height as i32,
-            artwork_size,
-            position.valign,
-            position.y,
-        );
+        let rect = self.positioned_rect(size, position, artwork_size, artwork_size);
 
         Some(NowPlayingArtworkPart {
             asset,
-            rect: Rect::new(x, y, artwork_size, artwork_size),
+            rect,
             radius: self
                 .theme
                 .now_playing_artwork_radius
@@ -166,16 +157,10 @@ impl ShellState {
             ),
             opacity_scale,
         );
-        let x = anchored_block_x(size.width as i32, box_width, position.halign, position.x);
-        let y = anchored_block_y(
-            size.height as i32,
-            block.height as i32,
-            position.valign,
-            position.y,
-        );
+        let rect = self.positioned_rect(size, position, box_width, block.height as i32);
 
         Some(NowPlayingTextPart {
-            rect: Rect::new(x, y, block.width as i32, block.height as i32),
+            rect: Rect::new(rect.x, rect.y, block.width as i32, block.height as i32),
             block,
         })
     }
@@ -201,16 +186,10 @@ impl ShellState {
             ),
             opacity_scale,
         );
-        let x = anchored_block_x(size.width as i32, box_width, position.halign, position.x);
-        let y = anchored_block_y(
-            size.height as i32,
-            block.height as i32,
-            position.valign,
-            position.y,
-        );
+        let rect = self.positioned_rect(size, position, box_width, block.height as i32);
 
         Some(NowPlayingTextPart {
-            rect: Rect::new(x, y, block.width as i32, block.height as i32),
+            rect: Rect::new(rect.x, rect.y, block.width as i32, block.height as i32),
             block,
         })
     }

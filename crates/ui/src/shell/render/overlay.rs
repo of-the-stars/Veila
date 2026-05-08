@@ -6,7 +6,7 @@ use veila_renderer::{
 use super::super::{ShellState, ShellStatus};
 use super::{
     SceneLayout,
-    layout::{SceneMetrics, anchored_block_x, anchored_block_y, hero_block_x},
+    layout::{SceneMetrics, hero_block_x},
     model::{AuthGroup, LayoutRole, SceneSection, SceneWidget},
     widgets::{
         InputRightAdornment, InputWidget, draw_avatar_widget, draw_block, draw_centered_block,
@@ -137,19 +137,8 @@ impl ShellState {
                 .theme
                 .clock_position
                 .expect("floating clock requires explicit position");
-            let x = anchored_block_x(
-                buffer.size().width as i32,
-                clock.width(),
-                position.halign,
-                position.x,
-            );
-            let y = anchored_block_y(
-                buffer.size().height as i32,
-                clock.height(),
-                position.valign,
-                position.y,
-            );
-            draw_clock_widget(buffer, x, y, clock);
+            let rect = self.positioned_rect(buffer.size(), position, clock.width(), clock.height());
+            draw_clock_widget(buffer, rect.x, rect.y, clock);
         }
 
         if let Some(date) = layout.floating_date.as_ref() {
@@ -157,19 +146,13 @@ impl ShellState {
                 .theme
                 .date_position
                 .expect("floating date requires resolved position");
-            let x = anchored_block_x(
-                buffer.size().width as i32,
+            let rect = self.positioned_rect(
+                buffer.size(),
+                position,
                 date.width as i32,
-                position.halign,
-                position.x,
-            );
-            let y = anchored_block_y(
-                buffer.size().height as i32,
                 date.height as i32,
-                position.valign,
-                position.y,
             );
-            draw_block(buffer, x, y, date);
+            draw_block(buffer, rect.x, rect.y, date);
         }
     }
 
@@ -180,23 +163,12 @@ impl ShellState {
                 .avatar_position
                 .expect("floating avatar requires explicit position");
             let size = layout.metrics.avatar_size;
-            let x = anchored_block_x(
-                buffer.size().width as i32,
-                size,
-                position.halign,
-                position.x,
-            );
-            let y = anchored_block_y(
-                buffer.size().height as i32,
-                size,
-                position.valign,
-                position.y,
-            );
+            let rect = self.positioned_rect(buffer.size(), position, size, size);
             draw_avatar_widget(
                 buffer,
                 &self.avatar,
-                x + size / 2,
-                y,
+                rect.x + size / 2,
+                rect.y,
                 size as u32,
                 self.avatar_style(),
             );
@@ -207,19 +179,13 @@ impl ShellState {
                 .theme
                 .username_position
                 .expect("floating username requires resolved position");
-            let x = anchored_block_x(
-                buffer.size().width as i32,
+            let rect = self.positioned_rect(
+                buffer.size(),
+                position,
                 username.width as i32,
-                position.halign,
-                position.x,
-            );
-            let y = anchored_block_y(
-                buffer.size().height as i32,
                 username.height as i32,
-                position.valign,
-                position.y,
             );
-            draw_block(buffer, x, y, username);
+            draw_block(buffer, rect.x, rect.y, username);
         }
     }
 
@@ -253,55 +219,32 @@ impl ShellState {
         if let Some(icon) = weather.icon
             && let Some(position) = self.theme.weather_icon_position
         {
-            let x = anchored_block_x(
-                buffer.size().width as i32,
-                icon.size,
-                position.halign,
-                position.x,
-            );
-            let y = anchored_block_y(
-                buffer.size().height as i32,
-                icon.size,
-                position.valign,
-                position.y,
-            );
-            draw_weather_icon(buffer, x, y, icon.asset, icon.size, icon.opacity);
+            let rect = self.positioned_rect(buffer.size(), position, icon.size, icon.size);
+            draw_weather_icon(buffer, rect.x, rect.y, icon.asset, icon.size, icon.opacity);
         }
 
         if let Some(temperature) = weather.temperature.as_ref()
             && let Some(position) = self.theme.weather_temperature_position
         {
-            let x = anchored_block_x(
-                buffer.size().width as i32,
+            let rect = self.positioned_rect(
+                buffer.size(),
+                position,
                 temperature.width as i32,
-                position.halign,
-                position.x,
-            );
-            let y = anchored_block_y(
-                buffer.size().height as i32,
                 temperature.height as i32,
-                position.valign,
-                position.y,
             );
-            draw_block(buffer, x, y, temperature);
+            draw_block(buffer, rect.x, rect.y, temperature);
         }
 
         if let Some(location) = weather.location.as_ref()
             && let Some(position) = self.theme.weather_location_position
         {
-            let x = anchored_block_x(
-                buffer.size().width as i32,
+            let rect = self.positioned_rect(
+                buffer.size(),
+                position,
                 location.width as i32,
-                position.halign,
-                position.x,
-            );
-            let y = anchored_block_y(
-                buffer.size().height as i32,
                 location.height as i32,
-                position.valign,
-                position.y,
             );
-            draw_block(buffer, x, y, location);
+            draw_block(buffer, rect.x, rect.y, location);
         }
     }
 
@@ -392,22 +335,9 @@ impl ShellState {
 
     fn floating_input_rect(&self, layout: &SceneLayout, size: FrameSize) -> Option<Rect> {
         let position = self.theme.input_position?;
-        let x = anchored_block_x(
-            size.width as i32,
-            layout.metrics.input_width,
-            position.halign,
-            position.x,
-        );
-        let y = anchored_block_y(
-            size.height as i32,
-            layout.metrics.input_height,
-            position.valign,
-            position.y,
-        );
-
-        Some(Rect::new(
-            x,
-            y,
+        Some(self.positioned_rect(
+            size,
+            position,
             layout.metrics.input_width,
             layout.metrics.input_height,
         ))
@@ -420,19 +350,9 @@ impl ShellState {
         block: &veila_renderer::text::TextBlock,
     ) -> Option<(i32, i32)> {
         if let Some(position) = self.theme.status_position {
-            let x = anchored_block_x(
-                size.width as i32,
-                block.width as i32,
-                position.halign,
-                position.x,
-            );
-            let y = anchored_block_y(
-                size.height as i32,
-                block.height as i32,
-                position.valign,
-                position.y,
-            );
-            return Some((x, y));
+            let rect =
+                self.positioned_rect(size, position, block.width as i32, block.height as i32);
+            return Some((rect.x, rect.y));
         }
 
         if layout.floating_status_follows_input {

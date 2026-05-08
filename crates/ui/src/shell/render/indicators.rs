@@ -2,7 +2,6 @@ use veila_renderer::SoftwareBuffer;
 
 use super::super::{ShellState, ShellStatus};
 use super::{
-    layout::{anchored_block_x, anchored_block_y},
     styles,
     widgets::{draw_chip_block, draw_icon_chip, top_right_chip_diameter},
 };
@@ -47,22 +46,11 @@ impl ShellState {
                 block.width as i32,
                 block.height as i32,
             );
-            let x = anchored_block_x(
-                buffer.size().width as i32,
-                chip_diameter,
-                position.halign,
-                position.x,
-            );
-            let y = anchored_block_y(
-                buffer.size().height as i32,
-                chip_diameter,
-                position.valign,
-                position.y,
-            );
+            let rect = self.positioned_rect(buffer.size(), position, chip_diameter, chip_diameter);
             draw_chip_block(
                 buffer,
-                x,
-                y,
+                rect.x,
+                rect.y,
                 self.theme.keyboard_background_color,
                 self.theme.keyboard_background_size,
                 block,
@@ -79,22 +67,11 @@ impl ShellState {
                     block.height as i32,
                 )
             });
-            let x = anchored_block_x(
-                buffer.size().width as i32,
-                chip_diameter,
-                position.halign,
-                position.x,
-            );
-            let y = anchored_block_y(
-                buffer.size().height as i32,
-                chip_diameter,
-                position.valign,
-                position.y,
-            );
+            let rect = self.positioned_rect(buffer.size(), position, chip_diameter, chip_diameter);
             draw_chip_block(
                 buffer,
-                x,
-                y,
+                rect.x,
+                rect.y,
                 self.theme.keyboard_background_color,
                 self.theme.keyboard_background_size,
                 block,
@@ -111,18 +88,7 @@ impl ShellState {
                 battery_icon_size,
                 battery_icon_size,
             );
-            let x = anchored_block_x(
-                buffer.size().width as i32,
-                chip_diameter,
-                position.halign,
-                position.x,
-            );
-            let y = anchored_block_y(
-                buffer.size().height as i32,
-                chip_diameter,
-                position.valign,
-                position.y,
-            );
+            let rect = self.positioned_rect(buffer.size(), position, chip_diameter, chip_diameter);
             let battery_color = self.theme.battery_color.unwrap_or(self.theme.foreground);
             let icon_style =
                 veila_renderer::icon::IconStyle::new(if battery_color.alpha == u8::MAX {
@@ -132,8 +98,8 @@ impl ShellState {
                 });
             draw_icon_chip(
                 buffer,
-                x,
-                y,
+                rect.x,
+                rect.y,
                 self.theme.battery_background_color,
                 self.theme.battery_background_size,
                 battery.icon,

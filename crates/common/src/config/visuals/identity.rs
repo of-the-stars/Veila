@@ -122,7 +122,7 @@ impl super::VisualConfig {
     pub fn avatar_position(&self) -> WidgetPositionConfig {
         self.avatar
             .as_ref()
-            .map(|avatar| avatar.position)
+            .map(|avatar| avatar.position.clone())
             .unwrap_or_default()
     }
 
@@ -168,7 +168,7 @@ impl super::VisualConfig {
     pub fn username_position(&self) -> WidgetPositionConfig {
         self.username
             .as_ref()
-            .map(|username| username.position)
+            .map(|username| username.position.clone())
             .unwrap_or_default()
     }
 }

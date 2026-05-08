@@ -163,6 +163,7 @@ impl Default for KeyboardVisualConfig {
                 valign: Some(super::VerticalAlign::Top),
                 x: Some(-24),
                 y: Some(17),
+                relative_to: None,
             },
         }
     }
@@ -197,6 +198,7 @@ impl Default for BatteryVisualConfig {
                 valign: Some(super::VerticalAlign::Top),
                 x: Some(-78),
                 y: Some(17),
+                relative_to: None,
             },
         }
     }
@@ -219,6 +221,7 @@ impl Default for PowerStatusVisualConfig {
                 valign: Some(super::VerticalAlign::Top),
                 x: Some(-24),
                 y: Some(17),
+                relative_to: None,
             },
         }
     }
@@ -318,7 +321,7 @@ impl super::VisualConfig {
     pub fn status_position(&self) -> WidgetPositionConfig {
         self.status
             .as_ref()
-            .map(|status| status.position)
+            .map(|status| status.position.clone())
             .unwrap_or_default()
     }
 
@@ -386,7 +389,7 @@ impl super::VisualConfig {
     pub fn keyboard_position(&self) -> WidgetPositionConfig {
         self.keyboard
             .as_ref()
-            .map(|keyboard| keyboard.position)
+            .map(|keyboard| keyboard.position.clone())
             .unwrap_or_default()
     }
 
@@ -428,7 +431,7 @@ impl super::VisualConfig {
     pub fn battery_position(&self) -> WidgetPositionConfig {
         self.battery
             .as_ref()
-            .map(|battery| battery.position)
+            .map(|battery| battery.position.clone())
             .unwrap_or_default()
     }
 
@@ -442,7 +445,7 @@ impl super::VisualConfig {
     pub fn power_status_position(&self) -> WidgetPositionConfig {
         self.power_status
             .as_ref()
-            .map(|power_status| power_status.position)
+            .map(|power_status| power_status.position.clone())
             .unwrap_or_default()
     }
 }

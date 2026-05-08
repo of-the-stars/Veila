@@ -24,7 +24,7 @@ pub enum VerticalAlign {
     Bottom,
 }
 
-#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct WidgetPositionConfig {
     #[serde(default)]
     pub halign: Option<HorizontalAlign>,
@@ -34,11 +34,17 @@ pub struct WidgetPositionConfig {
     pub x: Option<i16>,
     #[serde(default)]
     pub y: Option<i16>,
+    #[serde(default)]
+    pub relative_to: Option<String>,
 }
 
 impl WidgetPositionConfig {
-    pub const fn is_specified(&self) -> bool {
-        self.halign.is_some() || self.valign.is_some() || self.x.is_some() || self.y.is_some()
+    pub fn is_specified(&self) -> bool {
+        self.halign.is_some()
+            || self.valign.is_some()
+            || self.x.is_some()
+            || self.y.is_some()
+            || self.relative_to.is_some()
     }
 }
 

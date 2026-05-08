@@ -204,6 +204,7 @@ fn parses_power_status_widget_position() {
             valign: Some(VerticalAlign::Bottom),
             x: Some(28),
             y: Some(-36),
+            relative_to: None,
         }
     );
 }
@@ -213,6 +214,7 @@ fn parses_multiple_backdrops() {
     let config = AppConfig::from_toml_str(
         r##"
             [[visuals.backdrop]]
+            name = "auth_panel"
             enabled = true
             mode = "blur"
             color = "#080A0E70"
@@ -247,6 +249,7 @@ fn parses_multiple_backdrops() {
     assert_eq!(
         config.visuals.backdrop[0],
         BackdropVisualConfig {
+            name: Some(String::from("auth_panel")),
             enabled: Some(true),
             mode: Some(BackdropMode::Blur),
             color: Some(RgbColor::rgba(8, 10, 14, 112)),
@@ -264,12 +267,49 @@ fn parses_multiple_backdrops() {
                 valign: Some(VerticalAlign::Bottom),
                 x: Some(-12),
                 y: Some(16),
+                relative_to: None,
             },
         }
     );
     assert_eq!(config.visuals.backdrop[1].mode, Some(BackdropMode::Solid));
     assert_eq!(config.visuals.backdrop[1].width, Some(300));
     assert_eq!(config.visuals.backdrop[1].height, Some(180));
+}
+
+#[test]
+fn parses_widget_position_relative_to_named_backdrop() {
+    let config = AppConfig::from_toml_str(
+        r#"
+            [[visuals.backdrop]]
+            name = "auth_panel"
+            width = 540
+            full_height = true
+
+            [visuals.clock]
+            halign = "center"
+            valign = "top"
+            x = 0
+            y = 40
+            relative_to = "auth_panel"
+        "#,
+    )
+    .expect("config should parse");
+
+    assert_eq!(config.visuals.backdrop.len(), 1);
+    assert_eq!(
+        config.visuals.backdrop[0].name.as_deref(),
+        Some("auth_panel")
+    );
+    assert_eq!(
+        config.visuals.clock_position(),
+        WidgetPositionConfig {
+            halign: Some(HorizontalAlign::Center),
+            valign: Some(VerticalAlign::Top),
+            x: Some(0),
+            y: Some(40),
+            relative_to: Some(String::from("auth_panel")),
+        }
+    );
 }
 
 #[test]

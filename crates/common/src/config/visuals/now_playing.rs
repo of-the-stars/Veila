@@ -28,6 +28,7 @@ impl Default for NowPlayingArtworkVisualConfig {
                 valign: Some(super::VerticalAlign::Bottom),
                 x: Some(-388),
                 y: Some(-56),
+                relative_to: None,
             },
         }
     }
@@ -86,6 +87,7 @@ impl Default for NowPlayingVisualConfig {
                     valign: Some(super::VerticalAlign::Bottom),
                     x: Some(-52),
                     y: Some(-88),
+                    relative_to: None,
                 },
             }),
             title: Some(NowPlayingTextVisualConfig {
@@ -101,6 +103,7 @@ impl Default for NowPlayingVisualConfig {
                     valign: Some(super::VerticalAlign::Bottom),
                     x: Some(-52),
                     y: Some(-56),
+                    relative_to: None,
                 },
             }),
         }
@@ -154,7 +157,7 @@ impl super::VisualConfig {
         self.now_playing
             .as_ref()
             .and_then(|now_playing| now_playing.artwork.as_ref())
-            .map(|artwork| artwork.position)
+            .map(|artwork| artwork.position.clone())
             .unwrap_or_default()
     }
 
@@ -212,7 +215,7 @@ impl super::VisualConfig {
         self.now_playing
             .as_ref()
             .and_then(|now_playing| now_playing.artist.as_ref())
-            .map(|artist| artist.position)
+            .map(|artist| artist.position.clone())
             .unwrap_or_default()
     }
 
@@ -270,7 +273,7 @@ impl super::VisualConfig {
         self.now_playing
             .as_ref()
             .and_then(|now_playing| now_playing.title.as_ref())
-            .map(|title| title.position)
+            .map(|title| title.position.clone())
             .unwrap_or_default()
     }
 }

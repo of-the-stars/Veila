@@ -51,6 +51,7 @@ fn loads_nested_visual_tables_with_precedence_for_auth_and_header_entries() {
             valign: Some(VerticalAlign::Bottom),
             x: Some(28),
             y: Some(-64),
+            relative_to: None,
         }
     );
     assert_eq!(
@@ -73,6 +74,7 @@ fn loads_nested_visual_tables_with_precedence_for_auth_and_header_entries() {
             valign: Some(VerticalAlign::Center),
             x: Some(36),
             y: Some(-24),
+            relative_to: None,
         }
     );
     assert_eq!(
@@ -93,6 +95,7 @@ fn loads_nested_visual_tables_with_precedence_for_auth_and_header_entries() {
             valign: Some(VerticalAlign::Bottom),
             x: Some(-40),
             y: Some(-96),
+            relative_to: None,
         }
     );
     assert_eq!(config.visuals.clock_font_family(), Some("Prototype"));
@@ -106,6 +109,7 @@ fn loads_nested_visual_tables_with_precedence_for_auth_and_header_entries() {
             valign: Some(VerticalAlign::Bottom),
             x: Some(20),
             y: Some(-40),
+            relative_to: None,
         }
     );
     assert_eq!(config.visuals.clock_format(), ClockFormat::TwelveHour);
@@ -132,6 +136,7 @@ fn loads_nested_visual_tables_with_precedence_for_auth_and_header_entries() {
             valign: Some(VerticalAlign::Top),
             x: Some(-24),
             y: Some(32),
+            relative_to: None,
         }
     );
     assert_eq!(
@@ -149,6 +154,7 @@ fn loads_nested_visual_tables_with_precedence_for_auth_and_header_entries() {
             valign: Some(VerticalAlign::Top),
             x: Some(-32),
             y: Some(48),
+            relative_to: None,
         }
     );
     assert_eq!(
@@ -230,6 +236,7 @@ fn loads_nested_visual_tables_with_precedence_for_backdrop_and_widgets() {
             valign: Some(VerticalAlign::Bottom),
             x: Some(-12),
             y: Some(16),
+            relative_to: None,
         }
     );
     assert_eq!(config.visuals.backdrop[0].z, Some(2));
@@ -250,6 +257,7 @@ fn loads_nested_visual_tables_with_precedence_for_backdrop_and_widgets() {
             valign: Some(VerticalAlign::Top),
             x: Some(-24),
             y: Some(29),
+            relative_to: None,
         }
     );
     assert_eq!(
@@ -269,6 +277,7 @@ fn loads_nested_visual_tables_with_precedence_for_backdrop_and_widgets() {
             valign: Some(VerticalAlign::Top),
             x: Some(-82),
             y: Some(29),
+            relative_to: None,
         }
     );
     assert!(config.visuals.weather_icon_enabled());
@@ -309,6 +318,7 @@ fn loads_nested_visual_tables_with_precedence_for_backdrop_and_widgets() {
             valign: Some(VerticalAlign::Bottom),
             x: Some(-52),
             y: Some(-126),
+            relative_to: None,
         }
     );
     assert_eq!(
@@ -318,6 +328,7 @@ fn loads_nested_visual_tables_with_precedence_for_backdrop_and_widgets() {
             valign: Some(VerticalAlign::Bottom),
             x: Some(-52),
             y: Some(-80),
+            relative_to: None,
         }
     );
     assert_eq!(
@@ -327,6 +338,7 @@ fn loads_nested_visual_tables_with_precedence_for_backdrop_and_widgets() {
             valign: Some(VerticalAlign::Bottom),
             x: Some(-52),
             y: Some(-52),
+            relative_to: None,
         }
     );
 }
@@ -376,6 +388,7 @@ fn loads_nested_visual_tables_with_precedence_for_now_playing_and_palette() {
             valign: Some(VerticalAlign::Bottom),
             x: Some(-274),
             y: Some(-46),
+            relative_to: None,
         }
     );
     assert_eq!(
@@ -385,6 +398,7 @@ fn loads_nested_visual_tables_with_precedence_for_now_playing_and_palette() {
             valign: Some(VerticalAlign::Bottom),
             x: Some(-58),
             y: Some(-78),
+            relative_to: None,
         }
     );
     assert_eq!(
@@ -394,6 +408,7 @@ fn loads_nested_visual_tables_with_precedence_for_now_playing_and_palette() {
             valign: Some(VerticalAlign::Bottom),
             x: Some(-58),
             y: Some(-46),
+            relative_to: None,
         }
     );
     assert_eq!(

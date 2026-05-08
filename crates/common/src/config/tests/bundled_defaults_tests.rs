@@ -149,6 +149,7 @@ fn first_run_defaults_match_bundled_theme() {
             valign: Some(VerticalAlign::Top),
             x: Some(-24),
             y: Some(17),
+            relative_to: None,
         }
     );
     assert_eq!(
@@ -168,6 +169,7 @@ fn first_run_defaults_match_bundled_theme() {
             valign: Some(VerticalAlign::Top),
             x: Some(-78),
             y: Some(17),
+            relative_to: None,
         }
     );
     assert_eq!(
@@ -177,6 +179,7 @@ fn first_run_defaults_match_bundled_theme() {
             valign: Some(VerticalAlign::Top),
             x: Some(-24),
             y: Some(17),
+            relative_to: None,
         }
     );
     assert!(config.visuals.backdrop.is_empty());
@@ -221,6 +224,7 @@ fn first_run_defaults_match_bundled_theme() {
             valign: Some(VerticalAlign::Bottom),
             x: Some(30),
             y: Some(-112),
+            relative_to: None,
         }
     );
     assert_eq!(
@@ -230,6 +234,7 @@ fn first_run_defaults_match_bundled_theme() {
             valign: Some(VerticalAlign::Bottom),
             x: Some(30),
             y: Some(-66),
+            relative_to: None,
         }
     );
     assert_eq!(
@@ -239,6 +244,7 @@ fn first_run_defaults_match_bundled_theme() {
             valign: Some(VerticalAlign::Bottom),
             x: Some(30),
             y: Some(-34),
+            relative_to: None,
         }
     );
     assert_eq!(config.visuals.now_playing_fade_duration_ms(), Some(320));
@@ -285,6 +291,7 @@ fn first_run_defaults_match_bundled_theme() {
             valign: Some(VerticalAlign::Bottom),
             x: Some(-388),
             y: Some(-56),
+            relative_to: None,
         }
     );
     assert_eq!(
@@ -294,6 +301,7 @@ fn first_run_defaults_match_bundled_theme() {
             valign: Some(VerticalAlign::Bottom),
             x: Some(-52),
             y: Some(-88),
+            relative_to: None,
         }
     );
     assert_eq!(
@@ -303,6 +311,7 @@ fn first_run_defaults_match_bundled_theme() {
             valign: Some(VerticalAlign::Bottom),
             x: Some(-52),
             y: Some(-56),
+            relative_to: None,
         }
     );
     assert_eq!(

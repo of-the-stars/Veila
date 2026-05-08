@@ -193,6 +193,7 @@ fn loads_config_from_file() {
             valign: Some(VerticalAlign::Bottom),
             x: Some(0),
             y: Some(-24),
+            relative_to: None,
         }
     );
     assert_eq!(
@@ -223,6 +224,7 @@ fn loads_config_from_file() {
             valign: Some(VerticalAlign::Center),
             x: Some(0),
             y: Some(32),
+            relative_to: None,
         }
     );
     assert_eq!(
@@ -232,6 +234,7 @@ fn loads_config_from_file() {
             valign: Some(VerticalAlign::Center),
             x: Some(0),
             y: Some(220),
+            relative_to: None,
         }
     );
     assert_eq!(
@@ -241,6 +244,7 @@ fn loads_config_from_file() {
             valign: Some(VerticalAlign::Top),
             x: Some(24),
             y: Some(40),
+            relative_to: None,
         }
     );
     assert_eq!(
@@ -250,6 +254,7 @@ fn loads_config_from_file() {
             valign: Some(VerticalAlign::Top),
             x: Some(24),
             y: Some(156),
+            relative_to: None,
         }
     );
     assert_eq!(

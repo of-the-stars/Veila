@@ -13,6 +13,8 @@ pub enum BackdropMode {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BackdropVisualConfig {
     #[serde(default)]
+    pub name: Option<String>,
+    #[serde(default)]
     pub enabled: Option<bool>,
     #[serde(default)]
     pub mode: Option<BackdropMode>,
@@ -43,6 +45,7 @@ pub struct BackdropVisualConfig {
 impl Default for BackdropVisualConfig {
     fn default() -> Self {
         Self {
+            name: None,
             enabled: Some(true),
             mode: Some(BackdropMode::Blur),
             color: Some(RgbColor::rgba(8, 10, 14, 107)),
@@ -60,6 +63,7 @@ impl Default for BackdropVisualConfig {
                 valign: Some(super::VerticalAlign::Top),
                 x: Some(0),
                 y: Some(0),
+                relative_to: None,
             },
         }
     }

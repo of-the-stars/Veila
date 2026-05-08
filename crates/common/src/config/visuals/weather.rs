@@ -83,6 +83,7 @@ impl Default for WeatherIconVisualConfig {
                 valign: Some(super::VerticalAlign::Bottom),
                 x: Some(30),
                 y: Some(-112),
+                relative_to: None,
             },
         }
     }
@@ -103,6 +104,7 @@ impl Default for WeatherTemperatureVisualConfig {
                 valign: Some(super::VerticalAlign::Bottom),
                 x: Some(30),
                 y: Some(-66),
+                relative_to: None,
             },
         }
     }
@@ -122,6 +124,7 @@ impl Default for WeatherLocationVisualConfig {
                 valign: Some(super::VerticalAlign::Bottom),
                 x: Some(30),
                 y: Some(-34),
+                relative_to: None,
             },
         }
     }
@@ -160,7 +163,7 @@ impl super::VisualConfig {
         self.weather
             .as_ref()
             .and_then(|weather| weather.icon.as_ref())
-            .map(|icon| icon.position)
+            .map(|icon| icon.position.clone())
             .unwrap_or_default()
     }
 
@@ -218,7 +221,7 @@ impl super::VisualConfig {
         self.weather
             .as_ref()
             .and_then(|weather| weather.temperature.as_ref())
-            .map(|temperature| temperature.position)
+            .map(|temperature| temperature.position.clone())
             .unwrap_or_default()
     }
 
@@ -269,7 +272,7 @@ impl super::VisualConfig {
         self.weather
             .as_ref()
             .and_then(|weather| weather.location.as_ref())
-            .map(|location| location.position)
+            .map(|location| location.position.clone())
             .unwrap_or_default()
     }
 }

@@ -1,5 +1,5 @@
 use super::*;
-use crate::shell::theme::{Backdrop, WidgetPosition};
+use crate::shell::theme::{Backdrop, WidgetPosition, WidgetPositionTarget};
 use veila_common::{BackdropMode, StatusDisplayMode, WeatherUnit};
 
 #[test]
@@ -22,6 +22,7 @@ fn backdrop_rect_supports_center_and_right_alignment() {
                     valign: VerticalAlign::Bottom,
                     x: 0,
                     y: -46,
+                    target: WidgetPositionTarget::Screen,
                 },
                 z: 0,
             }],
@@ -49,6 +50,7 @@ fn backdrop_rect_supports_center_and_right_alignment() {
                     valign: VerticalAlign::Top,
                     x: -12,
                     y: 0,
+                    target: WidgetPositionTarget::Screen,
                 },
                 z: 0,
             }],
@@ -59,9 +61,12 @@ fn backdrop_rect_supports_center_and_right_alignment() {
         true,
     );
 
-    let centered_rect =
-        centered.backdrop_rect(FrameSize::new(1280, 720), centered.theme.backdrops[0]);
-    let right_rect = right.backdrop_rect(FrameSize::new(1280, 720), right.theme.backdrops[0]);
+    let centered_rect = centered.backdrop_rect(
+        FrameSize::new(1280, 720),
+        centered.theme.backdrops[0].clone(),
+    );
+    let right_rect =
+        right.backdrop_rect(FrameSize::new(1280, 720), right.theme.backdrops[0].clone());
 
     assert_eq!(centered_rect.x, 380);
     assert_eq!(centered_rect.y, 254);
@@ -90,6 +95,7 @@ fn backdrop_rect_supports_full_width_and_height() {
                     valign: VerticalAlign::Bottom,
                     x: -12,
                     y: -16,
+                    target: WidgetPositionTarget::Screen,
                 },
                 z: 0,
             }],
@@ -100,12 +106,62 @@ fn backdrop_rect_supports_full_width_and_height() {
         true,
     );
 
-    let rect = shell.backdrop_rect(FrameSize::new(1280, 720), shell.theme.backdrops[0]);
+    let rect = shell.backdrop_rect(FrameSize::new(1280, 720), shell.theme.backdrops[0].clone());
 
     assert_eq!(rect.x, -12);
     assert_eq!(rect.y, -16);
     assert_eq!(rect.width, 1280);
     assert_eq!(rect.height, 720);
+}
+
+#[test]
+fn widget_position_can_center_inside_backdrop_rect() {
+    let shell = ShellState::new(
+        ShellTheme {
+            backdrops: vec![Backdrop {
+                mode: BackdropMode::Blur,
+                color: ClearColor::rgba(8, 10, 14, 112),
+                blur_strength: 16,
+                radius: 20,
+                border_color: Some(ClearColor::rgba(255, 255, 255, 48)),
+                border_width: 2,
+                full_width: false,
+                full_height: true,
+                width: 540,
+                height: 420,
+                position: WidgetPosition {
+                    halign: HorizontalAlign::Right,
+                    valign: VerticalAlign::Center,
+                    x: -100,
+                    y: 0,
+                    target: WidgetPositionTarget::Screen,
+                },
+                z: 0,
+            }],
+            ..ShellTheme::default()
+        },
+        None,
+        None,
+        true,
+    );
+
+    let rect = shell.positioned_rect(
+        FrameSize::new(1280, 720),
+        WidgetPosition {
+            halign: HorizontalAlign::Center,
+            valign: VerticalAlign::Top,
+            x: 0,
+            y: 40,
+            target: WidgetPositionTarget::Backdrop(0),
+        },
+        300,
+        120,
+    );
+
+    assert_eq!(rect.x, 760);
+    assert_eq!(rect.y, 40);
+    assert_eq!(rect.width, 300);
+    assert_eq!(rect.height, 120);
 }
 
 #[test]
@@ -148,18 +204,21 @@ fn floating_weather_does_not_shift_auth_or_use_footer_role() {
             valign: VerticalAlign::Bottom,
             x: 32,
             y: -120,
+            target: WidgetPositionTarget::Screen,
         }),
         weather_temperature_position: Some(crate::shell::theme::WidgetPosition {
             halign: HorizontalAlign::Left,
             valign: VerticalAlign::Bottom,
             x: 32,
             y: -72,
+            target: WidgetPositionTarget::Screen,
         }),
         weather_location_position: Some(crate::shell::theme::WidgetPosition {
             halign: HorizontalAlign::Left,
             valign: VerticalAlign::Bottom,
             x: 32,
             y: -40,
+            target: WidgetPositionTarget::Screen,
         }),
         ..ShellTheme::default()
     };
@@ -203,12 +262,14 @@ fn explicit_avatar_and_username_positions_are_removed_from_auth_flow() {
                 valign: VerticalAlign::Top,
                 x: 24,
                 y: 32,
+                target: WidgetPositionTarget::Screen,
             }),
             username_position: Some(crate::shell::theme::WidgetPosition {
                 halign: HorizontalAlign::Left,
                 valign: VerticalAlign::Top,
                 x: 24,
                 y: 200,
+                target: WidgetPositionTarget::Screen,
             }),
             ..ShellTheme::default()
         },
@@ -242,6 +303,7 @@ fn username_stays_in_auth_flow_when_only_avatar_is_explicit() {
                 valign: VerticalAlign::Center,
                 x: 12,
                 y: -48,
+                target: WidgetPositionTarget::Screen,
             }),
             ..ShellTheme::default()
         },
@@ -272,6 +334,7 @@ fn explicit_input_and_status_positions_are_removed_from_auth_flow() {
                 valign: VerticalAlign::Bottom,
                 x: 0,
                 y: -72,
+                target: WidgetPositionTarget::Screen,
             }),
             status_mode: StatusDisplayMode::External,
             status_position: Some(crate::shell::theme::WidgetPosition {
@@ -279,6 +342,7 @@ fn explicit_input_and_status_positions_are_removed_from_auth_flow() {
                 valign: VerticalAlign::Top,
                 x: -32,
                 y: 48,
+                target: WidgetPositionTarget::Screen,
             }),
             ..ShellTheme::default()
         },
@@ -317,6 +381,7 @@ fn inline_status_stays_inside_explicit_input_by_default() {
                 valign: VerticalAlign::Bottom,
                 x: 24,
                 y: -64,
+                target: WidgetPositionTarget::Screen,
             }),
             ..ShellTheme::default()
         },
@@ -348,6 +413,7 @@ fn external_status_follows_explicit_input_when_status_position_is_unset() {
                 valign: VerticalAlign::Bottom,
                 x: 24,
                 y: -64,
+                target: WidgetPositionTarget::Screen,
             }),
             status_mode: StatusDisplayMode::External,
             ..ShellTheme::default()

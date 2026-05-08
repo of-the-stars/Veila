@@ -103,6 +103,7 @@ fn input_alpha_uses_rgba_values() {
             valign: Some(VerticalAlign::Top),
             x: Some(-24),
             y: Some(29),
+            relative_to: None,
         },
     });
     config.visuals.battery = Some(BatteryVisualConfig {
@@ -116,6 +117,7 @@ fn input_alpha_uses_rgba_values() {
             valign: Some(VerticalAlign::Top),
             x: Some(-82),
             y: Some(29),
+            relative_to: None,
         },
     });
     config.visuals.power_status = Some(PowerStatusVisualConfig {
@@ -125,6 +127,7 @@ fn input_alpha_uses_rgba_values() {
             valign: Some(VerticalAlign::Bottom),
             x: Some(36),
             y: Some(-28),
+            relative_to: None,
         },
     });
     config.visuals.grid = Some(GridVisualConfig {
@@ -135,6 +138,7 @@ fn input_alpha_uses_rgba_values() {
         major_color: Some(ConfigColor::rgba(255, 255, 255, 44)),
     });
     config.visuals.backdrop = vec![BackdropVisualConfig {
+        name: None,
         enabled: Some(true),
         mode: Some(BackdropMode::Blur),
         color: Some(ConfigColor::rgba(8, 10, 14, 112)),
@@ -152,6 +156,7 @@ fn input_alpha_uses_rgba_values() {
             valign: Some(VerticalAlign::Bottom),
             x: Some(-12),
             y: Some(16),
+            relative_to: None,
         },
     }];
     config.visuals.weather = Some(WeatherVisualConfig {
@@ -164,6 +169,7 @@ fn input_alpha_uses_rgba_values() {
                 valign: Some(VerticalAlign::Bottom),
                 x: Some(-52),
                 y: Some(-126),
+                relative_to: None,
             },
         }),
         temperature: Some(WeatherTemperatureVisualConfig {
@@ -179,6 +185,7 @@ fn input_alpha_uses_rgba_values() {
                 valign: Some(VerticalAlign::Bottom),
                 x: Some(-52),
                 y: Some(-80),
+                relative_to: None,
             },
         }),
         location: Some(WeatherLocationVisualConfig {
@@ -193,6 +200,7 @@ fn input_alpha_uses_rgba_values() {
                 valign: Some(VerticalAlign::Bottom),
                 x: Some(-52),
                 y: Some(-52),
+                relative_to: None,
             },
         }),
     });
@@ -209,6 +217,7 @@ fn input_alpha_uses_rgba_values() {
                 valign: Some(VerticalAlign::Bottom),
                 x: Some(-274),
                 y: Some(-46),
+                relative_to: None,
             },
         }),
         artist: Some(NowPlayingTextVisualConfig {
@@ -224,6 +233,7 @@ fn input_alpha_uses_rgba_values() {
                 valign: Some(VerticalAlign::Bottom),
                 x: Some(-58),
                 y: Some(-78),
+                relative_to: None,
             },
         }),
         title: Some(NowPlayingTextVisualConfig {
@@ -239,6 +249,7 @@ fn input_alpha_uses_rgba_values() {
                 valign: Some(VerticalAlign::Bottom),
                 x: Some(-58),
                 y: Some(-46),
+                relative_to: None,
             },
         }),
     });
@@ -350,6 +361,7 @@ fn input_alpha_uses_rgba_values() {
             valign: VerticalAlign::Top,
             x: -24,
             y: 29,
+            target: super::WidgetPositionTarget::Screen,
         })
     );
     assert_eq!(
@@ -369,6 +381,7 @@ fn input_alpha_uses_rgba_values() {
             valign: VerticalAlign::Top,
             x: -82,
             y: 29,
+            target: super::WidgetPositionTarget::Screen,
         })
     );
     assert!(theme.power_status_enabled);
@@ -379,6 +392,7 @@ fn input_alpha_uses_rgba_values() {
             valign: VerticalAlign::Bottom,
             x: 36,
             y: -28,
+            target: super::WidgetPositionTarget::Screen,
         })
     );
     assert_eq!(theme.backdrops.len(), 1);
@@ -402,6 +416,7 @@ fn input_alpha_uses_rgba_values() {
             valign: VerticalAlign::Bottom,
             x: -12,
             y: 16,
+            target: super::WidgetPositionTarget::Screen,
         }
     );
     assert_eq!(theme.backdrops[0].z, 2);
@@ -449,6 +464,7 @@ fn input_alpha_uses_rgba_values() {
             valign: VerticalAlign::Bottom,
             x: -52,
             y: -126,
+            target: super::WidgetPositionTarget::Screen,
         })
     );
     assert_eq!(
@@ -458,6 +474,7 @@ fn input_alpha_uses_rgba_values() {
             valign: VerticalAlign::Bottom,
             x: -52,
             y: -80,
+            target: super::WidgetPositionTarget::Screen,
         })
     );
     assert_eq!(
@@ -467,6 +484,7 @@ fn input_alpha_uses_rgba_values() {
             valign: VerticalAlign::Bottom,
             x: -52,
             y: -52,
+            target: super::WidgetPositionTarget::Screen,
         })
     );
     assert_eq!(
@@ -504,6 +522,7 @@ fn input_alpha_uses_rgba_values() {
             valign: VerticalAlign::Bottom,
             x: -274,
             y: -46,
+            target: super::WidgetPositionTarget::Screen,
         })
     );
     assert_eq!(
@@ -513,6 +532,7 @@ fn input_alpha_uses_rgba_values() {
             valign: VerticalAlign::Bottom,
             x: -58,
             y: -78,
+            target: super::WidgetPositionTarget::Screen,
         })
     );
     assert_eq!(
@@ -522,6 +542,7 @@ fn input_alpha_uses_rgba_values() {
             valign: VerticalAlign::Bottom,
             x: -58,
             y: -46,
+            target: super::WidgetPositionTarget::Screen,
         })
     );
     assert_eq!(
@@ -563,6 +584,7 @@ fn explicit_clock_and_date_positions_override_legacy_header_layout() {
             valign: VerticalAlign::Bottom,
             x: 20,
             y: -40,
+            target: super::WidgetPositionTarget::Screen,
         })
     );
     assert_eq!(
@@ -572,6 +594,7 @@ fn explicit_clock_and_date_positions_override_legacy_header_layout() {
             valign: VerticalAlign::Top,
             x: -24,
             y: 32,
+            target: super::WidgetPositionTarget::Screen,
         })
     );
 }
@@ -604,6 +627,7 @@ fn explicit_avatar_and_username_positions_override_legacy_auth_layout() {
             valign: VerticalAlign::Top,
             x: -96,
             y: 48,
+            target: super::WidgetPositionTarget::Screen,
         })
     );
     assert_eq!(
@@ -613,6 +637,7 @@ fn explicit_avatar_and_username_positions_override_legacy_auth_layout() {
             valign: VerticalAlign::Bottom,
             x: 0,
             y: -72,
+            target: super::WidgetPositionTarget::Screen,
         })
     );
 }
@@ -646,6 +671,7 @@ fn explicit_input_and_status_positions_override_auth_flow_layout() {
             valign: VerticalAlign::Bottom,
             x: 28,
             y: -64,
+            target: super::WidgetPositionTarget::Screen,
         })
     );
     assert_eq!(
@@ -655,9 +681,47 @@ fn explicit_input_and_status_positions_override_auth_flow_layout() {
             valign: VerticalAlign::Top,
             x: -32,
             y: 48,
+            target: super::WidgetPositionTarget::Screen,
         })
     );
     assert_eq!(theme.status_mode, StatusDisplayMode::External);
+}
+
+#[test]
+fn explicit_widget_position_can_target_named_backdrop() {
+    let config = AppConfig::from_toml_str(
+        r#"
+            [[visuals.backdrop]]
+            name = "auth_panel"
+            width = 540
+            full_height = true
+            halign = "right"
+            valign = "center"
+            x = -100
+            y = 0
+
+            [visuals.clock]
+            halign = "center"
+            valign = "top"
+            x = 0
+            y = 40
+            relative_to = "auth_panel"
+        "#,
+    )
+    .expect("position config should parse");
+
+    let theme = ShellTheme::from_config(&config);
+
+    assert_eq!(
+        theme.clock_position,
+        Some(super::WidgetPosition {
+            halign: HorizontalAlign::Center,
+            valign: VerticalAlign::Top,
+            x: 0,
+            y: 40,
+            target: super::WidgetPositionTarget::Backdrop(0),
+        })
+    );
 }
 
 #[test]

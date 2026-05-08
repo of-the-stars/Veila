@@ -28,6 +28,7 @@ use self::{
     model::{AuthGroup, LayoutRole, SceneModel, SceneTextBlocks, StandardSceneConfig},
 };
 use super::ShellState;
+use crate::shell::theme::WidgetPositionTarget;
 
 const NOW_PLAYING_MAX_TEXT_WIDTH: u32 = 318;
 const NOW_PLAYING_MIN_TEXT_WIDTH: i32 = 64;
@@ -184,7 +185,7 @@ impl ShellState {
 
     pub fn render_backdrops(&self, buffer: &mut SoftwareBuffer) {
         for backdrop in &self.theme.backdrops {
-            let rect = self.backdrop_rect(buffer.size(), *backdrop);
+            let rect = self.backdrop_rect(buffer.size(), backdrop.clone());
             let mode = match backdrop.mode {
                 BackdropMode::Solid => BackdropLayerMode::Solid,
                 BackdropMode::Blur => BackdropLayerMode::Blur,
@@ -241,9 +242,42 @@ impl ShellState {
     }
 
     pub(super) fn first_backdrop_center_x(&self, size: veila_renderer::FrameSize) -> Option<i32> {
-        let backdrop = *self.theme.backdrops.first()?;
+        let backdrop = self.theme.backdrops.first()?.clone();
         let rect = self.backdrop_rect(size, backdrop);
         Some(rect.x + rect.width / 2)
+    }
+
+    pub(super) fn positioned_rect(
+        &self,
+        size: veila_renderer::FrameSize,
+        position: crate::shell::theme::WidgetPosition,
+        width: i32,
+        height: i32,
+    ) -> Rect {
+        let container = self.position_container_rect(size, position);
+        Rect::new(
+            container.x + anchored_block_x(container.width, width, position.halign, position.x),
+            container.y + anchored_block_y(container.height, height, position.valign, position.y),
+            width,
+            height,
+        )
+    }
+
+    fn position_container_rect(
+        &self,
+        size: veila_renderer::FrameSize,
+        position: crate::shell::theme::WidgetPosition,
+    ) -> Rect {
+        match position.target {
+            WidgetPositionTarget::Screen => Rect::new(0, 0, size.width as i32, size.height as i32),
+            WidgetPositionTarget::Backdrop(index) => self
+                .theme
+                .backdrops
+                .get(index)
+                .cloned()
+                .map(|backdrop| self.backdrop_rect(size, backdrop))
+                .unwrap_or_else(|| Rect::new(0, 0, size.width as i32, size.height as i32)),
+        }
     }
 
     fn scene_text_blocks(&self, metrics: SceneMetrics) -> SceneTextBlocks {

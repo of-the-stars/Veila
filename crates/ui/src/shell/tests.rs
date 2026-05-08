@@ -369,6 +369,7 @@ fn explicit_input_position_keeps_inline_status_when_mode_is_inline() {
                 valign: VerticalAlign::Bottom,
                 x: 0,
                 y: -64,
+                target: crate::shell::theme::WidgetPositionTarget::Screen,
             }),
             ..ShellTheme::default()
         },

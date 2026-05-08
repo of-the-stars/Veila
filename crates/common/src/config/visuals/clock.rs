@@ -195,7 +195,7 @@ impl super::VisualConfig {
     pub fn clock_position(&self) -> WidgetPositionConfig {
         self.clock
             .as_ref()
-            .map(|clock| clock.position)
+            .map(|clock| clock.position.clone())
             .unwrap_or_default()
     }
 
@@ -237,7 +237,7 @@ impl super::VisualConfig {
     pub fn date_position(&self) -> WidgetPositionConfig {
         self.date
             .as_ref()
-            .map(|date| date.position)
+            .map(|date| date.position.clone())
             .unwrap_or_default()
     }
 }

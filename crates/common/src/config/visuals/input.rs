@@ -152,7 +152,7 @@ impl super::VisualConfig {
     pub fn input_position(&self) -> WidgetPositionConfig {
         match &self.input {
             InputVisualEntry::Color(_) => WidgetPositionConfig::default(),
-            InputVisualEntry::Section(config) => config.position,
+            InputVisualEntry::Section(config) => config.position.clone(),
         }
     }
 
