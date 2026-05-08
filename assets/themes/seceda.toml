@@ -3,21 +3,11 @@
 mode = "file"
 path = "/path/to/wallpaper.jpg"
 color = "#323549"
-blur_radius = 0
 dim_strength = 20
 
 [lock]
 user_hint = "Password"
 show_username = true
-
-[visuals.layer]
-enabled = true
-mode = "blur"
-alignment = "left"
-width = 540
-offset_x = 0
-color = "rgba(0, 0, 0, 0.1)"
-blur_radius = 12
 
 [battery]
 enabled = true
@@ -176,3 +166,20 @@ halign = "right"
 valign = "bottom"
 x = -48
 y = -48
+
+
+# Auth stack Background
+[[visuals.backdrop]]
+enabled = true
+mode = "blur"
+color = "rgba(255, 255, 255, 0.05)"
+blur_strength = 12
+radius = 10
+border_color = "#FFFFFF18"
+width = 390
+height = 60
+halign = "right"
+valign = "bottom"
+x = -50
+y = -48
+z = 0

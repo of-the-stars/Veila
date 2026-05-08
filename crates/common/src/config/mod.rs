@@ -123,7 +123,11 @@ impl AppConfig {
         let mut user_value = parse_toml_value(input)?;
         let theme_name = extract_theme_name(&user_value)?;
         let include_paths = include::extract_paths(&user_value, config_dir)?;
-        let mut config_value = default_config_value()?;
+        let mut config_value = if theme_name.is_some() {
+            hardcoded_config_value()?
+        } else {
+            default_config_value()?
+        };
 
         if let Some(theme_name) = theme_name {
             let preset_value = load_theme_value(&theme_name, config_dir)?;

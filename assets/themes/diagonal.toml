@@ -10,16 +10,6 @@ tint = "rgba(255, 255, 255, 0.1)"
 user_hint = "Password"
 show_username = true
 
-[visuals.layer]
-enabled = true
-mode = "solid"
-style = "diagonal"
-alignment = "right"
-width = "full"
-offset_x = 0
-color = "rgba(8, 10, 14, 0.42)"
-blur_radius = 12
-
 [battery]
 enabled = true
 

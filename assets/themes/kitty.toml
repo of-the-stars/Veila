@@ -10,17 +10,6 @@ dim_strength = 20
 user_hint = "Password"
 show_username = false
 
-[visuals.layer]
-enabled = true
-style = "panel"
-alignment = "center"
-offset_x = -150
-vertical_alignment = "center"
-width = 540
-height = 600
-color = "rgba(0, 0, 0, 0)"
-blur_radius = 0
-
 [battery]
 enabled = true
 

@@ -111,6 +111,10 @@ fn loads_bundled_theme_before_user_overrides() {
         loaded.config.visuals.now_playing_title_color(),
         theme_config.visuals.now_playing_title_color()
     );
+    assert_eq!(
+        loaded.config.visuals.backdrop,
+        theme_config.visuals.backdrop
+    );
 
     fs::remove_file(path).ok();
     fs::remove_dir(dir).ok();
@@ -166,6 +170,40 @@ fn loads_second_bundled_theme() {
     assert_eq!(
         config.visuals.now_playing_artist_color(),
         theme_config.visuals.now_playing_artist_color()
+    );
+    assert_eq!(config.visuals.backdrop, theme_config.visuals.backdrop);
+
+    fs::remove_file(path).ok();
+    fs::remove_dir(dir).ok();
+}
+
+#[test]
+fn selected_theme_does_not_inherit_bundled_default_backdrops() {
+    let dir = std::env::temp_dir().join(format!(
+        "veila-theme-normandy-no-default-backdrop-{}",
+        std::process::id()
+    ));
+    fs::create_dir_all(&dir).expect("temp dir");
+    let path = dir.join("config.toml");
+    let (_theme_path, raw_theme) = read_theme_source(None, "normandy").expect("theme source");
+    let theme_config = AppConfig::from_toml_str(&raw_theme).expect("theme should parse");
+    let (_, raw_default_theme) = read_theme_source(None, "default").expect("default theme source");
+    let default_theme_config =
+        AppConfig::from_toml_str(&raw_default_theme).expect("default theme should parse");
+    fs::write(
+        &path,
+        r#"
+            theme = "normandy"
+        "#,
+    )
+    .expect("write config");
+
+    let config = AppConfig::load_from_file(&path).expect("config should load");
+
+    assert_eq!(config.visuals.backdrop, theme_config.visuals.backdrop);
+    assert_ne!(
+        config.visuals.backdrop,
+        default_theme_config.visuals.backdrop
     );
 
     fs::remove_file(path).ok();

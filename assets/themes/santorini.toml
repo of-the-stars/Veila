@@ -9,19 +9,6 @@ dim_strength = 20
 user_hint = "Password"
 show_username = true
 
-[visuals.layer]
-enabled = true
-style = "panel"
-mode = "blur"
-blur_radius = 12
-alignment = "left"
-width = 540
-offset_x = 100
-color = "rgba(0, 14, 28, 0.15)"
-top_margin = 100
-bottom_margin = 100
-radius = 50
-
 [battery]
 enabled = true
 
