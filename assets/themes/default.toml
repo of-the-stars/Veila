@@ -1,13 +1,20 @@
 [background]
-mode = "gradient"
+mode = "radial"
 color = "#413249"
-dim_strength = 40
+dim_strength = 0
 
-[background.gradient]
-top_left = "#A85BFF"
-top_right = "#39B8FF"
-bottom_left = "#6FE2FF"
-bottom_right = "#6F4CFF"
+# [background.gradient]
+# top_left = "#A85BFF"
+# top_right = "#39B8FF"
+# bottom_left = "#6FE2FF"
+# bottom_right = "#6F4CFF"
+
+[background.radial]
+center = "#373057"
+edge = "#1F1B2E"
+center_x = 50
+center_y = 50
+radius = 100
 
 [lock]
 user_hint = "Password"
@@ -44,7 +51,7 @@ x = 0
 y = 140
 
 [visuals.input]
-background_color = "rgba(255, 255, 255, 0.08)"
+background_color = "rgba(255, 255, 255, 0.04)"
 width = 310
 height = 54
 radius = 10
@@ -73,7 +80,7 @@ color = "rgba(255, 255, 255, 0.9)"
 
 [visuals.avatar]
 size = 150
-background_color = "rgba(255, 255, 255, 0.08)"
+background_color = "rgba(255, 255, 255, 0.04)"
 placeholder_padding = 28
 halign = "center"
 valign = "center"
@@ -180,7 +187,7 @@ enabled = true
 name = "now_playing_panel"
 show_when = "now_playing"
 mode = "blur"
-color = "rgba(255, 255, 255, 0.05)"
+color = "rgba(255, 255, 255, 0.02)"
 blur_strength = 12
 radius = 10
 border_color = "#FFFFFF18"

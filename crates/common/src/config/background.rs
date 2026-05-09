@@ -269,8 +269,8 @@ pub struct BackgroundConfig {
     pub layered: Option<BackgroundLayeredConfig>,
     #[serde(default)]
     pub radial: Option<BackgroundRadialConfig>,
-    #[serde(default = "default_background_blur_radius")]
-    pub blur_radius: u8,
+    #[serde(default = "default_background_blur_strength")]
+    pub blur_strength: u8,
     #[serde(default = "default_background_dim_strength")]
     pub dim_strength: u8,
     #[serde(default)]
@@ -289,7 +289,7 @@ impl Default for BackgroundConfig {
             gradient: Some(BackgroundGradientConfig::default()),
             layered: Some(BackgroundLayeredConfig::default()),
             radial: Some(BackgroundRadialConfig::default()),
-            blur_radius: default_background_blur_radius(),
+            blur_strength: default_background_blur_strength(),
             dim_strength: default_background_dim_strength(),
             tint: None,
         }
@@ -404,7 +404,7 @@ const fn default_background_slideshow_change_every_seconds() -> u64 {
     300
 }
 
-const fn default_background_blur_radius() -> u8 {
+const fn default_background_blur_strength() -> u8 {
     0
 }
 

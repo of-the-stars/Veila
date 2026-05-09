@@ -11,7 +11,7 @@ fn loads_config_from_file() {
             [background]
             mode = "file"
             path = "/tmp/wallpaper.jpg"
-            blur_radius = 6
+            blur_strength = 6
             dim_strength = 40
             tint = "#080A0E99"
 
@@ -141,7 +141,7 @@ fn loads_config_from_file() {
         loaded.config.background.resolved_path().as_deref(),
         Some(std::path::Path::new("/tmp/wallpaper.jpg"))
     );
-    assert_eq!(loaded.config.background.blur_radius, 6);
+    assert_eq!(loaded.config.background.blur_strength, 6);
     assert_eq!(loaded.config.background.dim_strength, 40);
     assert_eq!(
         loaded.config.background.tint,

@@ -69,7 +69,7 @@ pub(crate) fn render_preview(options: CurtainOptions) -> Result<()> {
     };
 
     let treatment = BackgroundTreatment {
-        blur_radius: config.background.blur_radius,
+        blur_radius: config.background.blur_strength,
         dim_strength: config.background.dim_strength,
         tint: config.background.tint.map(to_clear_color),
         scaling: to_background_scaling(config.background.scaling),

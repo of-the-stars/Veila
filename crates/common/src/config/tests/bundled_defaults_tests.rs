@@ -28,7 +28,7 @@ fn first_run_defaults_match_bundled_theme() {
     assert_eq!(gradient.bottom_left, RgbColor::rgb(111, 226, 255));
     assert_eq!(gradient.bottom_right, RgbColor::rgb(111, 76, 255));
     assert!(config.background.resolved_path().is_none());
-    assert_eq!(config.background.blur_radius, 0);
+    assert_eq!(config.background.blur_strength, 0);
     assert_eq!(config.background.dim_strength, 54);
     assert!(config.background.tint.is_none());
     assert!(!config.lock.suspend_only_on_battery);

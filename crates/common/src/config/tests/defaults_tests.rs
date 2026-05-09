@@ -56,7 +56,7 @@ fn parses_partial_config_with_defaults() {
         crate::config::BackgroundLayeredBaseMode::Gradient
     );
     assert!(layered.blobs.is_empty());
-    assert_eq!(config.background.blur_radius, 0);
+    assert_eq!(config.background.blur_strength, 0);
     assert_eq!(config.background.dim_strength, 34);
     assert!(config.background.tint.is_none());
     assert!(!config.weather.enabled);

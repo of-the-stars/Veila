@@ -528,7 +528,7 @@ pub(crate) fn background_treatment(
     config: &veila_common::config::BackgroundConfig,
 ) -> BackgroundTreatment {
     BackgroundTreatment {
-        blur_radius: config.blur_radius,
+        blur_radius: config.blur_strength,
         dim_strength: config.dim_strength,
         tint: config
             .tint

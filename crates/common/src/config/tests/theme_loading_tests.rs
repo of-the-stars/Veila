@@ -16,8 +16,8 @@ fn loads_bundled_default_theme_as_default_layer() {
     let config = AppConfig::from_default_layers().expect("default config should load");
 
     assert_eq!(
-        config.background.blur_radius,
-        theme_config.background.blur_radius
+        config.background.blur_strength,
+        theme_config.background.blur_strength
     );
     assert_eq!(
         config.background.dim_strength,
@@ -139,8 +139,8 @@ fn loads_second_bundled_theme() {
 
     assert_eq!(config.background.color, theme_config.background.color);
     assert_eq!(
-        config.background.blur_radius,
-        theme_config.background.blur_radius
+        config.background.blur_strength,
+        theme_config.background.blur_strength
     );
     assert_eq!(
         config.visuals.clock_font_family(),

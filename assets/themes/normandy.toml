@@ -3,7 +3,7 @@
 mode = "file"
 path = "/path/to/wallpaper.jpg"
 color = "#324948"
-blur_radius = 12
+blur_strength = 12
 dim_strength = 34
 
 [lock]
