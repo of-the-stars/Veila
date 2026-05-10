@@ -4,7 +4,8 @@ use std::{
 };
 
 use veila_common::{
-    AppConfig, BackdropMode, BackdropVisualConfig, HorizontalAlign, RgbColor, VerticalAlign,
+    AppConfig, BackdropMode, BackdropShowWhen, BackdropVisualConfig, HorizontalAlign, RgbColor,
+    VerticalAlign,
     config::{
         BackgroundLayeredBaseMode, BackgroundLayeredConfig,
         BackgroundScaling as ConfigBackgroundScaling,
@@ -272,8 +273,8 @@ fn prewarm_layered_backgrounds(
     let mut warmed_sizes = 0usize;
 
     for size in sizes.iter().copied() {
-        let backdrops = scaled_backdrop_specs(backdrops, size.scale);
-        let variant = backdrop_variant(&backdrops, size.scale);
+        let scaled_backdrops = scaled_backdrop_specs(backdrops, size.scale);
+        let variant = backdrop_variant(backdrops, size.scale);
         if load_cached_render_variant(path, size.buffer, treatment, &variant)
             .ok()
             .flatten()
@@ -284,7 +285,7 @@ fn prewarm_layered_backgrounds(
         }
 
         let mut buffer = asset.render(size.buffer).ok()?;
-        apply_backdrop_specs(&backdrops, &mut buffer);
+        apply_backdrop_specs(&scaled_backdrops, &mut buffer);
         store_cached_render_variant(path, size.buffer, treatment, &buffer, &variant).ok()?;
         warmed_sizes += 1;
     }
@@ -346,8 +347,8 @@ fn prewarm_generated_layered_backgrounds(
     let mut warmed_sizes = 0usize;
 
     for size in sizes.iter().copied() {
-        let backdrops = scaled_backdrop_specs(backdrops, size.scale);
-        let variant = backdrop_variant(&backdrops, size.scale);
+        let scaled_backdrops = scaled_backdrop_specs(backdrops, size.scale);
+        let variant = backdrop_variant(backdrops, size.scale);
         if load_cached_generated_render_variant(generated, size.buffer, treatment, &variant)
             .ok()
             .flatten()
@@ -358,7 +359,7 @@ fn prewarm_generated_layered_backgrounds(
         }
 
         let mut buffer = asset.render(size.buffer).ok()?;
-        apply_backdrop_specs(&backdrops, &mut buffer);
+        apply_backdrop_specs(&scaled_backdrops, &mut buffer);
         store_cached_generated_render_variant(generated, size.buffer, treatment, &buffer, &variant)
             .ok()?;
         warmed_sizes += 1;
@@ -421,12 +422,20 @@ fn scaled_backdrop_specs(
         .iter()
         .map(|backdrop| BackdropPrewarmSpec {
             mode: backdrop.mode,
+            show_when: backdrop.show_when,
+            visible: backdrop.visible,
             width: scale_i32(backdrop.width, scale),
             height: scale_i32(backdrop.height, scale),
             halign: backdrop.halign,
             valign: backdrop.valign,
             x: scale_i32(backdrop.x, scale),
             y: scale_i32(backdrop.y, scale),
+            full_width: backdrop.full_width,
+            full_height: backdrop.full_height,
+            inset_top: scale_i32(backdrop.inset_top, scale),
+            inset_bottom: scale_i32(backdrop.inset_bottom, scale),
+            inset_left: scale_i32(backdrop.inset_left, scale),
+            inset_right: scale_i32(backdrop.inset_right, scale),
             z: backdrop.z,
             color: backdrop.color,
             blur_strength: backdrop.blur_strength,
@@ -488,19 +497,19 @@ fn apply_backdrop_specs(
     let frame_height = buffer.size().height as i32;
 
     for backdrop in backdrops {
+        if !backdrop.visible {
+            continue;
+        }
+
         let mode = match backdrop.mode {
             BackdropMode::Solid => BackdropLayerMode::Solid,
             BackdropMode::Blur => BackdropLayerMode::Blur,
         };
+        let rect = backdrop_rect(frame_width, frame_height, backdrop);
 
         draw_backdrop_layer(
             buffer,
-            Rect::new(
-                anchored_block_x(frame_width, backdrop.width, backdrop.halign, backdrop.x),
-                anchored_block_y(frame_height, backdrop.height, backdrop.valign, backdrop.y),
-                backdrop.width,
-                backdrop.height,
-            ),
+            rect,
             BackdropLayerStyle::new(
                 mode,
                 BackdropLayerShape::Panel,
@@ -522,11 +531,19 @@ fn backdrop_prewarm_specs(config: &AppConfig) -> Vec<BackdropPrewarmSpec> {
         .filter(|backdrop| backdrop.enabled.unwrap_or(true))
         .map(|backdrop| BackdropPrewarmSpec {
             mode: backdrop.mode.unwrap_or_default(),
+            show_when: backdrop.show_when.unwrap_or_default(),
+            visible: backdrop.show_when.unwrap_or_default() == BackdropShowWhen::Always,
             color: to_clear_color(backdrop.color.unwrap_or(config.visuals.panel)),
             blur_strength: backdrop.blur_strength.unwrap_or(12).min(24),
             radius: i32::from(backdrop.radius.unwrap_or(0)).clamp(0, 160),
             border_color: backdrop.border_color.map(to_clear_color),
             border_width: i32::from(backdrop.border_width.unwrap_or(0)).clamp(0, 16),
+            full_width: backdrop.full_width.unwrap_or(false),
+            full_height: backdrop.full_height.unwrap_or(false),
+            inset_top: i32::from(backdrop.inset_top.unwrap_or(0)).clamp(0, 4_096),
+            inset_bottom: i32::from(backdrop.inset_bottom.unwrap_or(0)).clamp(0, 4_096),
+            inset_left: i32::from(backdrop.inset_left.unwrap_or(0)).clamp(0, 4_096),
+            inset_right: i32::from(backdrop.inset_right.unwrap_or(0)).clamp(0, 4_096),
             width: i32::from(backdrop.width.unwrap_or(560)).max(1),
             height: i32::from(backdrop.height.unwrap_or(600)).max(1),
             halign: backdrop.position.halign.unwrap_or(HorizontalAlign::Center),
@@ -545,22 +562,40 @@ fn backdrop_variant(backdrops: &[BackdropPrewarmSpec], scale: i32) -> String {
 
     let mut variant = String::from("backdrop:v1");
     for backdrop in backdrops {
+        let border = backdrop
+            .border_color
+            .unwrap_or_else(|| ClearColor::rgba(0, 0, 0, 0));
         let _ = write!(
             &mut variant,
-            "|{:?}:{:?}:{:?}:{:?}:{:?}:{:?}:{:?}:{:?}:{:?}:{:?}:{:?}:{:?}:{:?}",
+            ":{:?}:{}:{}:{:?}:{}:{}:{}:{}:{}:{}:{}:{}:{}:{}:{}:{}:{}:{}:{}:{}:{}:{}:{}",
             backdrop.mode,
+            backdrop.show_when as u8,
+            backdrop.visible as u8,
             backdrop.halign,
-            backdrop.valign,
-            backdrop.width,
-            backdrop.height,
+            backdrop.valign as u8,
             backdrop.x,
             backdrop.y,
+            backdrop.full_width as u8,
+            backdrop.full_height as u8,
+            backdrop.inset_top,
+            backdrop.inset_bottom,
+            backdrop.inset_left,
+            backdrop.inset_right,
+            backdrop.width,
+            backdrop.height,
             backdrop.z,
-            backdrop.color,
+            backdrop.color.red,
+            backdrop.color.green,
+            backdrop.color.blue,
+            backdrop.color.alpha,
             backdrop.blur_strength,
             backdrop.radius,
-            backdrop.border_color,
             backdrop.border_width,
+        );
+        let _ = write!(
+            &mut variant,
+            ":{}:{}:{}:{}",
+            border.red, border.green, border.blue, border.alpha
         );
     }
     if scale > 1 {
@@ -575,6 +610,31 @@ fn anchored_block_x(frame_width: i32, width: i32, halign: HorizontalAlign, x: i3
         HorizontalAlign::Center => (frame_width - width) / 2 + x,
         HorizontalAlign::Right => frame_width - width + x,
     }
+}
+
+fn backdrop_rect(frame_width: i32, frame_height: i32, backdrop: &BackdropPrewarmSpec) -> Rect {
+    let x = if backdrop.full_width {
+        backdrop.inset_left.min(frame_width)
+    } else {
+        anchored_block_x(frame_width, backdrop.width, backdrop.halign, backdrop.x)
+    };
+    let y = if backdrop.full_height {
+        backdrop.inset_top.min(frame_height)
+    } else {
+        anchored_block_y(frame_height, backdrop.height, backdrop.valign, backdrop.y)
+    };
+    let width = if backdrop.full_width {
+        (frame_width - backdrop.inset_left - backdrop.inset_right).max(0)
+    } else {
+        backdrop.width
+    };
+    let height = if backdrop.full_height {
+        (frame_height - backdrop.inset_top - backdrop.inset_bottom).max(0)
+    } else {
+        backdrop.height
+    };
+
+    Rect::new(x, y, width, height)
 }
 
 fn anchored_block_y(frame_height: i32, height: i32, valign: VerticalAlign, y: i32) -> i32 {
@@ -736,12 +796,20 @@ struct GeneratedPrewarmReport {
 
 struct BackdropPrewarmSpec {
     mode: BackdropMode,
+    show_when: BackdropShowWhen,
+    visible: bool,
     width: i32,
     height: i32,
     halign: HorizontalAlign,
     valign: VerticalAlign,
     x: i32,
     y: i32,
+    full_width: bool,
+    full_height: bool,
+    inset_top: i32,
+    inset_bottom: i32,
+    inset_left: i32,
+    inset_right: i32,
     z: i32,
     color: ClearColor,
     blur_strength: u8,
@@ -766,12 +834,15 @@ struct BackgroundPrewarmInputs {
 
 #[cfg(test)]
 mod tests {
-    use veila_common::AppConfig;
-    use veila_renderer::FrameSize;
+    use veila_common::{AppConfig, BackdropMode, BackdropShowWhen, HorizontalAlign, VerticalAlign};
+    use veila_renderer::{ClearColor, FrameSize};
 
     use crate::app::output_probe::ProbedOutput;
 
-    use super::{PrewarmSize, generated_sizes, prewarm_inputs_changed, prewarm_jobs};
+    use super::{
+        BackdropPrewarmSpec, PrewarmSize, backdrop_rect, backdrop_variant, generated_sizes,
+        prewarm_inputs_changed, prewarm_jobs,
+    };
 
     #[test]
     fn detects_background_related_prewarm_changes() {
@@ -870,6 +941,70 @@ mod tests {
                 buffer: FrameSize::new(3840, 2160),
                 scale: 2
             }]
+        );
+    }
+
+    #[test]
+    fn backdrop_rect_uses_full_height_geometry() {
+        let backdrop = BackdropPrewarmSpec {
+            mode: BackdropMode::Blur,
+            show_when: BackdropShowWhen::Always,
+            visible: true,
+            width: 540,
+            height: 600,
+            halign: HorizontalAlign::Left,
+            valign: VerticalAlign::Center,
+            x: 0,
+            y: 0,
+            full_width: false,
+            full_height: true,
+            inset_top: 24,
+            inset_bottom: 36,
+            inset_left: 0,
+            inset_right: 0,
+            z: 0,
+            color: ClearColor::rgba(0, 0, 0, 26),
+            blur_strength: 12,
+            radius: 0,
+            border_color: None,
+            border_width: 0,
+        };
+
+        assert_eq!(
+            backdrop_rect(3840, 2160, &backdrop),
+            veila_renderer::shape::Rect::new(0, 24, 540, 2100)
+        );
+    }
+
+    #[test]
+    fn backdrop_variant_tracks_runtime_geometry_fields() {
+        let backdrop = BackdropPrewarmSpec {
+            mode: BackdropMode::Blur,
+            show_when: BackdropShowWhen::Always,
+            visible: true,
+            width: 540,
+            height: 600,
+            halign: HorizontalAlign::Left,
+            valign: VerticalAlign::Center,
+            x: 0,
+            y: 0,
+            full_width: false,
+            full_height: true,
+            inset_top: 24,
+            inset_bottom: 36,
+            inset_left: 0,
+            inset_right: 0,
+            z: 0,
+            color: ClearColor::rgba(0, 0, 0, 26),
+            blur_strength: 12,
+            radius: 0,
+            border_color: Some(ClearColor::rgba(255, 255, 255, 24)),
+            border_width: 1,
+        };
+
+        assert_eq!(
+            backdrop_variant(&[backdrop], 2),
+            "backdrop:v1:Blur:0:1:Left:1:0:0:0:1:24:36:0:0:540:600:0:0:0:0:26:12:0:1:255:255:255:24:render-scale:2"
         );
     }
 }
