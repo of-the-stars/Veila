@@ -65,9 +65,18 @@ impl CurtainApp {
         }
 
         self.maybe_notify_ready();
+        self.flush_pending_pre_ready_redraw(queue_handle);
     }
 
     pub(crate) fn render_all_surfaces(&mut self, queue_handle: &QueueHandle<Self>) {
+        if !self.ready_notified {
+            if !self.pending_pre_ready_redraw {
+                tracing::debug!("deferred non-critical redraw until curtain readiness");
+            }
+            self.pending_pre_ready_redraw = true;
+            return;
+        }
+
         self.refresh_power_status_text();
         let surfaces: Vec<_> = self
             .lock_surfaces
@@ -116,6 +125,15 @@ impl CurtainApp {
         }
 
         self.log_memory_snapshot("ready");
+    }
+
+    pub(crate) fn flush_pending_pre_ready_redraw(&mut self, queue_handle: &QueueHandle<Self>) {
+        if !self.ready_notified || !self.pending_pre_ready_redraw {
+            return;
+        }
+
+        self.pending_pre_ready_redraw = false;
+        self.render_all_surfaces(queue_handle);
     }
 
     pub(crate) fn resolve_surface_size(&self, index: usize, requested: (u32, u32)) -> SurfaceSize {

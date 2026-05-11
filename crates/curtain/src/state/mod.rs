@@ -162,6 +162,7 @@ pub(crate) struct CurtainApp {
     pub(crate) wake_pointer_release_pending: bool,
     pub(crate) post_ready_nonfirst_renders: u32,
     pub(crate) post_ready_memory_logged: bool,
+    pub(crate) pending_pre_ready_redraw: bool,
 }
 
 impl CurtainApp {
@@ -314,6 +315,7 @@ impl CurtainApp {
             wake_pointer_release_pending: false,
             post_ready_nonfirst_renders: 0,
             post_ready_memory_logged: false,
+            pending_pre_ready_redraw: false,
             lock_acquisition_started: false,
         })
     }

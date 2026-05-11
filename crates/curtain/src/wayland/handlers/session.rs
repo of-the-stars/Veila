@@ -13,7 +13,7 @@ use smithay_client_toolkit::{
 use crate::state::{CurtainApp, duration_ms_between, elapsed_ms, elapsed_us};
 
 impl SessionLockHandler for CurtainApp {
-    fn locked(&mut self, _conn: &Connection, _qh: &QueueHandle<Self>, _session_lock: SessionLock) {
+    fn locked(&mut self, _conn: &Connection, qh: &QueueHandle<Self>, _session_lock: SessionLock) {
         let session_locked_at = std::time::Instant::now();
         self.session_locked_at = Some(session_locked_at);
         tracing::info!(
@@ -28,6 +28,7 @@ impl SessionLockHandler for CurtainApp {
         self.session_locked = true;
         self.screen_off.arm(session_locked_at);
         self.maybe_notify_ready();
+        self.flush_pending_pre_ready_redraw(qh);
     }
 
     fn finished(
