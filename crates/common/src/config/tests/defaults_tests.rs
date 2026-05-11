@@ -95,6 +95,8 @@ fn parses_partial_config_with_defaults() {
     assert_eq!(config.visuals.input_radius(), 32);
     assert!(config.visuals.input_border_width().is_none());
     assert!(config.visuals.avatar_background_color().is_none());
+    assert!(config.visuals.avatar_image_path().is_none());
+    assert!(config.avatar_image_path().is_none());
     assert!(config.visuals.avatar_size().is_none());
     assert!(config.visuals.avatar_placeholder_padding().is_none());
     assert!(config.visuals.avatar_icon_color().is_none());

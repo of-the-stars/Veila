@@ -88,7 +88,7 @@ impl CurtainApp {
             theme,
             config.lock.user_hint.clone(),
             config.lock.username.clone(),
-            config.lock.avatar_path.clone(),
+            config.avatar_image_path().map(std::path::Path::to_path_buf),
             config.lock.show_username,
             config.weather.normalized_location(),
             self.weather_snapshot.clone(),

@@ -77,6 +77,12 @@ impl AppConfig {
         toml::from_str(input).map_err(Into::into)
     }
 
+    pub fn avatar_image_path(&self) -> Option<&Path> {
+        self.visuals
+            .avatar_image_path()
+            .or(self.lock.avatar_path.as_deref())
+    }
+
     pub fn load(explicit_path: Option<&Path>) -> Result<LoadedConfig> {
         let path = match explicit_path {
             Some(path) => Some(path.to_path_buf()),

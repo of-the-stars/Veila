@@ -1,3 +1,5 @@
+use std::path::{Path, PathBuf};
+
 use serde::{Deserialize, Serialize};
 
 use super::{RgbColor, WidgetPositionConfig};
@@ -6,6 +8,8 @@ use super::{RgbColor, WidgetPositionConfig};
 pub struct AvatarVisualConfig {
     #[serde(default)]
     pub enabled: Option<bool>,
+    #[serde(default)]
+    pub image_path: Option<PathBuf>,
     #[serde(default)]
     pub size: Option<u16>,
     #[serde(default)]
@@ -26,6 +30,7 @@ impl Default for AvatarVisualConfig {
     fn default() -> Self {
         Self {
             enabled: Some(true),
+            image_path: None,
             size: Some(150),
             background_color: Some(RgbColor::rgba(255, 255, 255, 10)),
             placeholder_padding: Some(28),
@@ -82,6 +87,12 @@ impl Default for UsernameVisualConfig {
 }
 
 impl super::VisualConfig {
+    pub fn avatar_image_path(&self) -> Option<&Path> {
+        self.avatar
+            .as_ref()
+            .and_then(|avatar| avatar.image_path.as_deref())
+    }
+
     pub fn avatar_enabled(&self) -> bool {
         self.avatar
             .as_ref()

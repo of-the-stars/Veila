@@ -951,3 +951,39 @@ fn legacy_bundled_mode_resolves_as_gradient() {
     assert_eq!(gradient.bottom_left, RgbColor::rgb(111, 226, 255));
     assert_eq!(gradient.bottom_right, RgbColor::rgb(111, 76, 255));
 }
+
+#[test]
+fn avatar_image_path_uses_legacy_lock_path_when_visual_path_is_unset() {
+    let config = AppConfig::from_toml_str(
+        r#"
+            [lock]
+            avatar_path = "/tmp/legacy-avatar.png"
+        "#,
+    )
+    .expect("config should parse");
+
+    assert!(config.visuals.avatar_image_path().is_none());
+    assert_eq!(
+        config.avatar_image_path(),
+        Some(std::path::Path::new("/tmp/legacy-avatar.png"))
+    );
+}
+
+#[test]
+fn avatar_image_path_prefers_visual_path_over_legacy_lock_path() {
+    let config = AppConfig::from_toml_str(
+        r#"
+            [lock]
+            avatar_path = "/tmp/legacy-avatar.png"
+
+            [visuals.avatar]
+            image_path = "/tmp/avatar.png"
+        "#,
+    )
+    .expect("config should parse");
+
+    assert_eq!(
+        config.avatar_image_path(),
+        Some(std::path::Path::new("/tmp/avatar.png"))
+    );
+}

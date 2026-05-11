@@ -89,7 +89,7 @@ pub(crate) fn render_preview(options: CurtainOptions) -> Result<()> {
         ShellTheme::from_config(&config),
         config.lock.user_hint.clone(),
         preview_username,
-        config.lock.avatar_path.clone(),
+        config.avatar_image_path().map(std::path::Path::to_path_buf),
         config.lock.show_username,
         weather_location,
         weather_snapshot,

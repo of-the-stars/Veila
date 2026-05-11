@@ -71,7 +71,8 @@ color = "rgba(255, 255, 255, 0.52)"
 color = "rgba(255, 255, 255, 0.6)"
 
 [visuals.avatar]
-size = 160
+# image_path = "/path/to/avatar.jpg"
+size = 150
 background_color = "rgba(255, 255, 255, 0.04)"
 placeholder_padding = 28
 ring_color = "rgba(255, 255, 255, 0.15)"
@@ -118,7 +119,7 @@ opacity = 80
 halign = "left"
 valign = "bottom"
 x = 40
-y = -106
+y = -112
 
 [visuals.weather.temperature]
 font_size = 40

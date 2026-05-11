@@ -74,6 +74,7 @@ fn loads_config_from_file() {
             input_mask_color = "#A9C4FF"
 
             [visuals.avatar]
+            image_path = "/tmp/avatar-new.png"
             halign = "center"
             valign = "center"
             x = 0
@@ -116,6 +117,14 @@ fn loads_config_from_file() {
     assert_eq!(
         loaded.config.lock.avatar_path.as_deref(),
         Some(std::path::Path::new("/tmp/avatar.png"))
+    );
+    assert_eq!(
+        loaded.config.visuals.avatar_image_path(),
+        Some(std::path::Path::new("/tmp/avatar-new.png"))
+    );
+    assert_eq!(
+        loaded.config.avatar_image_path(),
+        Some(std::path::Path::new("/tmp/avatar-new.png"))
     );
     assert_eq!(
         loaded.config.lock.user_hint.as_deref(),

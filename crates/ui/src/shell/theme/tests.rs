@@ -35,6 +35,7 @@ fn input_alpha_uses_rgba_values() {
     });
     config.visuals.avatar = Some(AvatarVisualConfig {
         enabled: Some(true),
+        image_path: None,
         size: Some(92),
         background_color: Some(ConfigColor::rgba(24, 30, 42, 92)),
         placeholder_padding: Some(14),
