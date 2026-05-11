@@ -87,7 +87,7 @@ pub(crate) fn render_preview(options: CurtainOptions) -> Result<()> {
 
     let shell = ShellState::new_with_username_and_widgets(
         ShellTheme::from_config(&config),
-        config.lock.user_hint.clone(),
+        Some(config.visuals.input_placeholder()),
         preview_username,
         config.avatar_image_path().map(std::path::Path::to_path_buf),
         config.visuals.username_enabled(),

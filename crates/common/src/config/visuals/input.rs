@@ -18,6 +18,7 @@ impl Default for InputVisualEntry {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default)]
 pub struct InputVisualConfig {
+    pub placeholder: Option<String>,
     pub reveal_on_interaction: Option<bool>,
     pub reveal_mode: Option<InputRevealMode>,
     pub reveal_hint: Option<String>,
@@ -39,6 +40,7 @@ pub struct InputVisualConfig {
 impl Default for InputVisualConfig {
     fn default() -> Self {
         Self {
+            placeholder: Some(String::from(DEFAULT_INPUT_PLACEHOLDER)),
             reveal_on_interaction: Some(false),
             reveal_mode: Some(InputRevealMode::Input),
             reveal_hint: Some(String::from(DEFAULT_REVEAL_HINT)),
@@ -86,6 +88,7 @@ const fn default_input_color() -> RgbColor {
     RgbColor::rgb(13, 18, 28)
 }
 
+const DEFAULT_INPUT_PLACEHOLDER: &str = "Password";
 const DEFAULT_REVEAL_HINT: &str = "Press any key or click to continue";
 const MAX_REVEAL_HINT_CHARS: usize = 160;
 
@@ -99,6 +102,19 @@ pub(crate) fn sanitized_reveal_hint(hint: Option<&str>) -> String {
 }
 
 impl super::VisualConfig {
+    pub fn input_placeholder(&self) -> String {
+        match &self.input {
+            InputVisualEntry::Color(_) => String::from(DEFAULT_INPUT_PLACEHOLDER),
+            InputVisualEntry::Section(config) => config
+                .placeholder
+                .as_deref()
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+                .unwrap_or(DEFAULT_INPUT_PLACEHOLDER)
+                .to_string(),
+        }
+    }
+
     pub fn input_background_color(&self) -> RgbColor {
         match &self.input {
             InputVisualEntry::Color(color) => *color,

@@ -20,7 +20,6 @@ fn parses_partial_config_with_defaults() {
         config.lock.log_file_path,
         std::path::PathBuf::from("~/.local/state/veila/veilad.log")
     );
-    assert!(config.lock.user_hint.is_none());
     assert!(config.lock.avatar_path.is_none());
     assert_eq!(config.background.effective_mode(), BackgroundMode::Gradient);
     assert_eq!(config.background.color, RgbColor::rgb(12, 16, 24));
@@ -92,6 +91,7 @@ fn parses_partial_config_with_defaults() {
     assert!(config.visuals.input_height().is_none());
     assert_eq!(config.visuals.input_radius(), 32);
     assert!(config.visuals.input_border_width().is_none());
+    assert_eq!(config.visuals.input_placeholder(), "Password");
     assert!(config.visuals.avatar_background_color().is_none());
     assert!(config.visuals.avatar_image_path().is_none());
     assert!(config.avatar_image_path().is_none());

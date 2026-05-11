@@ -27,8 +27,6 @@ pub struct LockConfig {
     #[serde(default)]
     pub skip_suspend_while_media_playing: bool,
     #[serde(default)]
-    pub user_hint: Option<String>,
-    #[serde(default)]
     pub avatar_path: Option<PathBuf>,
 }
 
@@ -46,7 +44,6 @@ impl Default for LockConfig {
             suspend_seconds: None,
             suspend_only_on_battery: false,
             skip_suspend_while_media_playing: false,
-            user_hint: Some(String::from("Password")),
             avatar_path: None,
         }
     }

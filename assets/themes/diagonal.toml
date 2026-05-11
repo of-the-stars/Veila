@@ -5,9 +5,6 @@ color = "#323449"
 dim_strength = 64
 tint = "rgba(255, 255, 255, 0.1)"
 
-[lock]
-user_hint = "Password"
-
 [battery]
 enabled = true
 
@@ -40,6 +37,7 @@ x = 0
 y = 140
 
 [visuals.input]
+placeholder = "Password"
 background_color = "rgba(255, 255, 255, 0.08)"
 width = 310
 height = 54

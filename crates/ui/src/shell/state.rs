@@ -85,13 +85,13 @@ impl ShellState {
 
     pub fn new(
         theme: ShellTheme,
-        user_hint: Option<String>,
+        input_placeholder: Option<String>,
         avatar_path: Option<PathBuf>,
         username_enabled: bool,
     ) -> Self {
         Self::new_with_weather(
             theme,
-            user_hint,
+            input_placeholder,
             None,
             avatar_path,
             username_enabled,
@@ -105,14 +105,14 @@ impl ShellState {
 
     pub fn new_with_username(
         theme: ShellTheme,
-        user_hint: Option<String>,
+        input_placeholder: Option<String>,
         username_override: Option<String>,
         avatar_path: Option<PathBuf>,
         username_enabled: bool,
     ) -> Self {
         Self::new_with_weather(
             theme,
-            user_hint,
+            input_placeholder,
             username_override,
             avatar_path,
             username_enabled,
@@ -127,7 +127,7 @@ impl ShellState {
     #[allow(clippy::too_many_arguments)]
     pub fn new_with_username_and_weather(
         theme: ShellTheme,
-        user_hint: Option<String>,
+        input_placeholder: Option<String>,
         username_override: Option<String>,
         avatar_path: Option<PathBuf>,
         username_enabled: bool,
@@ -138,7 +138,7 @@ impl ShellState {
     ) -> Self {
         Self::new_with_username_and_widgets(
             theme,
-            user_hint,
+            input_placeholder,
             username_override,
             avatar_path,
             username_enabled,
@@ -153,7 +153,7 @@ impl ShellState {
     #[allow(clippy::too_many_arguments)]
     pub fn new_with_username_and_widgets(
         theme: ShellTheme,
-        user_hint: Option<String>,
+        input_placeholder: Option<String>,
         username_override: Option<String>,
         avatar_path: Option<PathBuf>,
         username_enabled: bool,
@@ -165,7 +165,7 @@ impl ShellState {
     ) -> Self {
         Self::new_with_weather(
             theme,
-            user_hint,
+            input_placeholder,
             username_override,
             avatar_path,
             username_enabled,
@@ -180,7 +180,7 @@ impl ShellState {
     #[allow(clippy::too_many_arguments)]
     fn new_with_weather(
         theme: ShellTheme,
-        user_hint: Option<String>,
+        input_placeholder: Option<String>,
         username_override: Option<String>,
         avatar_path: Option<PathBuf>,
         username_enabled: bool,
@@ -207,7 +207,7 @@ impl ShellState {
             status: ShellStatus::Idle,
             clock: ClockState::current(theme.clock_format),
             theme,
-            hint_text: user_hint
+            hint_text: input_placeholder
                 .filter(|hint| !hint.trim().is_empty())
                 .unwrap_or_else(|| String::from("Type your password to unlock")),
             reveal_hint_text,
@@ -283,24 +283,30 @@ impl ShellState {
     pub fn apply_theme(
         &mut self,
         theme: ShellTheme,
-        user_hint: Option<String>,
+        input_placeholder: Option<String>,
         avatar_path: Option<PathBuf>,
         username_enabled: bool,
     ) {
-        self.apply_theme_with_username(theme, user_hint, None, avatar_path, username_enabled);
+        self.apply_theme_with_username(
+            theme,
+            input_placeholder,
+            None,
+            avatar_path,
+            username_enabled,
+        );
     }
 
     pub fn apply_theme_with_username(
         &mut self,
         theme: ShellTheme,
-        user_hint: Option<String>,
+        input_placeholder: Option<String>,
         username_override: Option<String>,
         avatar_path: Option<PathBuf>,
         username_enabled: bool,
     ) {
         self.apply_theme_with_username_and_weather(
             theme,
-            user_hint,
+            input_placeholder,
             username_override,
             avatar_path,
             username_enabled,
@@ -316,7 +322,7 @@ impl ShellState {
     pub fn apply_theme_with_username_and_weather(
         &mut self,
         theme: ShellTheme,
-        user_hint: Option<String>,
+        input_placeholder: Option<String>,
         username_override: Option<String>,
         avatar_path: Option<PathBuf>,
         username_enabled: bool,
@@ -329,7 +335,7 @@ impl ShellState {
         let reveal_on_interaction = theme.input_reveal_on_interaction;
         self.theme = theme;
         self.clock = ClockState::current(self.theme.clock_format);
-        self.hint_text = user_hint
+        self.hint_text = input_placeholder
             .filter(|hint| !hint.trim().is_empty())
             .unwrap_or_else(|| String::from("Type your password to unlock"));
         self.reveal_hint_text = self.theme.input_reveal_hint.clone();

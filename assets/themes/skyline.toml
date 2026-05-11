@@ -5,9 +5,6 @@ path = "/path/to/wallpaper.jpg"
 color = "#403249"
 dim_strength = 20
 
-[lock]
-user_hint = "Password"
-
 [battery]
 enabled = true
 
@@ -42,6 +39,7 @@ y = 40
 relative_to = "auth_panel"
 
 [visuals.input]
+placeholder = "Password"
 background_color = "rgba(255, 255, 255, 0.1)"
 border_color = "rgba(255, 255, 255, 0.08)"
 border_width = 3

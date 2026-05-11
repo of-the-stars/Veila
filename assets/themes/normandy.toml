@@ -6,9 +6,6 @@ color = "#324948"
 blur_strength = 12
 dim_strength = 34
 
-[lock]
-user_hint = "Password"
-
 [battery]
 enabled = true
 
@@ -41,6 +38,7 @@ x = 0
 y = 0
 
 [visuals.input]
+placeholder = "Password"
 background_color = "rgba(255, 255, 255, 0.08)"
 border_color = "rgba(255, 255, 255, 0.08)"
 border_width = 3

@@ -86,7 +86,7 @@ impl CurtainApp {
         }
         self.ui_shell.apply_theme_with_username_and_weather(
             theme,
-            config.lock.user_hint.clone(),
+            Some(config.visuals.input_placeholder()),
             config.visuals.username_text().map(str::to_owned),
             config.avatar_image_path().map(std::path::Path::to_path_buf),
             config.visuals.username_enabled(),

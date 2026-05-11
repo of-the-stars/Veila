@@ -10,9 +10,6 @@ center_x = 50
 center_y = 50
 radius = 80
 
-[lock]
-user_hint = "Password"
-
 [battery]
 enabled = true
 
@@ -44,6 +41,7 @@ x = 0
 y = 140
 
 [visuals.input]
+placeholder = "Password"
 background_color = "rgba(255, 255, 255, 0.04)"
 width = 310
 height = 54

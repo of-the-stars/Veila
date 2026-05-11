@@ -17,6 +17,7 @@ use super::ShellTheme;
 fn input_alpha_uses_rgba_values() {
     let mut config = AppConfig::default();
     config.visuals.input = InputVisualEntry::Section(InputVisualConfig {
+        placeholder: None,
         reveal_on_interaction: Some(true),
         reveal_mode: Some(InputRevealMode::Full),
         reveal_hint: None,

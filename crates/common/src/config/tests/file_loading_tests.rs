@@ -18,7 +18,6 @@ fn loads_config_from_file() {
             [lock]
             acquire_timeout_seconds = 9
             auth_backoff_base_ms = 250
-            user_hint = "Type your password"
             avatar_path = "/tmp/avatar.png"
 
             [weather]
@@ -37,16 +36,6 @@ fn loads_config_from_file() {
 
             [visuals]
             avatar_background_color = "rgba(24, 30, 42, 0.82)"
-            input = "#FFFFFF1A"
-            input_border = "#FFFFFF1F"
-            input_font_family = "Geom"
-            input_font_weight = 600
-            input_font_style = "italic"
-            input_font_size = 22
-            input_width = 280
-            input_height = 54
-            input_radius = 20
-            input_border_width = 3
             avatar_size = 92
             avatar_placeholder_padding = 12
             avatar_icon_color = "#E8EEF9"
@@ -69,7 +58,20 @@ fn loads_config_from_file() {
             placeholder_color = "#8694B499"
             eye_icon_color = "#F4F8FFB8"
             status_color = "#FFE0A0E0"
-            input_mask_color = "#A9C4FF"
+
+            [visuals.input]
+            placeholder = "Type your password"
+            background_color = "#FFFFFF1A"
+            border_color = "#FFFFFF1F"
+            font_family = "Geom"
+            font_weight = 600
+            font_style = "italic"
+            font_size = 22
+            width = 280
+            height = 54
+            radius = 20
+            border_width = 3
+            mask_color = "#A9C4FF"
 
             [visuals.avatar]
             image_path = "/tmp/avatar-new.png"
@@ -127,8 +129,8 @@ fn loads_config_from_file() {
         Some(std::path::Path::new("/tmp/avatar-new.png"))
     );
     assert_eq!(
-        loaded.config.lock.user_hint.as_deref(),
-        Some("Type your password")
+        loaded.config.visuals.input_placeholder(),
+        "Type your password"
     );
     assert!(loaded.config.weather.enabled);
     assert_eq!(loaded.config.weather.location.as_deref(), Some("Riga"));

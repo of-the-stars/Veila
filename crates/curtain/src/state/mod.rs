@@ -204,7 +204,7 @@ impl CurtainApp {
             .or_else(|| config.background.resolved_path());
         let ui_shell = ShellState::new_with_username_and_widgets(
             theme,
-            config.lock.user_hint.clone(),
+            Some(config.visuals.input_placeholder()),
             config.visuals.username_text().map(str::to_owned),
             config.avatar_image_path().map(std::path::Path::to_path_buf),
             config.visuals.username_enabled(),

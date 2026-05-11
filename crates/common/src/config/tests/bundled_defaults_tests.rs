@@ -13,7 +13,6 @@ fn first_run_defaults_match_bundled_theme() {
         config.lock.log_file_path,
         std::path::PathBuf::from("~/.local/state/veila/veilad.log")
     );
-    assert_eq!(config.lock.user_hint.as_deref(), Some("Password"));
     assert!(config.lock.avatar_path.is_none());
     assert_eq!(config.background.effective_mode(), BackgroundMode::Radial);
     assert_eq!(config.background.color, RgbColor::rgb(65, 50, 73));
@@ -69,6 +68,7 @@ fn first_run_defaults_match_bundled_theme() {
     assert_eq!(config.visuals.input_height(), Some(54));
     assert_eq!(config.visuals.input_radius(), 10);
     assert_eq!(config.visuals.input_border_width(), Some(0));
+    assert_eq!(config.visuals.input_placeholder(), "Password");
     assert_eq!(
         config.visuals.avatar_background_color(),
         Some(RgbColor::rgba(255, 255, 255, 10))
