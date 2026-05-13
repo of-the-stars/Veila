@@ -128,6 +128,7 @@ fn loads_nested_visual_tables_with_precedence_for_auth_and_header_entries() {
     assert_eq!(config.visuals.date_font_family(), Some("Geom"));
     assert_eq!(config.visuals.date_font_weight(), Some(600));
     assert_eq!(config.visuals.date_font_style(), Some(FontStyle::Italic));
+    assert_eq!(config.visuals.date_format(), DateFormat::Iso);
     assert_eq!(config.visuals.date_font_size(), Some(16));
     assert_eq!(
         config.visuals.date_position(),

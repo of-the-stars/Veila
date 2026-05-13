@@ -1,13 +1,13 @@
 use veila_common::{
     AppConfig, AvatarVisualConfig, BackdropMode, BackdropShowWhen, BackdropVisualConfig,
-    BatteryVisualConfig, ClockFormat, ClockStyle, ClockVisualConfig, ConfigColor, DateVisualConfig,
-    EyeVisualConfig, FontStyle, GridVisualConfig, HorizontalAlign, InputRevealMode,
-    InputVisualConfig, InputVisualEntry, KeyboardVisualConfig, LayerKind, LayerVisualConfig,
-    NowPlayingArtworkVisualConfig, NowPlayingTextVisualConfig, NowPlayingVisualConfig,
-    PaletteVisualConfig, PlaceholderVisualConfig, PowerStatusVisualConfig, RevealDisplayMode,
-    RevealVisualConfig, StatusDisplayMode, StatusVisualConfig, UsernameVisualConfig, VerticalAlign,
-    WeatherIconVisualConfig, WeatherLocationVisualConfig, WeatherTemperatureVisualConfig,
-    WeatherVisualConfig, WidgetPositionConfig,
+    BatteryVisualConfig, ClockFormat, ClockStyle, ClockVisualConfig, ConfigColor, DateFormat,
+    DateVisualConfig, EyeVisualConfig, FontStyle, GridVisualConfig, HorizontalAlign,
+    InputRevealMode, InputVisualConfig, InputVisualEntry, KeyboardVisualConfig, LayerKind,
+    LayerVisualConfig, NowPlayingArtworkVisualConfig, NowPlayingTextVisualConfig,
+    NowPlayingVisualConfig, PaletteVisualConfig, PlaceholderVisualConfig, PowerStatusVisualConfig,
+    RevealDisplayMode, RevealVisualConfig, StatusDisplayMode, StatusVisualConfig,
+    UsernameVisualConfig, VerticalAlign, WeatherIconVisualConfig, WeatherLocationVisualConfig,
+    WeatherTemperatureVisualConfig, WeatherVisualConfig, WidgetPositionConfig,
 };
 use veila_renderer::ClearColor;
 
@@ -71,6 +71,7 @@ fn input_alpha_uses_rgba_values() {
     });
     config.visuals.date = Some(DateVisualConfig {
         enabled: Some(true),
+        format: Some(DateFormat::Iso),
         font_family: Some(String::from("Geom")),
         font_weight: Some(600),
         font_style: Some(FontStyle::Italic),
@@ -366,6 +367,7 @@ fn input_alpha_uses_rgba_values() {
     assert_eq!(theme.date_font_family.as_deref(), Some("Geom"));
     assert_eq!(theme.date_font_weight, Some(600));
     assert_eq!(theme.date_font_style, Some(FontStyle::Italic));
+    assert_eq!(theme.date_format, DateFormat::Iso);
     assert_eq!(theme.date_color, Some(ClearColor::rgba(200, 212, 236, 189)));
     assert_eq!(theme.date_position, None);
     assert_eq!(theme.clock_font_size, Some(28));

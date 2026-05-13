@@ -28,6 +28,7 @@ y = 0
 relative_to = "auth_panel"
 
 [visuals.date]
+format = "long"
 font_family = "Japanola"
 font_weight = 700
 color = "rgba(0, 0, 0, 0.7)"

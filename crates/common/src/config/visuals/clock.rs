@@ -86,10 +86,31 @@ pub enum ClockFormat {
     TwelveHour,
 }
 
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub enum DateFormat {
+    #[default]
+    #[serde(rename = "long")]
+    Long,
+    #[serde(rename = "iso")]
+    Iso,
+    #[serde(rename = "dmy-dots")]
+    DayMonthYearDots,
+    #[serde(rename = "ymd-dots")]
+    YearMonthDayDots,
+    #[serde(rename = "mdy-slash")]
+    MonthDayYearSlash,
+    #[serde(rename = "dmy-slash")]
+    DayMonthYearSlash,
+    #[serde(rename = "short")]
+    Short,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct DateVisualConfig {
     #[serde(default)]
     pub enabled: Option<bool>,
+    #[serde(default)]
+    pub format: Option<DateFormat>,
     #[serde(default)]
     pub font_family: Option<String>,
     #[serde(default)]
@@ -108,6 +129,7 @@ impl Default for DateVisualConfig {
     fn default() -> Self {
         Self {
             enabled: Some(true),
+            format: Some(DateFormat::Long),
             font_family: Some(super::default_geom_font_family()),
             font_weight: Some(600),
             font_style: Some(FontStyle::Normal),
@@ -223,6 +245,13 @@ impl super::VisualConfig {
             .as_ref()
             .and_then(|date| date.enabled)
             .unwrap_or(true)
+    }
+
+    pub fn date_format(&self) -> DateFormat {
+        self.date
+            .as_ref()
+            .and_then(|date| date.format)
+            .unwrap_or_default()
     }
 
     pub fn date_font_family(&self) -> Option<&str> {

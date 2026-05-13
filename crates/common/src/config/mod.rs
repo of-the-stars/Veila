@@ -36,7 +36,7 @@ pub use lock::LockConfig;
 pub use now_playing::NowPlayingConfig;
 pub use visuals::{
     AvatarVisualConfig, BackdropMode, BackdropShowWhen, BackdropVisualConfig, BatteryVisualConfig,
-    CapsLockVisualConfig, ClockAlignment, ClockFormat, ClockStyle, ClockVisualConfig,
+    CapsLockVisualConfig, ClockAlignment, ClockFormat, ClockStyle, ClockVisualConfig, DateFormat,
     DateVisualConfig, EyeVisualConfig, FontStyle, GridVisualConfig, HorizontalAlign,
     InputRevealMode, InputVisualConfig, InputVisualEntry, KeyboardVisualConfig, LayerKind,
     LayerVisualConfig, NowPlayingArtworkVisualConfig, NowPlayingTextVisualConfig,

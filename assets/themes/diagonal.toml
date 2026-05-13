@@ -27,6 +27,7 @@ x = 0
 y = 40
 
 [visuals.date]
+format = "long"
 font_family = "Google Sans Flex"
 font_weight = 400
 font_size = 18

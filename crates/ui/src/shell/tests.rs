@@ -8,7 +8,7 @@ use veila_common::{
     WeatherSnapshot, WeatherUnit,
 };
 use veila_common::{
-    ClockFormat, HorizontalAlign, InputRevealMode, StatusDisplayMode, VerticalAlign,
+    ClockFormat, DateFormat, HorizontalAlign, InputRevealMode, StatusDisplayMode, VerticalAlign,
 };
 use veila_renderer::icon::BatteryIcon;
 use veila_renderer::{FrameSize, SoftwareBuffer};
@@ -650,15 +650,17 @@ fn applying_theme_updates_clock_format() {
     let mut shell = ShellState::default();
     let theme = ShellTheme {
         clock_format: ClockFormat::TwelveHour,
+        date_format: DateFormat::Iso,
         ..ShellTheme::default()
     };
 
     shell.apply_theme(theme.clone(), None, None, true);
 
     assert_eq!(shell.theme.clock_format, ClockFormat::TwelveHour);
+    assert_eq!(shell.theme.date_format, DateFormat::Iso);
     assert_eq!(
         shell.clock,
-        super::clock::ClockState::current(theme.clock_format)
+        super::clock::ClockState::current(theme.clock_format, theme.date_format)
     );
 }
 

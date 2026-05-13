@@ -68,6 +68,7 @@ border_color = "#DDDDDD1F"
             gap = 20
 
             [visuals.date]
+            format = "iso"
             font_family = "Geom"
             font_weight = 600
             font_style = "italic"

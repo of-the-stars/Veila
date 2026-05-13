@@ -31,6 +31,7 @@ x = 0
 y = 40
 
 [visuals.date]
+format = "long"
 font_family = "Geom"
 font_weight = 600
 font_size = 18

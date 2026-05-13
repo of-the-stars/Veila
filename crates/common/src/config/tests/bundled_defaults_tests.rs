@@ -119,6 +119,7 @@ fn first_run_defaults_match_bundled_theme() {
         config.visuals.date_color(),
         Some(RgbColor::rgba(255, 255, 255, 102))
     );
+    assert_eq!(config.visuals.date_format(), DateFormat::Long);
     assert_eq!(config.visuals.date_font_family(), Some("Geom"));
     assert_eq!(config.visuals.date_font_weight(), Some(600));
     assert_eq!(config.visuals.date_font_style(), Some(FontStyle::Normal));

@@ -1,10 +1,11 @@
 use time::{Month, OffsetDateTime, Weekday};
-use veila_common::{ClockFormat, ClockStyle};
+use veila_common::{ClockFormat, ClockStyle, DateFormat};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct ClockState {
     minute_key: i64,
     format: ClockFormat,
+    date_format: DateFormat,
     time_text: String,
     hour_text: String,
     minute_text: String,
@@ -13,12 +14,12 @@ pub(super) struct ClockState {
 }
 
 impl ClockState {
-    pub(super) fn current(format: ClockFormat) -> Self {
-        Self::from_datetime(local_now(), format)
+    pub(super) fn current(format: ClockFormat, date_format: DateFormat) -> Self {
+        Self::from_datetime(local_now(), format, date_format)
     }
 
     pub(super) fn refresh(&mut self) -> bool {
-        let next = Self::current(self.format);
+        let next = Self::current(self.format, self.date_format);
         if *self == next {
             return false;
         }
@@ -49,29 +50,30 @@ impl ClockState {
         self.meridiem_text.as_deref()
     }
 
-    fn from_datetime(datetime: OffsetDateTime, format: ClockFormat) -> Self {
+    fn from_datetime(
+        datetime: OffsetDateTime,
+        format: ClockFormat,
+        date_format: DateFormat,
+    ) -> Self {
         let (time_text, hour_text, minute_text, meridiem_text) = format_time(datetime, format);
 
         Self {
             minute_key: datetime.unix_timestamp().div_euclid(60),
             format,
+            date_format,
             time_text,
             hour_text,
             minute_text,
             meridiem_text,
-            date_text: format!(
-                "{}, {} {}",
-                weekday_name(datetime.weekday()),
-                month_name(datetime.month()),
-                datetime.day()
-            ),
+            date_text: format_date(datetime, date_format),
         }
     }
 }
 
 impl super::ShellState {
     pub fn set_preview_time(&mut self, datetime: OffsetDateTime) {
-        self.clock = ClockState::from_datetime(datetime, self.theme.clock_format);
+        self.clock =
+            ClockState::from_datetime(datetime, self.theme.clock_format, self.theme.date_format);
     }
 }
 
@@ -104,6 +106,53 @@ fn format_time(
     }
 }
 
+fn format_date(datetime: OffsetDateTime, format: DateFormat) -> String {
+    match format {
+        DateFormat::Long => format!(
+            "{}, {} {}",
+            weekday_name(datetime.weekday()),
+            month_name(datetime.month()),
+            datetime.day()
+        ),
+        DateFormat::Iso => format!(
+            "{:04}-{:02}-{:02}",
+            datetime.year(),
+            u8::from(datetime.month()),
+            datetime.day()
+        ),
+        DateFormat::DayMonthYearDots => format!(
+            "{:02}.{:02}.{:04}",
+            datetime.day(),
+            u8::from(datetime.month()),
+            datetime.year()
+        ),
+        DateFormat::YearMonthDayDots => format!(
+            "{:04}.{:02}.{:02}",
+            datetime.year(),
+            u8::from(datetime.month()),
+            datetime.day()
+        ),
+        DateFormat::MonthDayYearSlash => format!(
+            "{:02}/{:02}/{:04}",
+            u8::from(datetime.month()),
+            datetime.day(),
+            datetime.year()
+        ),
+        DateFormat::DayMonthYearSlash => format!(
+            "{:02}/{:02}/{:04}",
+            datetime.day(),
+            u8::from(datetime.month()),
+            datetime.year()
+        ),
+        DateFormat::Short => format!(
+            "{}, {} {}",
+            short_weekday_name(datetime.weekday()),
+            month_name(datetime.month()),
+            datetime.day()
+        ),
+    }
+}
+
 fn local_now() -> OffsetDateTime {
     OffsetDateTime::now_local().unwrap_or_else(|error| {
         tracing::warn!("failed to resolve local time offset: {error}");
@@ -120,6 +169,18 @@ fn weekday_name(weekday: Weekday) -> &'static str {
         Weekday::Friday => "Friday",
         Weekday::Saturday => "Saturday",
         Weekday::Sunday => "Sunday",
+    }
+}
+
+fn short_weekday_name(weekday: Weekday) -> &'static str {
+    match weekday {
+        Weekday::Monday => "Mon",
+        Weekday::Tuesday => "Tue",
+        Weekday::Wednesday => "Wed",
+        Weekday::Thursday => "Thu",
+        Weekday::Friday => "Fri",
+        Weekday::Saturday => "Sat",
+        Weekday::Sunday => "Sun",
     }
 }
 
@@ -143,7 +204,7 @@ fn month_name(month: Month) -> &'static str {
 #[cfg(test)]
 mod tests {
     use time::{Date, Month, PrimitiveDateTime, Time, UtcOffset};
-    use veila_common::{ClockFormat, ClockStyle};
+    use veila_common::{ClockFormat, ClockStyle, DateFormat};
 
     use super::ClockState;
 
@@ -155,7 +216,8 @@ mod tests {
         )
         .assume_offset(UtcOffset::UTC);
 
-        let clock = ClockState::from_datetime(datetime, ClockFormat::TwentyFourHour);
+        let clock =
+            ClockState::from_datetime(datetime, ClockFormat::TwentyFourHour, DateFormat::Long);
 
         assert_eq!(clock.primary_text(ClockStyle::Standard), "09:05");
         assert_eq!(clock.primary_text(ClockStyle::Stacked), "09");
@@ -172,7 +234,7 @@ mod tests {
         )
         .assume_offset(UtcOffset::UTC);
 
-        let clock = ClockState::from_datetime(datetime, ClockFormat::TwelveHour);
+        let clock = ClockState::from_datetime(datetime, ClockFormat::TwelveHour, DateFormat::Long);
 
         assert_eq!(clock.primary_text(ClockStyle::Standard), "03:05");
         assert_eq!(clock.primary_text(ClockStyle::Stacked), "03");
@@ -189,9 +251,33 @@ mod tests {
         )
         .assume_offset(UtcOffset::UTC);
 
-        let clock = ClockState::from_datetime(datetime, ClockFormat::TwelveHour);
+        let clock = ClockState::from_datetime(datetime, ClockFormat::TwelveHour, DateFormat::Long);
 
         assert_eq!(clock.primary_text(ClockStyle::Standard), "12:05");
         assert_eq!(clock.meridiem_text(), Some("AM"));
+    }
+
+    #[test]
+    fn formats_date_presets() {
+        let datetime = PrimitiveDateTime::new(
+            Date::from_calendar_date(2026, Month::May, 13).expect("date"),
+            Time::from_hms(9, 5, 0).expect("time"),
+        )
+        .assume_offset(UtcOffset::UTC);
+
+        let cases = [
+            (DateFormat::Long, "Wednesday, May 13"),
+            (DateFormat::Iso, "2026-05-13"),
+            (DateFormat::DayMonthYearDots, "13.05.2026"),
+            (DateFormat::YearMonthDayDots, "2026.05.13"),
+            (DateFormat::MonthDayYearSlash, "05/13/2026"),
+            (DateFormat::DayMonthYearSlash, "13/05/2026"),
+            (DateFormat::Short, "Wed, May 13"),
+        ];
+
+        for (format, expected) in cases {
+            let clock = ClockState::from_datetime(datetime, ClockFormat::TwentyFourHour, format);
+            assert_eq!(clock.date_text(), expected);
+        }
     }
 }

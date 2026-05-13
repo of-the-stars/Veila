@@ -113,6 +113,7 @@ fn parses_partial_config_with_defaults() {
     assert!(config.visuals.clock_meridiem_y().is_none());
     assert!(config.visuals.clock_color().is_none());
     assert!(config.visuals.date_color().is_none());
+    assert_eq!(config.visuals.date_format(), DateFormat::Long);
     assert!(config.visuals.date_font_family().is_none());
     assert!(config.visuals.date_font_weight().is_none());
     assert!(config.visuals.date_font_style().is_none());

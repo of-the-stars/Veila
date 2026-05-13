@@ -5,8 +5,8 @@ mod tests;
 use std::collections::HashMap;
 
 use veila_common::{
-    AppConfig, BackdropMode, BackdropShowWhen, ClockAlignment, ClockFormat, ClockStyle, FontStyle,
-    GridVisualConfig, HorizontalAlign, InputRevealMode, LayerKind, StatusDisplayMode,
+    AppConfig, BackdropMode, BackdropShowWhen, ClockAlignment, ClockFormat, ClockStyle, DateFormat,
+    FontStyle, GridVisualConfig, HorizontalAlign, InputRevealMode, LayerKind, StatusDisplayMode,
     VerticalAlign, WidgetPositionConfig,
 };
 use veila_renderer::ClearColor;
@@ -132,6 +132,7 @@ pub struct ShellTheme {
     pub date_font_family: Option<String>,
     pub date_font_weight: Option<u16>,
     pub date_font_style: Option<FontStyle>,
+    pub date_format: DateFormat,
     pub date_color: Option<ClearColor>,
     pub date_position: Option<WidgetPosition>,
     pub clock_font_size: Option<u32>,
@@ -798,6 +799,7 @@ impl ShellTheme {
             date_font_family: config.visuals.date_font_family().map(str::to_owned),
             date_font_weight: config.visuals.date_font_weight(),
             date_font_style: config.visuals.date_font_style(),
+            date_format: config.visuals.date_format(),
             date_color: config.visuals.date_color().map(to_color),
             date_position,
             clock_font_size: config.visuals.clock_font_size().map(u32::from),
