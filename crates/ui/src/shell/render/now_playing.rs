@@ -4,6 +4,9 @@ use super::super::{NowPlayingWidgetData, ShellState};
 use super::{NOW_PLAYING_MAX_TEXT_WIDTH, NOW_PLAYING_MIN_TEXT_WIDTH, SceneLayout, TextLayoutCache};
 
 const NOW_PLAYING_TEXT_WIDTH_CAP: i32 = 640;
+const NOW_PLAYING_ARTWORK_DEFAULT_SIZE: i32 = 44;
+const NOW_PLAYING_ARTWORK_MIN_SIZE: i32 = 32;
+const NOW_PLAYING_ARTWORK_AUTO_MAX_SIZE: i32 = 160;
 
 impl ShellState {
     pub(super) fn render_now_playing_widget(
@@ -116,23 +119,43 @@ impl ShellState {
     ) -> Option<NowPlayingArtworkPart<'a>> {
         let asset = now_playing.artwork.as_ref()?;
         let position = self.theme.now_playing_artwork_position?;
-        let artwork_size = self
-            .theme
-            .now_playing_artwork_size
-            .unwrap_or(44)
-            .clamp(32, 160);
+        let artwork_size = self.now_playing_artwork_size(size);
         let rect = self.positioned_rect(size, position, artwork_size, artwork_size);
 
         Some(NowPlayingArtworkPart {
             asset,
             rect,
-            radius: self
-                .theme
-                .now_playing_artwork_radius
-                .unwrap_or(8)
-                .clamp(0, 80),
+            radius: self.now_playing_artwork_radius(artwork_size),
             opacity: combine_optional_fade(self.theme.now_playing_artwork_opacity, fade_percent),
         })
+    }
+
+    fn now_playing_artwork_size(&self, size: FrameSize) -> i32 {
+        let scale = self.render_scale.max(1) as i32;
+        let min_size = NOW_PLAYING_ARTWORK_MIN_SIZE.saturating_mul(scale);
+
+        self.theme.now_playing_artwork_size.map_or_else(
+            || {
+                NOW_PLAYING_ARTWORK_DEFAULT_SIZE
+                    .saturating_mul(scale)
+                    .clamp(
+                        min_size,
+                        NOW_PLAYING_ARTWORK_AUTO_MAX_SIZE.saturating_mul(scale),
+                    )
+            },
+            |configured_size| {
+                let viewport_max =
+                    min_size.max((size.width.min(size.height) as i32).saturating_mul(4) / 5);
+                configured_size.clamp(min_size, viewport_max)
+            },
+        )
+    }
+
+    fn now_playing_artwork_radius(&self, artwork_size: i32) -> i32 {
+        self.theme
+            .now_playing_artwork_radius
+            .unwrap_or(8)
+            .clamp(0, artwork_size / 2)
     }
 
     fn now_playing_artist_part(
@@ -342,5 +365,71 @@ mod tests {
             .expect("scaled title should render");
 
         assert_eq!(title_line, scaled_title_line);
+    }
+
+    #[test]
+    fn configured_artwork_size_is_preserved_above_previous_cap() {
+        let shell = ShellState::new(
+            ShellTheme {
+                now_playing_artwork_size: Some(175),
+                ..ShellTheme::default()
+            },
+            None,
+            None,
+            true,
+        );
+
+        assert_eq!(
+            shell.now_playing_artwork_size(FrameSize::new(2560, 1440)),
+            175
+        );
+    }
+
+    #[test]
+    fn configured_artwork_size_scales_for_hidpi_render() {
+        let theme = ShellTheme {
+            now_playing_artwork_size: Some(175),
+            ..ShellTheme::default()
+        };
+        let mut shell = ShellState::new(theme.scaled_for_render(2), None, None, true);
+        shell.render_scale = 2;
+
+        assert_eq!(
+            shell.now_playing_artwork_size(FrameSize::new(5120, 2880)),
+            350
+        );
+    }
+
+    #[test]
+    fn configured_artwork_size_uses_viewport_safety_limit() {
+        let shell = ShellState::new(
+            ShellTheme {
+                now_playing_artwork_size: Some(1200),
+                ..ShellTheme::default()
+            },
+            None,
+            None,
+            true,
+        );
+
+        assert_eq!(
+            shell.now_playing_artwork_size(FrameSize::new(800, 600)),
+            480
+        );
+    }
+
+    #[test]
+    fn artwork_radius_clamps_to_half_artwork_size() {
+        let shell = ShellState::new(
+            ShellTheme {
+                now_playing_artwork_radius: Some(240),
+                ..ShellTheme::default()
+            },
+            None,
+            None,
+            true,
+        );
+
+        assert_eq!(shell.now_playing_artwork_radius(350), 175);
     }
 }
