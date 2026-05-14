@@ -1,3 +1,4 @@
+mod config;
 mod daemon;
 mod doctor;
 mod term;
@@ -7,6 +8,7 @@ use anyhow::{Result, bail};
 
 use crate::{DaemonOptions, adapters::ipc, app};
 
+use config::print_config_validation;
 use daemon::{
     lock_running_daemon, print_running_health, print_running_status, print_version_info,
     reload_running_config, stop_running_daemon,
@@ -56,11 +58,12 @@ pub async fn run(options: DaemonOptions) -> Result<()> {
         + usize::from(options.status)
         + usize::from(options.health)
         + usize::from(options.doctor)
+        + usize::from(options.check_config)
         + usize::from(options.version)
         + usize::from(options.reload_config);
     if control_mode_count > 1 {
         bail!(
-            "use only one of --lock-now, --current-theme, --print-theme, --set-theme, --unset-theme, --stop, --list-themes, --status, --health, --doctor, --version, or --reload-config at a time"
+            "use only one of --lock-now, --current-theme, --print-theme, --set-theme, --unset-theme, --stop, --list-themes, --status, --health, --doctor, --check-config, --version, or --reload-config at a time"
         );
     }
     if options.wait_ready && !options.lock_now {
@@ -118,6 +121,11 @@ pub async fn run(options: DaemonOptions) -> Result<()> {
         return Ok(());
     }
 
+    if options.check_config {
+        print_config_validation(options.config_path.as_deref())?;
+        return Ok(());
+    }
+
     if options.version {
         print_version_info();
         return Ok(());
@@ -171,6 +179,7 @@ pub async fn run_control(options: DaemonOptions) -> Result<()> {
         + usize::from(options.status)
         + usize::from(options.health)
         + usize::from(options.doctor)
+        + usize::from(options.check_config)
         + usize::from(options.version)
         + usize::from(options.reload_config);
     if control_mode_count > 1 {
@@ -247,6 +256,11 @@ pub async fn run_control(options: DaemonOptions) -> Result<()> {
         return Ok(());
     }
 
+    if options.check_config {
+        print_config_validation(options.config_path.as_deref())?;
+        return Ok(());
+    }
+
     if options.reload_config {
         reload_running_config(&daemon_socket_path).await?;
         return Ok(());
@@ -278,6 +292,7 @@ Legacy control:
       --status               Print daemon runtime status
       --health               Print daemon build and platform info
       --doctor               Check local runtime prerequisites without locking
+      --check-config         Validate config files without starting the daemon
       --stop                 Stop the running daemon
 
 Themes:
@@ -316,6 +331,7 @@ Commands:
   status                     Print daemon runtime status
   health                     Print daemon build and platform info
   doctor                     Check local runtime prerequisites without locking
+  check-config               Validate config files without starting the daemon
   reload                     Ask the running daemon to reload config from disk
   stop                       Stop the running daemon
 

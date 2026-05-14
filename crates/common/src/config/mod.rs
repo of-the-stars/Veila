@@ -7,6 +7,7 @@ mod lock;
 mod now_playing;
 #[cfg(test)]
 mod tests;
+mod validation;
 mod visuals;
 mod weather;
 
@@ -34,6 +35,10 @@ pub use battery::BatteryConfig;
 pub use color::ConfigColor;
 pub use lock::LockConfig;
 pub use now_playing::NowPlayingConfig;
+pub use validation::{
+    ConfigValidationIssue, ConfigValidationReport, ConfigValidationSource,
+    ConfigValidationSourceKind,
+};
 pub use visuals::{
     AvatarVisualConfig, BackdropMode, BackdropShowWhen, BackdropVisualConfig, BatteryVisualConfig,
     CapsLockVisualConfig, ClockAlignment, ClockFormat, ClockStyle, ClockVisualConfig, DateFormat,
@@ -117,6 +122,10 @@ impl AppConfig {
     pub fn load_from_file(path: &Path) -> Result<Self> {
         let content = fs::read_to_string(path)?;
         Self::from_toml_str_with_theme_support(&content, path.parent())
+    }
+
+    pub fn validate(explicit_path: Option<&Path>) -> Result<ConfigValidationReport> {
+        validation::validate_config(explicit_path)
     }
 
     fn from_default_layers() -> Result<Self> {
