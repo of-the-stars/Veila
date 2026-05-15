@@ -6,7 +6,8 @@ use veila_common::{
 use veila_renderer::{ClearColor, avatar::AvatarAsset};
 
 use super::{
-    ClockState, NowPlayingTransition, ShellState, ShellStatus, ShellTheme, TextLayoutCache,
+    ClockState, NowPlayingTransition, ShellMode, ShellState, ShellStatus, ShellTheme,
+    TextLayoutCache,
     avatar::{load_avatar, username_text},
     battery::widget_data as battery_widget_data,
     now_playing::{same_widget_data, widget_data as now_playing_widget_data},
@@ -15,6 +16,10 @@ use super::{
 
 impl ShellState {
     pub fn backdrop_cache_variant(&self) -> Option<String> {
+        if self.emergency_active() {
+            return None;
+        }
+
         if self.theme.backdrops.is_empty() {
             return None;
         }
@@ -61,14 +66,26 @@ impl ShellState {
     }
 
     pub fn has_visual_layers(&self) -> bool {
+        if self.emergency_active() {
+            return false;
+        }
+
         !self.theme.layers.is_empty()
     }
 
     pub fn keyboard_enabled(&self) -> bool {
+        if self.emergency_active() {
+            return false;
+        }
+
         self.theme.keyboard_enabled
     }
 
     pub fn static_scene_cache_variant(&self, scale: u32) -> Option<String> {
+        if self.emergency_active() {
+            return None;
+        }
+
         self.has_visual_layers().then(|| {
             format!(
                 "static-scene:v2:scale:{}:theme:{:?}:hint:{:?}:reveal-hint:{:?}:username:{:?}:auth-revealed:{}:focused:{}:avatar:{}",
@@ -300,6 +317,7 @@ impl ShellState {
     ) -> Self {
         let reveal_hint_text = theme.input_reveal_hint.clone();
         Self {
+            mode: ShellMode::Rich,
             secret: String::new(),
             secret_selected: false,
             caps_lock_active: false,
@@ -464,6 +482,23 @@ impl ShellState {
 
     pub fn static_scene_revision(&self) -> u64 {
         self.static_scene_revision
+    }
+
+    pub fn emergency_active(&self) -> bool {
+        self.mode == ShellMode::Emergency
+    }
+
+    pub fn activate_emergency(&mut self) {
+        if self.emergency_active() {
+            return;
+        }
+
+        self.mode = ShellMode::Emergency;
+        self.auth_revealed = true;
+        self.reveal_secret = false;
+        self.reveal_toggle_hovered = false;
+        self.reveal_toggle_pressed = false;
+        self.bump_static_scene_revision();
     }
 
     pub(super) fn identity_visible(&self) -> bool {

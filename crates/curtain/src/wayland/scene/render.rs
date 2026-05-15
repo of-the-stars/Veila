@@ -7,6 +7,23 @@ use veila_renderer::{PixelBuffer, shm};
 use crate::state::{CurtainApp, RenderTimingSample, SurfaceSize};
 
 impl CurtainApp {
+    pub(crate) fn render_surface_with_emergency_fallback(
+        &mut self,
+        surface: &SessionLockSurface,
+        size: SurfaceSize,
+        queue_handle: &QueueHandle<Self>,
+    ) -> Result<()> {
+        match self.render_surface(surface, size, queue_handle) {
+            Ok(()) => Ok(()),
+            Err(error) if !self.ui_shell.emergency_active() => {
+                let reason = format!("{error:#}");
+                self.activate_emergency_ui(&reason)?;
+                self.render_surface(surface, size, queue_handle)
+            }
+            Err(error) => Err(error),
+        }
+    }
+
     pub(crate) fn render_surface(
         &mut self,
         surface: &SessionLockSurface,

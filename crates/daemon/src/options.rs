@@ -13,6 +13,7 @@ pub struct DaemonOptions {
     pub set_theme: Option<String>,
     pub unset_theme: bool,
     pub lock_now: bool,
+    pub force_emergency_ui: bool,
     pub wait_ready: bool,
     pub stop: bool,
     pub list_themes: bool,
@@ -75,8 +76,18 @@ impl DaemonOptions {
                 continue;
             }
 
+            if arg == "--force-emergency-ui" {
+                options.force_emergency_ui = true;
+                continue;
+            }
+
             if arg == "--wait-ready" {
                 options.wait_ready = true;
+                continue;
+            }
+
+            if arg == "--force-emergency-ui" {
+                options.force_emergency_ui = true;
                 continue;
             }
 
@@ -153,6 +164,11 @@ impl DaemonOptions {
 
             if arg == "--wait-ready" {
                 options.wait_ready = true;
+                continue;
+            }
+
+            if arg == "--force-emergency-ui" {
+                options.force_emergency_ui = true;
                 continue;
             }
 
@@ -287,10 +303,15 @@ mod tests {
 
     #[test]
     fn parses_lock_now_argument() {
-        let options = DaemonOptions::parse_args(["veilad".to_string(), "--lock-now".to_string()])
-            .expect("arguments should parse");
+        let options = DaemonOptions::parse_args([
+            "veilad".to_string(),
+            "--lock-now".to_string(),
+            "--force-emergency-ui".to_string(),
+        ])
+        .expect("arguments should parse");
 
         assert!(options.lock_now);
+        assert!(options.force_emergency_ui);
     }
 
     #[test]
@@ -433,12 +454,14 @@ mod tests {
         let options = DaemonOptions::parse_control_args([
             "veila".to_string(),
             "--wait-ready".to_string(),
+            "--force-emergency-ui".to_string(),
             "lock".to_string(),
         ])
         .expect("arguments should parse");
 
         assert!(options.lock_now);
         assert!(options.wait_ready);
+        assert!(options.force_emergency_ui);
     }
 
     #[test]

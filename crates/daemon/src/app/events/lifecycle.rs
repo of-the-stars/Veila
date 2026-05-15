@@ -23,6 +23,7 @@ pub(crate) async fn handle_lock_signal(
     weather_snapshot: Option<&WeatherSnapshot>,
     battery_snapshot: Option<&BatterySnapshot>,
     now_playing_snapshot: Option<&NowPlayingSnapshot>,
+    force_emergency_ui: bool,
     slots: RuntimeSlots<'_>,
     auth_policy: AuthPolicy,
     suspend_state: &mut LockedSuspendState,
@@ -52,6 +53,7 @@ pub(crate) async fn handle_lock_signal(
         weather_snapshot,
         battery_snapshot,
         now_playing_snapshot,
+        force_emergency_ui,
         ActiveRuntime::new(
             curtain,
             auth_listener,
@@ -124,6 +126,7 @@ pub(crate) async fn handle_curtain_exit(
     weather_snapshot: Option<&WeatherSnapshot>,
     battery_snapshot: Option<&BatterySnapshot>,
     now_playing_snapshot: Option<&NowPlayingSnapshot>,
+    force_emergency_ui: bool,
     slots: RuntimeSlots<'_>,
     auth_policy: AuthPolicy,
     suspend_state: &mut LockedSuspendState,
@@ -165,6 +168,7 @@ pub(crate) async fn handle_curtain_exit(
             weather_snapshot,
             battery_snapshot,
             now_playing_snapshot,
+            force_emergency_ui,
             ActiveRuntime::new(
                 curtain,
                 auth_listener,

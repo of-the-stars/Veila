@@ -22,7 +22,7 @@ use tokio::{
     signal::unix::{SignalKind, signal},
     time::{self, MissedTickBehavior},
 };
-use veila_common::AppConfig;
+use veila_common::{AppConfig, LoadedConfig};
 
 use self::events::{
     handle_auth_connection, handle_auth_result, handle_control_connection, handle_curtain_exit,
@@ -48,9 +48,19 @@ pub async fn run(
     mut control_listener: UnixListener,
     daemon_control_socket_path: PathBuf,
 ) -> Result<()> {
-    let mut runtime = AppRuntime::new(
-        AppConfig::load(options.config_path.as_deref()).context("failed to load daemon config")?,
-    );
+    let loaded_config = match AppConfig::load(options.config_path.as_deref()) {
+        Ok(loaded_config) => loaded_config,
+        Err(error) => {
+            tracing::warn!(
+                "failed to load daemon config: {error:#}; using defaults so the emergency fallback can still lock"
+            );
+            LoadedConfig {
+                path: options.config_path.clone(),
+                config: AppConfig::default(),
+            }
+        }
+    };
+    let mut runtime = AppRuntime::new(loaded_config);
     prewarm::spawn_background_prewarm(runtime.loaded_config.path.as_deref());
     cache::spawn_background_cache_pruner();
     let connection = logind::connect_system().await?;
@@ -86,6 +96,7 @@ pub async fn run(
         session = %session_path,
         session_id_override = options.session_id.as_deref().unwrap_or("none"),
         manual_lock = options.lock_now,
+        force_emergency_ui = options.force_emergency_ui,
         config = runtime.loaded_config.path.as_deref().map(|path| path.display().to_string()).unwrap_or_else(|| "defaults".to_string()),
         "veilad ready"
     );
@@ -103,6 +114,7 @@ pub async fn run(
             runtime.weather.current_snapshot().as_ref(),
             runtime.battery.current_snapshot().as_ref(),
             now_playing_snapshot.as_ref(),
+            options.force_emergency_ui,
             ActiveRuntime::new(
                 &mut runtime.curtain,
                 &mut runtime.auth_listener,
@@ -136,6 +148,7 @@ pub async fn run(
                     weather_snapshot.as_ref(),
                     battery_snapshot.as_ref(),
                     now_playing_snapshot.as_ref(),
+                    options.force_emergency_ui,
                     slots,
                     auth_policy,
                     suspend_state,
@@ -203,6 +216,7 @@ pub async fn run(
                     weather_snapshot.as_ref(),
                     battery_snapshot.as_ref(),
                     now_playing_snapshot.as_ref(),
+                    options.force_emergency_ui,
                     slots,
                     auth_policy,
                     suspend_state,

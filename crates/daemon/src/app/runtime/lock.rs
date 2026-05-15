@@ -29,6 +29,7 @@ pub(crate) async fn activate_lock(
     weather_snapshot: Option<&WeatherSnapshot>,
     battery_snapshot: Option<&BatterySnapshot>,
     now_playing_snapshot: Option<&NowPlayingSnapshot>,
+    force_emergency_ui: bool,
 ) -> Result<LockActivation> {
     let activation_started_at = Instant::now();
     *state = LockState::Locking;
@@ -51,6 +52,7 @@ pub(crate) async fn activate_lock(
         weather_snapshot,
         battery_snapshot,
         now_playing_snapshot,
+        force_emergency_ui,
     )
     .await?;
     let spawn_elapsed_ms = elapsed_ms(spawn_started_at);

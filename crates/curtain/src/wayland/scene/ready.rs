@@ -58,7 +58,9 @@ impl CurtainApp {
         }
         self.maybe_start_background_render();
 
-        if let Err(error) = self.render_surface(&surface, size, queue_handle) {
+        if let Err(error) =
+            self.render_surface_with_emergency_fallback(&surface, size, queue_handle)
+        {
             self.failure_reason = Some(format!("failed to render curtain surface: {error:#}"));
             self.exit_requested = true;
             return;
@@ -85,7 +87,9 @@ impl CurtainApp {
             .collect();
 
         for (surface, size) in surfaces {
-            if let Err(error) = self.render_surface(&surface, size, queue_handle) {
+            if let Err(error) =
+                self.render_surface_with_emergency_fallback(&surface, size, queue_handle)
+            {
                 self.failure_reason = Some(format!("failed to rerender UI shell: {error:#}"));
                 self.exit_requested = true;
                 return;

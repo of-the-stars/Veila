@@ -98,6 +98,10 @@ pub(crate) fn render_preview(options: CurtainOptions) -> Result<()> {
         now_playing_snapshot,
     );
     let mut shell = shell;
+    if options.force_emergency_ui {
+        shell.activate_emergency();
+        buffer.clear(ClearColor::opaque(12, 14, 18));
+    }
     if let Some(preview_time) = options.preview_time {
         shell.set_preview_time(preview_clock_datetime(preview_time));
     }

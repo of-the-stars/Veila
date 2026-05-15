@@ -60,7 +60,10 @@ pub(crate) async fn handle_control_connection(
     };
 
     let (response, stop_requested) = match message {
-        DaemonControlMessage::LockNow { wait_ready } => {
+        DaemonControlMessage::LockNow {
+            wait_ready,
+            force_emergency_ui,
+        } => {
             if !state.is_active() {
                 let initial_background_path =
                     select_initial_background_path(&loaded_config.config, background_selection);
@@ -73,6 +76,7 @@ pub(crate) async fn handle_control_connection(
                     weather_snapshot,
                     battery_snapshot,
                     now_playing_snapshot,
+                    force_emergency_ui,
                     ActiveRuntime::new(
                         curtain,
                         auth_listener,

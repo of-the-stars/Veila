@@ -24,12 +24,16 @@ pub(super) async fn stop_running_daemon(daemon_socket_path: &std::path::Path) ->
 pub(super) async fn lock_running_daemon(
     daemon_socket_path: &std::path::Path,
     wait_ready: bool,
+    force_emergency_ui: bool,
 ) -> Result<Option<bool>> {
     ensure_running_daemon(daemon_socket_path)?;
 
     let response = ipc::send_daemon_control_message(
         daemon_socket_path,
-        &veila_common::ipc::DaemonControlMessage::LockNow { wait_ready },
+        &veila_common::ipc::DaemonControlMessage::LockNow {
+            wait_ready,
+            force_emergency_ui,
+        },
     )
     .await?;
 

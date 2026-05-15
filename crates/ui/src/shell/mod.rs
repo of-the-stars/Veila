@@ -1,6 +1,7 @@
 mod avatar;
 mod battery;
 mod clock;
+mod emergency;
 mod input;
 mod now_playing;
 mod pointer;
@@ -54,6 +55,12 @@ enum ShellStatus {
     },
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ShellMode {
+    Rich,
+    Emergency,
+}
+
 #[derive(Debug, Clone)]
 struct NowPlayingTransition {
     previous: Option<NowPlayingWidgetData>,
@@ -70,6 +77,7 @@ pub struct PreviewGrid {
 
 #[derive(Debug, Clone)]
 pub struct ShellState {
+    mode: ShellMode,
     secret: String,
     secret_selected: bool,
     caps_lock_active: bool,

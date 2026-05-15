@@ -69,6 +69,9 @@ pub async fn run(options: DaemonOptions) -> Result<()> {
     if options.wait_ready && !options.lock_now {
         bail!("--wait-ready can only be used with --lock-now");
     }
+    if options.force_emergency_ui && !options.lock_now {
+        bail!("--force-emergency-ui can only be used with --lock-now");
+    }
 
     let daemon_socket_path = ipc::daemon_socket_path();
     if options.current_theme {
@@ -144,6 +147,7 @@ pub async fn run(options: DaemonOptions) -> Result<()> {
                     &daemon_socket_path,
                     &veila_common::ipc::DaemonControlMessage::LockNow {
                         wait_ready: options.wait_ready,
+                        force_emergency_ui: options.force_emergency_ui,
                     },
                 )
                 .await?;
@@ -188,6 +192,9 @@ pub async fn run_control(options: DaemonOptions) -> Result<()> {
     if options.wait_ready && !options.lock_now {
         bail!("--wait-ready can only be used with `veila lock`");
     }
+    if options.force_emergency_ui && !options.lock_now {
+        bail!("--force-emergency-ui can only be used with `veila lock`");
+    }
 
     let daemon_socket_path = ipc::daemon_socket_path();
     if options.version {
@@ -221,7 +228,12 @@ pub async fn run_control(options: DaemonOptions) -> Result<()> {
     }
 
     if options.lock_now {
-        let already_active = lock_running_daemon(&daemon_socket_path, options.wait_ready).await?;
+        let already_active = lock_running_daemon(
+            &daemon_socket_path,
+            options.wait_ready,
+            options.force_emergency_ui,
+        )
+        .await?;
         if options.wait_ready {
             println!("lock_ready=true");
             println!("already_active={}", already_active.unwrap_or(false));
@@ -288,6 +300,7 @@ General:
 Legacy control:
       --lock-now             Trigger an immediate lock
       --wait-ready           Return only after the secure lock is active
+      --force-emergency-ui   Lock with the built-in emergency unlock prompt
       --reload-config        Ask a running daemon to reload config from disk
       --status               Print daemon runtime status
       --health               Print daemon build and platform info
@@ -325,6 +338,7 @@ General:
   -h, --help                 Show this help text
       --version              Print the local Veila version
       --config=<path>        Use a specific config file for theme/config commands
+      --force-emergency-ui   Combine with `lock` to test the emergency unlock prompt
 
 Commands:
   lock [--wait-ready]        Ask the running daemon to lock now

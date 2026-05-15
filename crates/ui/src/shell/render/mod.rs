@@ -186,14 +186,26 @@ impl ShellState {
     }
 
     pub fn render_backdrops(&self, buffer: &mut impl PixelBuffer) {
+        if self.emergency_active() {
+            return;
+        }
+
         self.render_backdrops_matching(buffer, |_| true);
     }
 
     pub fn render_static_backdrops(&self, buffer: &mut impl PixelBuffer) {
+        if self.emergency_active() {
+            return;
+        }
+
         self.render_backdrops_matching(buffer, |show_when| show_when == BackdropShowWhen::Always);
     }
 
     pub fn render_dynamic_backdrops(&self, buffer: &mut impl PixelBuffer) {
+        if self.emergency_active() {
+            return;
+        }
+
         self.render_backdrops_matching(buffer, |show_when| show_when != BackdropShowWhen::Always);
     }
 

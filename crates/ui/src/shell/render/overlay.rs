@@ -19,29 +19,59 @@ use super::{
 
 impl ShellState {
     pub fn render(&self, buffer: &mut impl PixelBuffer) {
+        if self.emergency_active() {
+            self.render_emergency(buffer);
+            return;
+        }
+
         buffer.clear(self.theme.background);
         self.render_overlay(buffer);
     }
 
     pub fn render_scaled(&self, buffer: &mut impl PixelBuffer, scale: u32) {
+        if self.emergency_active() {
+            self.render_emergency_scaled(buffer, scale);
+            return;
+        }
+
         self.with_render_scale(scale, |shell| shell.render(buffer));
     }
 
     pub fn render_overlay(&self, buffer: &mut impl PixelBuffer) {
+        if self.emergency_active() {
+            self.render_emergency_overlay(buffer);
+            return;
+        }
+
         self.render_static_backdrops(buffer);
         self.render_static_overlay(buffer);
         self.render_dynamic_overlay(buffer);
     }
 
     pub fn render_overlay_scaled(&self, buffer: &mut impl PixelBuffer, scale: u32) {
+        if self.emergency_active() {
+            self.render_emergency_overlay_scaled(buffer, scale);
+            return;
+        }
+
         self.with_render_scale(scale, |shell| shell.render_overlay(buffer));
     }
 
     pub fn render_static_overlay(&self, buffer: &mut impl PixelBuffer) {
+        if self.emergency_active() {
+            self.render_emergency_static_overlay(buffer);
+            return;
+        }
+
         self.render_static_overlay_with_layers(buffer, true);
     }
 
     pub fn render_static_overlay_without_layers(&self, buffer: &mut impl PixelBuffer) {
+        if self.emergency_active() {
+            self.render_emergency_static_overlay(buffer);
+            return;
+        }
+
         self.render_static_overlay_with_layers(buffer, false);
     }
 
@@ -71,6 +101,11 @@ impl ShellState {
     }
 
     pub fn render_static_overlay_scaled(&self, buffer: &mut impl PixelBuffer, scale: u32) {
+        if self.emergency_active() {
+            self.render_emergency_static_overlay_scaled(buffer, scale);
+            return;
+        }
+
         self.with_render_scale(scale, |shell| shell.render_static_overlay(buffer));
     }
 
@@ -79,12 +114,22 @@ impl ShellState {
         buffer: &mut impl PixelBuffer,
         scale: u32,
     ) {
+        if self.emergency_active() {
+            self.render_emergency_static_overlay_scaled(buffer, scale);
+            return;
+        }
+
         self.with_render_scale(scale, |shell| {
             shell.render_static_overlay_without_layers(buffer);
         });
     }
 
     pub fn render_dynamic_overlay(&self, buffer: &mut impl PixelBuffer) {
+        if self.emergency_active() {
+            self.render_emergency_dynamic_overlay(buffer);
+            return;
+        }
+
         self.render_dynamic_backdrops(buffer);
         let layout = self.scene_layout(buffer.size());
         self.render_identity_group(buffer, &layout, true);
@@ -112,6 +157,11 @@ impl ShellState {
     }
 
     pub fn render_dynamic_overlay_scaled(&self, buffer: &mut impl PixelBuffer, scale: u32) {
+        if self.emergency_active() {
+            self.render_emergency_dynamic_overlay_scaled(buffer, scale);
+            return;
+        }
+
         self.with_render_scale(scale, |shell| shell.render_dynamic_overlay(buffer));
     }
 

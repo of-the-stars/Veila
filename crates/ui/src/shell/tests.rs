@@ -148,6 +148,74 @@ fn empty_enter_submits_authentication() {
 }
 
 #[test]
+fn emergency_mode_keeps_password_input_flow() {
+    let mut shell = ShellState::default();
+
+    shell.activate_emergency();
+
+    assert!(shell.emergency_active());
+    assert_eq!(
+        shell.handle_key(ShellKey::Character('a')),
+        ShellAction::None
+    );
+    assert_eq!(
+        shell.handle_key(ShellKey::Enter),
+        ShellAction::Submit(String::from("a"))
+    );
+}
+
+#[test]
+fn emergency_mode_renders_without_theme_layers() {
+    let mut shell = ShellState::new(
+        ShellTheme {
+            layers: vec![VisualLayer {
+                kind: LayerKind::Text,
+                text: String::from("rich layer"),
+                color: veila_renderer::ClearColor::opaque(255, 255, 255),
+                background_color: None,
+                font_family: None,
+                font_weight: None,
+                font_style: None,
+                font_size: 48,
+                width: None,
+                height: None,
+                padding: 0,
+                radius: 0,
+                position: WidgetPosition {
+                    halign: HorizontalAlign::Center,
+                    valign: VerticalAlign::Center,
+                    x: 0,
+                    y: 0,
+                    target: WidgetPositionTarget::Screen,
+                },
+                z: 0,
+            }],
+            ..ShellTheme::default()
+        },
+        None,
+        None,
+        true,
+    );
+    let mut buffer = SoftwareBuffer::solid(
+        FrameSize::new(800, 450),
+        veila_renderer::ClearColor::opaque(0, 0, 0),
+    )
+    .expect("buffer");
+
+    shell.activate_emergency();
+    shell.render(&mut buffer);
+
+    assert!(!shell.has_visual_layers());
+    let first_pixel = &buffer.pixels()[0..4];
+    assert!(
+        buffer
+            .pixels()
+            .chunks_exact(4)
+            .any(|pixel| pixel != first_pixel)
+    );
+}
+
+#[test]
 fn input_reveal_on_interaction_starts_hidden() {
     let shell = ShellState::new(
         ShellTheme {

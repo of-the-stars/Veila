@@ -52,7 +52,10 @@ pub enum CurtainControlMessage {
 /// Messages sent to the long-running daemon control socket.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum DaemonControlMessage {
-    LockNow { wait_ready: bool },
+    LockNow {
+        wait_ready: bool,
+        force_emergency_ui: bool,
+    },
     Stop,
     Status,
     Health,
@@ -199,7 +202,10 @@ mod tests {
 
     #[test]
     fn round_trips_daemon_control_messages() {
-        let message = DaemonControlMessage::LockNow { wait_ready: true };
+        let message = DaemonControlMessage::LockNow {
+            wait_ready: true,
+            force_emergency_ui: true,
+        };
         let encoded = encode_message(&message).expect("daemon control message should encode");
         let decoded = decode_message::<DaemonControlMessage>(&encoded)
             .expect("daemon control message should decode");

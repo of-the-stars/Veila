@@ -38,6 +38,7 @@ pub(super) async fn activate_and_install(
     weather_snapshot: Option<&WeatherSnapshot>,
     battery_snapshot: Option<&BatterySnapshot>,
     now_playing_snapshot: Option<&NowPlayingSnapshot>,
+    force_emergency_ui: bool,
     runtime: ActiveRuntime<'_>,
     auth_policy: AuthPolicy,
     auth_state: &mut AuthState,
@@ -52,6 +53,7 @@ pub(super) async fn activate_and_install(
         weather_snapshot,
         battery_snapshot,
         now_playing_snapshot,
+        force_emergency_ui,
     )
     .await?;
     runtime.install_activation(activation);
@@ -70,6 +72,7 @@ pub(super) async fn activate_and_log(
     weather_snapshot: Option<&WeatherSnapshot>,
     battery_snapshot: Option<&BatterySnapshot>,
     now_playing_snapshot: Option<&NowPlayingSnapshot>,
+    force_emergency_ui: bool,
     runtime: ActiveRuntime<'_>,
     auth_policy: AuthPolicy,
     auth_state: &mut AuthState,
@@ -85,6 +88,7 @@ pub(super) async fn activate_and_log(
         weather_snapshot,
         battery_snapshot,
         now_playing_snapshot,
+        force_emergency_ui,
         runtime,
         auth_policy,
         auth_state,

@@ -27,7 +27,7 @@ use smithay_client_toolkit::{
     shm::Shm,
 };
 use veila_common::{
-    AppConfig, BatterySnapshot, NowPlayingSnapshot, OutputUiMode, WeatherSnapshot,
+    AppConfig, BatterySnapshot, LoadedConfig, NowPlayingSnapshot, OutputUiMode, WeatherSnapshot,
     config::{
         BackgroundConfig, BackgroundLayeredBaseMode, BackgroundLayeredConfig,
         BackgroundOutputConfig, BackgroundScaling as ConfigBackgroundScaling,
@@ -60,6 +60,8 @@ pub(crate) use power::ScreenOffState;
 pub(crate) use profiler::{RenderProfiler, RenderTimingSample};
 pub(crate) use repeat::KeyRepeatState;
 pub(crate) use resume::ResumeInputState;
+
+const EMERGENCY_BACKGROUND: ClearColor = ClearColor::opaque(12, 14, 18);
 
 pub(crate) struct ManagedLockSurface {
     pub(crate) output: wl_output::WlOutput,
@@ -184,28 +186,65 @@ impl CurtainApp {
         let (auth_sender, auth_events) = channel();
         let (background_sender, background_events) = channel();
         let (control_sender, control_events) = channel();
-        let loaded_config = AppConfig::load(options.config_path.as_deref())
-            .context("failed to load curtain config")?;
+        let force_emergency_ui = options.force_emergency_ui;
+        let mut emergency_reason = None;
+        let loaded_config = match AppConfig::load(options.config_path.as_deref()) {
+            Ok(loaded_config) => loaded_config,
+            Err(error) => {
+                let reason = format!("failed to load curtain config: {error:#}");
+                tracing::warn!("{reason}; emergency fallback UI active");
+                emergency_reason = Some(reason);
+                LoadedConfig {
+                    path: options.config_path.clone(),
+                    config: AppConfig::default(),
+                }
+            }
+        };
         let config = loaded_config.config;
+        let emergency_active = force_emergency_ui || emergency_reason.is_some();
         let theme = ShellTheme::from_config(&config);
-        let background_color = theme.background;
+        let background_color = if emergency_active {
+            EMERGENCY_BACKGROUND
+        } else {
+            theme.background
+        };
         let background_asset = BackgroundAsset::load(
             None,
             background_color,
-            background_generated(&config.background),
-            background_treatment(&config.background),
+            (!emergency_active)
+                .then(|| background_generated(&config.background))
+                .flatten(),
+            if emergency_active {
+                BackgroundTreatment::default()
+            } else {
+                background_treatment(&config.background)
+            },
         )
         .context("failed to prepare fallback background")?;
-        let background_generated = background_generated(&config.background);
-        let background_treatment = background_treatment(&config.background);
-        let slideshow = BackgroundSlideshow::load(
-            &config.background,
-            options.initial_background_path.as_deref(),
-        );
-        let background_path = slideshow
-            .as_ref()
-            .map(|slideshow| slideshow.current_path().to_path_buf())
-            .or_else(|| config.background.resolved_path());
+        let background_generated = (!emergency_active)
+            .then(|| background_generated(&config.background))
+            .flatten();
+        let background_treatment = if emergency_active {
+            BackgroundTreatment::default()
+        } else {
+            background_treatment(&config.background)
+        };
+        let slideshow = (!emergency_active)
+            .then(|| {
+                BackgroundSlideshow::load(
+                    &config.background,
+                    options.initial_background_path.as_deref(),
+                )
+            })
+            .flatten();
+        let background_path = if emergency_active {
+            None
+        } else {
+            slideshow
+                .as_ref()
+                .map(|slideshow| slideshow.current_path().to_path_buf())
+                .or_else(|| config.background.resolved_path())
+        };
         let avatar_path = config.avatar_image_path().map(std::path::Path::to_path_buf);
         let cached_avatar = veila_ui::load_cached_avatar(avatar_path.clone());
         let weather_location = effective_weather_location(&config);
@@ -227,6 +266,15 @@ impl CurtainApp {
         );
         if ui_shell.keyboard_enabled() {
             ui_shell.set_keyboard_layout_label(load_keyboard_layout_label());
+        }
+        if emergency_active {
+            if force_emergency_ui {
+                tracing::info!("emergency fallback UI forced by command line");
+            }
+            if let Some(reason) = emergency_reason.as_deref() {
+                tracing::warn!(reason, "emergency fallback UI active");
+            }
+            ui_shell.activate_emergency();
         }
         let lock_wait_timeout = Duration::from_secs(config.lock.acquire_timeout_seconds.max(1));
         let screen_off_delay = config
@@ -283,7 +331,11 @@ impl CurtainApp {
             control_socket: options.control_socket,
             config_path: options.config_path,
             background_path,
-            background_outputs: config.background.outputs.clone(),
+            background_outputs: if emergency_active {
+                Vec::new()
+            } else {
+                config.background.outputs.clone()
+            },
             slideshow,
             auth_events,
             auth_sender,
@@ -294,8 +346,16 @@ impl CurtainApp {
             background_generated,
             background_treatment,
             background_color,
-            ui_output_mode: config.visuals.output_ui_mode(),
-            ui_output_name: config.visuals.ui_output_name().map(str::to_owned),
+            ui_output_mode: if emergency_active {
+                OutputUiMode::All
+            } else {
+                config.visuals.output_ui_mode()
+            },
+            ui_output_name: if emergency_active {
+                None
+            } else {
+                config.visuals.ui_output_name().map(str::to_owned)
+            },
             weather_snapshot: options.weather_snapshot,
             battery_snapshot: options.battery_snapshot,
             now_playing_snapshot: options.now_playing_snapshot,
@@ -444,6 +504,41 @@ impl CurtainApp {
 
     pub(crate) fn failure_reason(&self) -> Option<&str> {
         self.failure_reason.as_deref()
+    }
+
+    pub(crate) fn activate_emergency_ui(&mut self, reason: &str) -> Result<()> {
+        if self.ui_shell.emergency_active() {
+            return Ok(());
+        }
+
+        tracing::warn!(reason, "switching to emergency fallback UI");
+        self.ui_shell.activate_emergency();
+        self.background_path = None;
+        self.background_outputs.clear();
+        self.slideshow = None;
+        self.background_generated = None;
+        self.background_treatment = BackgroundTreatment::default();
+        self.background_color = EMERGENCY_BACKGROUND;
+        self.background_asset = BackgroundAsset::load(
+            None,
+            EMERGENCY_BACKGROUND,
+            None,
+            BackgroundTreatment::default(),
+        )
+        .context("failed to prepare emergency fallback background")?;
+        self.ui_output_mode = OutputUiMode::All;
+        self.ui_output_name = None;
+        self.pending_pre_ready_redraw = true;
+
+        for surface in &mut self.lock_surfaces {
+            surface.background_path = None;
+            surface.background = None;
+            surface.scene_base = None;
+            surface.scene_base_revision = 0;
+            surface.scene_base_has_layers = false;
+        }
+
+        Ok(())
     }
 
     pub(crate) fn check_lock_deadline(&mut self) -> Result<()> {

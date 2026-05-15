@@ -29,6 +29,7 @@ pub async fn spawn_curtain(
     weather_snapshot: Option<&WeatherSnapshot>,
     battery_snapshot: Option<&BatterySnapshot>,
     now_playing_snapshot: Option<&NowPlayingSnapshot>,
+    force_emergency_ui: bool,
 ) -> Result<Child> {
     let binary = curtain_binary_path()?;
     let mut command = Command::new(&binary);
@@ -62,6 +63,9 @@ pub async fn spawn_curtain(
             encode_message(now_playing_snapshot)
                 .context("failed to encode now playing snapshot")?
         ));
+    }
+    if force_emergency_ui {
+        command.arg("--force-emergency-ui");
     }
 
     tracing::info!(binary = %binary.display(), "spawning curtain");

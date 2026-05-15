@@ -28,6 +28,7 @@ pub const fn component_name() -> &'static str {
 pub struct CurtainOptions {
     pub help: bool,
     pub lock: bool,
+    pub force_emergency_ui: bool,
     pub notify_socket: Option<PathBuf>,
     pub daemon_socket: Option<PathBuf>,
     pub control_socket: Option<PathBuf>,
@@ -75,6 +76,11 @@ impl CurtainOptions {
 
             if arg == "--lock" {
                 options.lock = true;
+                continue;
+            }
+
+            if arg == "--force-emergency-ui" {
+                options.force_emergency_ui = true;
                 continue;
             }
 
@@ -295,6 +301,7 @@ Usage:
 General:
   -h, --help                         Show this help text
       --lock                         Start a real lock session when running directly
+      --force-emergency-ui           Use the built-in emergency unlock prompt
       --config=<path>                Use a specific config file
       --notify-socket=<path>         Notify socket for curtain readiness
       --daemon-socket=<path>         Daemon auth IPC socket
@@ -427,6 +434,7 @@ mod tests {
             "--daemon-socket=/tmp/veila-auth.sock".to_string(),
             "--control-socket=/tmp/veila-control.sock".to_string(),
             "--config=/tmp/veila.toml".to_string(),
+            "--force-emergency-ui".to_string(),
             "--preview-png=/tmp/veila-preview.png".to_string(),
             "--preview-size=1920x1080".to_string(),
             "--preview-artwork=/tmp/cover.png".to_string(),
@@ -463,6 +471,7 @@ mod tests {
             options.config_path.as_deref(),
             Some(std::path::Path::new("/tmp/veila.toml"))
         );
+        assert!(options.force_emergency_ui);
         assert_eq!(
             options.preview_png.as_deref(),
             Some(std::path::Path::new("/tmp/veila-preview.png"))
@@ -565,11 +574,15 @@ mod tests {
 
     #[test]
     fn parses_direct_lock_argument() {
-        let options =
-            CurtainOptions::parse_args(["veila-curtain".to_string(), "--lock".to_string()])
-                .expect("arguments should parse");
+        let options = CurtainOptions::parse_args([
+            "veila-curtain".to_string(),
+            "--lock".to_string(),
+            "--force-emergency-ui".to_string(),
+        ])
+        .expect("arguments should parse");
 
         assert!(options.lock);
+        assert!(options.force_emergency_ui);
     }
 
     #[test]
