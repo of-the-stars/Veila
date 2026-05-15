@@ -327,6 +327,8 @@ fn first_run_defaults_match_bundled_theme() {
     assert_eq!(config.visuals.now_playing_artist_width(), Some(318));
     assert_eq!(config.visuals.now_playing_artwork_size(), Some(44));
     assert_eq!(config.visuals.now_playing_artwork_radius(), Some(8));
+    assert_eq!(config.visuals.output_ui_mode(), OutputUiMode::Single);
+    assert!(config.visuals.ui_output_name().is_none());
     assert_eq!(
         config.visuals.now_playing_artwork_position(),
         WidgetPositionConfig {

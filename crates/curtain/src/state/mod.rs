@@ -78,6 +78,25 @@ pub(crate) struct ManagedLockSurface {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum OutputRole {
+    PrimaryPrompt,
+    SecondaryCurtain,
+}
+
+impl OutputRole {
+    pub(crate) fn renders_shell(self) -> bool {
+        matches!(self, Self::PrimaryPrompt)
+    }
+
+    pub(crate) fn as_str(self) -> &'static str {
+        match self {
+            Self::PrimaryPrompt => "primary_prompt",
+            Self::SecondaryCurtain => "secondary_curtain",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct SurfaceSize {
     pub(crate) logical_width: u32,
     pub(crate) logical_height: u32,
@@ -620,9 +639,19 @@ impl CurtainApp {
     }
 
     pub(crate) fn ui_visible_on_surface(&self, index: usize) -> bool {
+        self.output_role_for_surface(index).renders_shell()
+    }
+
+    pub(crate) fn output_role_for_surface(&self, index: usize) -> OutputRole {
         match self.ui_output_mode {
-            OutputUiMode::All => true,
-            OutputUiMode::Single => self.selected_ui_surface_index() == Some(index),
+            OutputUiMode::All => OutputRole::PrimaryPrompt,
+            OutputUiMode::Single => {
+                if self.selected_ui_surface_index() == Some(index) {
+                    OutputRole::PrimaryPrompt
+                } else {
+                    OutputRole::SecondaryCurtain
+                }
+            }
         }
     }
 

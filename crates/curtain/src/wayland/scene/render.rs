@@ -44,7 +44,8 @@ impl CurtainApp {
         let frame_size = size.buffer;
         let render_scale = size.scale.max(1) as u32;
         let revision = self.ui_shell.static_scene_revision();
-        let ui_visible = self.ui_visible_on_surface(index);
+        let output_role = self.output_role_for_surface(index);
+        let ui_visible = output_role.renders_shell();
         let background_started_at = timing_enabled.then(Instant::now);
         let scene_base_cache_ready = if ui_visible {
             self.try_prepare_scene_base_without_background(index, frame_size, revision, size.scale)?
@@ -83,6 +84,7 @@ impl CurtainApp {
                 total_started_at,
                 timing_enabled,
                 size,
+                output_role.as_str(),
             );
         }
 
@@ -168,6 +170,7 @@ impl CurtainApp {
                 width = frame_size.width,
                 height = frame_size.height,
                 buffer_scale = size.scale,
+                output_role = output_role.as_str(),
                 first_frame = sample.first_frame,
                 background_refreshed,
                 scene_base_refreshed,
@@ -198,6 +201,7 @@ impl CurtainApp {
         total_started_at: Option<Instant>,
         timing_enabled: bool,
         size: SurfaceSize,
+        output_role: &'static str,
     ) -> Result<()> {
         let Some(background) = self.lock_surfaces[index].background.take() else {
             return Err(anyhow!("background buffer is unavailable"));
@@ -254,6 +258,7 @@ impl CurtainApp {
                 width = frame_size.width,
                 height = frame_size.height,
                 buffer_scale = size.scale,
+                output_role,
                 first_frame = sample.first_frame,
                 background_refreshed,
                 scene_base_refreshed = false,
