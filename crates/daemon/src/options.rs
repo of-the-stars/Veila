@@ -26,6 +26,8 @@ pub struct DaemonOptions {
     pub version: bool,
     pub reload_config: bool,
     pub background_prewarm_only: bool,
+    pub idle: bool,
+    pub idle_lock_after_seconds: Option<u64>,
 }
 
 impl DaemonOptions {
@@ -179,7 +181,7 @@ impl DaemonOptions {
                 continue;
             }
 
-            if arg.starts_with("--") {
+            if arg.starts_with("--") && positional.is_empty() {
                 bail!("unknown veila option: {arg}");
             }
 
@@ -224,9 +226,46 @@ fn apply_control_positionals(options: &mut DaemonOptions, positional: &[String])
             expect_no_extra_args(command, &positional[1..], || options.reload_config = true)
         }
         "stop" => expect_no_extra_args(command, &positional[1..], || options.stop = true),
+        "idle" => apply_idle_positionals(options, &positional[1..]),
         "theme" => apply_theme_positionals(options, &positional[1..]),
         _ => bail!("unknown veila command: {command}"),
     }
+}
+
+fn apply_idle_positionals(options: &mut DaemonOptions, args: &[String]) -> Result<()> {
+    options.idle = true;
+    let mut index = 0;
+
+    while let Some(arg) = args.get(index) {
+        if let Some(value) = arg.strip_prefix("--lock-after=") {
+            options.idle_lock_after_seconds = Some(parse_nonzero_seconds(value, "--lock-after")?);
+            index += 1;
+            continue;
+        }
+
+        if arg == "--lock-after" {
+            let Some(value) = args.get(index + 1) else {
+                bail!("missing value for --lock-after");
+            };
+            options.idle_lock_after_seconds = Some(parse_nonzero_seconds(value, "--lock-after")?);
+            index += 2;
+            continue;
+        }
+
+        bail!("unexpected extra argument for idle: {arg}");
+    }
+
+    Ok(())
+}
+
+fn parse_nonzero_seconds(value: &str, label: &str) -> Result<u64> {
+    let seconds = value
+        .parse::<u64>()
+        .map_err(|_| anyhow::anyhow!("{label} must be a positive integer number of seconds"))?;
+    if seconds == 0 {
+        bail!("{label} must be at least 1 second");
+    }
+    Ok(seconds)
 }
 
 fn apply_theme_positionals(options: &mut DaemonOptions, args: &[String]) -> Result<()> {
@@ -526,6 +565,54 @@ mod tests {
                 .expect("arguments should parse");
 
         assert!(options.reload_config);
+    }
+
+    #[test]
+    fn parses_control_idle_command() {
+        let options = DaemonOptions::parse_control_args(["veila".to_string(), "idle".to_string()])
+            .expect("arguments should parse");
+
+        assert!(options.idle);
+        assert_eq!(options.idle_lock_after_seconds, None);
+    }
+
+    #[test]
+    fn parses_control_idle_command_with_lock_after_equals() {
+        let options = DaemonOptions::parse_control_args([
+            "veila".to_string(),
+            "idle".to_string(),
+            "--lock-after=600".to_string(),
+        ])
+        .expect("arguments should parse");
+
+        assert!(options.idle);
+        assert_eq!(options.idle_lock_after_seconds, Some(600));
+    }
+
+    #[test]
+    fn parses_control_idle_command_with_lock_after_space() {
+        let options = DaemonOptions::parse_control_args([
+            "veila".to_string(),
+            "idle".to_string(),
+            "--lock-after".to_string(),
+            "60".to_string(),
+        ])
+        .expect("arguments should parse");
+
+        assert!(options.idle);
+        assert_eq!(options.idle_lock_after_seconds, Some(60));
+    }
+
+    #[test]
+    fn rejects_zero_idle_lock_after() {
+        let error = DaemonOptions::parse_control_args([
+            "veila".to_string(),
+            "idle".to_string(),
+            "--lock-after=0".to_string(),
+        ])
+        .expect_err("zero timeout should fail");
+
+        assert!(error.to_string().contains("at least 1 second"));
     }
 
     #[test]

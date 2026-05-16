@@ -1,6 +1,7 @@
 mod config;
 mod daemon;
 mod doctor;
+mod idle;
 mod term;
 mod theme;
 
@@ -14,6 +15,7 @@ use daemon::{
     reload_running_config, stop_running_daemon,
 };
 use doctor::print_doctor_report;
+use idle::run_idle_monitor;
 use theme::{
     print_available_themes, print_current_theme, print_theme_source, set_theme_and_reload,
     unset_theme_and_reload,
@@ -60,10 +62,11 @@ pub async fn run(options: DaemonOptions) -> Result<()> {
         + usize::from(options.doctor)
         + usize::from(options.check_config)
         + usize::from(options.version)
-        + usize::from(options.reload_config);
+        + usize::from(options.reload_config)
+        + usize::from(options.idle);
     if control_mode_count > 1 {
         bail!(
-            "use only one of --lock-now, --current-theme, --print-theme, --set-theme, --unset-theme, --stop, --list-themes, --status, --health, --doctor, --check-config, --version, or --reload-config at a time"
+            "use only one of --lock-now, --current-theme, --print-theme, --set-theme, --unset-theme, --stop, --list-themes, --status, --health, --doctor, --check-config, --version, --reload-config, or idle at a time"
         );
     }
     if options.wait_ready && !options.lock_now {
@@ -189,7 +192,8 @@ pub async fn run_control(options: DaemonOptions) -> Result<()> {
         + usize::from(options.doctor)
         + usize::from(options.check_config)
         + usize::from(options.version)
-        + usize::from(options.reload_config);
+        + usize::from(options.reload_config)
+        + usize::from(options.idle);
     if control_mode_count > 1 {
         bail!("use only one veila command at a time");
     }
@@ -290,6 +294,11 @@ pub async fn run_control(options: DaemonOptions) -> Result<()> {
         return Ok(());
     }
 
+    if options.idle {
+        run_idle_monitor(&daemon_socket_path, options.idle_lock_after_seconds).await?;
+        return Ok(());
+    }
+
     print_control_help();
     Ok(())
 }
@@ -364,6 +373,7 @@ Commands:
   check-config               Validate config files without starting the daemon
   reload                     Ask the running daemon to reload config from disk
   stop                       Stop the running daemon
+  idle [--lock-after=N]      Lock after compositor-reported idle time
 
 Themes:
   theme list                 List bundled themes
@@ -375,6 +385,7 @@ Themes:
 Notes:
   This command never starts the daemon. Start it with `veilad`, a user service, or your compositor config.
   `--wait-ready` can be combined with `veila lock` to block until the secure lock is active.
+  `veila idle` defaults to 300 seconds when --lock-after is omitted.
 "
     );
 }
