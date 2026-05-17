@@ -3,6 +3,17 @@ use std::path::PathBuf;
 use anyhow::{Result, bail};
 use veila_common::ipc::LatencyReportMode;
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum LogTarget {
+    #[default]
+    LockService,
+    All,
+    Daemon,
+    Curtain,
+    Ui,
+    Idle,
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct DaemonOptions {
     pub config_path: Option<PathBuf>,
@@ -32,6 +43,12 @@ pub struct DaemonOptions {
     pub idle: bool,
     pub idle_lock_after_seconds: Option<u64>,
     pub idle_lock_before_sleep: bool,
+    pub logs: bool,
+    pub logs_file: bool,
+    pub logs_follow: bool,
+    pub logs_since: Option<String>,
+    pub logs_lines: Option<u32>,
+    pub logs_target: LogTarget,
 }
 
 impl DaemonOptions {
@@ -232,6 +249,7 @@ fn apply_control_positionals(options: &mut DaemonOptions, positional: &[String])
         }
         "stop" => expect_no_extra_args(command, &positional[1..], || options.stop = true),
         "idle" => apply_idle_positionals(options, &positional[1..]),
+        "logs" => apply_logs_positionals(options, &positional[1..]),
         "theme" => apply_theme_positionals(options, &positional[1..]),
         _ => bail!("unknown veila command: {command}"),
     }
@@ -301,6 +319,87 @@ fn apply_idle_positionals(options: &mut DaemonOptions, args: &[String]) -> Resul
     Ok(())
 }
 
+fn apply_logs_positionals(options: &mut DaemonOptions, args: &[String]) -> Result<()> {
+    options.logs = true;
+    let mut explicit_target = false;
+    let mut index = 0;
+
+    while let Some(arg) = args.get(index) {
+        if arg == "--follow" || arg == "-f" {
+            options.logs_follow = true;
+            index += 1;
+            continue;
+        }
+
+        if arg == "--file" {
+            options.logs_file = true;
+            index += 1;
+            continue;
+        }
+
+        if let Some(value) = arg.strip_prefix("--since=") {
+            options.logs_since = Some(value.to_string());
+            index += 1;
+            continue;
+        }
+
+        if arg == "--since" {
+            let Some(value) = args.get(index + 1) else {
+                bail!("missing value for --since");
+            };
+            options.logs_since = Some(value.clone());
+            index += 2;
+            continue;
+        }
+
+        if let Some(value) = arg.strip_prefix("--lines=") {
+            options.logs_lines = Some(parse_log_lines(value)?);
+            index += 1;
+            continue;
+        }
+
+        if arg == "--lines" || arg == "-n" {
+            let Some(value) = args.get(index + 1) else {
+                bail!("missing value for {arg}");
+            };
+            options.logs_lines = Some(parse_log_lines(value)?);
+            index += 2;
+            continue;
+        }
+
+        if let Some(target) = parse_log_target_flag(arg) {
+            if explicit_target {
+                bail!("use only one logs target filter at a time");
+            }
+            options.logs_target = target;
+            explicit_target = true;
+            index += 1;
+            continue;
+        }
+
+        bail!("unexpected extra argument for logs: {arg}");
+    }
+
+    Ok(())
+}
+
+fn parse_log_lines(value: &str) -> Result<u32> {
+    value
+        .parse::<u32>()
+        .map_err(|_| anyhow::anyhow!("--lines must be a non-negative integer"))
+}
+
+fn parse_log_target_flag(arg: &str) -> Option<LogTarget> {
+    match arg {
+        "--all" => Some(LogTarget::All),
+        "--daemon" => Some(LogTarget::Daemon),
+        "--curtain" => Some(LogTarget::Curtain),
+        "--ui" => Some(LogTarget::Ui),
+        "--idle" => Some(LogTarget::Idle),
+        _ => None,
+    }
+}
+
 fn parse_nonzero_seconds(value: &str, label: &str) -> Result<u64> {
     let seconds = value
         .parse::<u64>()
@@ -356,7 +455,7 @@ fn expect_no_extra_args(command: &str, args: &[String], apply: impl FnOnce()) ->
 
 #[cfg(test)]
 mod tests {
-    use super::DaemonOptions;
+    use super::{DaemonOptions, LogTarget};
     use veila_common::ipc::LatencyReportMode;
 
     #[test]
@@ -672,6 +771,69 @@ mod tests {
         assert!(options.idle);
         assert_eq!(options.idle_lock_after_seconds, Some(120));
         assert!(options.idle_lock_before_sleep);
+    }
+
+    #[test]
+    fn parses_control_logs_command_defaults() {
+        let options = DaemonOptions::parse_control_args(["veila".to_string(), "logs".to_string()])
+            .expect("arguments should parse");
+
+        assert!(options.logs);
+        assert!(!options.logs_file);
+        assert_eq!(options.logs_target, LogTarget::LockService);
+        assert!(!options.logs_follow);
+        assert_eq!(options.logs_since.as_deref(), None);
+        assert_eq!(options.logs_lines, None);
+    }
+
+    #[test]
+    fn parses_control_logs_command_with_options() {
+        let options = DaemonOptions::parse_control_args([
+            "veila".to_string(),
+            "logs".to_string(),
+            "--follow".to_string(),
+            "--since=10m".to_string(),
+            "--lines".to_string(),
+            "25".to_string(),
+            "--curtain".to_string(),
+        ])
+        .expect("arguments should parse");
+
+        assert!(options.logs);
+        assert!(options.logs_follow);
+        assert_eq!(options.logs_since.as_deref(), Some("10m"));
+        assert_eq!(options.logs_lines, Some(25));
+        assert_eq!(options.logs_target, LogTarget::Curtain);
+    }
+
+    #[test]
+    fn parses_control_logs_file_command() {
+        let options = DaemonOptions::parse_control_args([
+            "veila".to_string(),
+            "logs".to_string(),
+            "--file".to_string(),
+            "--follow".to_string(),
+            "--lines=100".to_string(),
+        ])
+        .expect("arguments should parse");
+
+        assert!(options.logs);
+        assert!(options.logs_file);
+        assert!(options.logs_follow);
+        assert_eq!(options.logs_lines, Some(100));
+    }
+
+    #[test]
+    fn rejects_multiple_logs_targets() {
+        let error = DaemonOptions::parse_control_args([
+            "veila".to_string(),
+            "logs".to_string(),
+            "--daemon".to_string(),
+            "--idle".to_string(),
+        ])
+        .expect_err("multiple target filters should fail");
+
+        assert!(error.to_string().contains("only one logs target"));
     }
 
     #[test]

@@ -3,6 +3,7 @@ mod daemon;
 mod doctor;
 mod idle;
 mod init;
+mod logs;
 mod term;
 mod theme;
 
@@ -18,6 +19,7 @@ use daemon::{
 use doctor::print_doctor_report;
 use idle::run_idle_monitor;
 use init::init_config;
+use logs::print_logs;
 use theme::{
     print_available_themes, print_current_theme, print_theme_source, set_theme_and_reload,
     unset_theme_and_reload,
@@ -66,10 +68,11 @@ pub async fn run(options: DaemonOptions) -> Result<()> {
         + usize::from(options.init_config)
         + usize::from(options.version)
         + usize::from(options.reload_config)
-        + usize::from(options.idle);
+        + usize::from(options.idle)
+        + usize::from(options.logs);
     if control_mode_count > 1 {
         bail!(
-            "use only one of --lock-now, --current-theme, --print-theme, --set-theme, --unset-theme, --stop, --list-themes, --status, --health, --doctor, --check-config, --version, --reload-config, or idle at a time"
+            "use only one of --lock-now, --current-theme, --print-theme, --set-theme, --unset-theme, --stop, --list-themes, --status, --health, --doctor, --check-config, --version, --reload-config, idle, or logs at a time"
         );
     }
     if options.wait_ready && !options.lock_now {
@@ -197,7 +200,8 @@ pub async fn run_control(options: DaemonOptions) -> Result<()> {
         + usize::from(options.init_config)
         + usize::from(options.version)
         + usize::from(options.reload_config)
-        + usize::from(options.idle);
+        + usize::from(options.idle)
+        + usize::from(options.logs);
     if control_mode_count > 1 {
         bail!("use only one veila command at a time");
     }
@@ -242,6 +246,11 @@ pub async fn run_control(options: DaemonOptions) -> Result<()> {
 
     if options.check_config {
         print_config_validation(options.config_path.as_deref())?;
+        return Ok(());
+    }
+
+    if options.logs {
+        print_logs(&options)?;
         return Ok(());
     }
 
@@ -396,6 +405,11 @@ Commands:
   stop                       Stop the running daemon
   idle [--lock-after=N]      Lock after compositor-reported idle time
        [--lock-before-sleep] Also lock on logind PrepareForSleep
+  logs [--follow]            Show recent systemd user journal logs
+       [--file]
+       [--since WHEN]
+       [--lines N]
+       [--daemon|--curtain|--ui|--idle|--all]
 
 Themes:
   theme list                 List bundled themes
