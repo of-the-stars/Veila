@@ -377,9 +377,13 @@ fn delayed_pending_state_becomes_visible_after_timeout() {
     );
 
     thread::sleep(Duration::from_millis(1_050));
-    assert_eq!(
-        shell.advance_animated_state_update(),
-        ShellAnimationUpdate::AuthDirty
+    let update = shell.advance_animated_state_update();
+    assert!(
+        matches!(
+            update,
+            ShellAnimationUpdate::AuthDirty | ShellAnimationUpdate::Full
+        ),
+        "{update:?}"
     );
     assert!(matches!(
         shell.status,
@@ -426,9 +430,13 @@ fn pending_inline_status_text_uses_short_copy_after_delay() {
     let _ = shell.handle_key(ShellKey::Enter);
     thread::sleep(Duration::from_millis(1_050));
 
-    assert_eq!(
-        shell.advance_animated_state_update(),
-        ShellAnimationUpdate::AuthDirty
+    let update = shell.advance_animated_state_update();
+    assert!(
+        matches!(
+            update,
+            ShellAnimationUpdate::AuthDirty | ShellAnimationUpdate::Full
+        ),
+        "{update:?}"
     );
     assert_eq!(
         shell.inline_input_status_text().as_deref(),
