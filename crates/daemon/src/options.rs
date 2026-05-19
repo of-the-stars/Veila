@@ -146,7 +146,7 @@ impl DaemonOptions {
                 continue;
             }
 
-            if arg == "--version" {
+            if arg == "--version" || arg == "-v" {
                 options.version = true;
                 continue;
             }
@@ -177,7 +177,7 @@ impl DaemonOptions {
                 continue;
             }
 
-            if arg == "--version" {
+            if arg == "--version" || arg == "-v" {
                 options.version = true;
                 continue;
             }
@@ -643,10 +643,25 @@ mod tests {
 
     #[test]
     fn parses_version_argument() {
-        let options = DaemonOptions::parse_args(["veilad".to_string(), "--version".to_string()])
+        let long = DaemonOptions::parse_args(["veilad".to_string(), "--version".to_string()])
+            .expect("arguments should parse");
+        let short = DaemonOptions::parse_args(["veilad".to_string(), "-v".to_string()])
             .expect("arguments should parse");
 
-        assert!(options.version);
+        assert!(long.version);
+        assert!(short.version);
+    }
+
+    #[test]
+    fn parses_control_version_argument() {
+        let long =
+            DaemonOptions::parse_control_args(["veila".to_string(), "--version".to_string()])
+                .expect("arguments should parse");
+        let short = DaemonOptions::parse_control_args(["veila".to_string(), "-v".to_string()])
+            .expect("arguments should parse");
+
+        assert!(long.version);
+        assert!(short.version);
     }
 
     #[test]

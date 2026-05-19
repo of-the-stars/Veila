@@ -62,6 +62,7 @@
               install -Dm755 "$veila_bin" "$out/bin/veila"
               install -Dm755 "$veilad_bin" "$out/bin/veilad"
               install -Dm755 "$curtain_bin" "$out/bin/veila-curtain"
+              install -Dm644 docs/man/veila.1 "$out/share/man/man1/veila.1"
 
               mkdir -p "$out/share/veila"
               cp -R assets/fonts "$out/share/veila/"

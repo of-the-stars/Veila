@@ -85,7 +85,6 @@ pub async fn run(options: DaemonOptions) -> Result<()> {
         bail!("--latency-report can only be used with --lock-now");
     }
 
-    let daemon_socket_path = ipc::daemon_socket_path()?;
     if options.current_theme {
         print_current_theme(options.config_path.as_deref())?;
         return Ok(());
@@ -96,34 +95,8 @@ pub async fn run(options: DaemonOptions) -> Result<()> {
         return Ok(());
     }
 
-    if let Some(theme) = options.set_theme.as_deref() {
-        set_theme_and_reload(theme, options.config_path.as_deref(), &daemon_socket_path).await?;
-        return Ok(());
-    }
-
-    if options.unset_theme {
-        unset_theme_and_reload(options.config_path.as_deref(), &daemon_socket_path).await?;
-        return Ok(());
-    }
-
-    if options.stop {
-        stop_running_daemon(&daemon_socket_path).await?;
-        println!("stopped=true");
-        return Ok(());
-    }
-
     if options.list_themes {
         print_available_themes()?;
-        return Ok(());
-    }
-
-    if options.status {
-        print_running_status(&daemon_socket_path).await?;
-        return Ok(());
-    }
-
-    if options.health {
-        print_running_health(&daemon_socket_path).await?;
         return Ok(());
     }
 
@@ -143,6 +116,34 @@ pub async fn run(options: DaemonOptions) -> Result<()> {
 
     if options.version {
         print_version_info();
+        return Ok(());
+    }
+
+    let daemon_socket_path = ipc::daemon_socket_path()?;
+
+    if let Some(theme) = options.set_theme.as_deref() {
+        set_theme_and_reload(theme, options.config_path.as_deref(), &daemon_socket_path).await?;
+        return Ok(());
+    }
+
+    if options.unset_theme {
+        unset_theme_and_reload(options.config_path.as_deref(), &daemon_socket_path).await?;
+        return Ok(());
+    }
+
+    if options.stop {
+        stop_running_daemon(&daemon_socket_path).await?;
+        println!("stopped=true");
+        return Ok(());
+    }
+
+    if options.status {
+        print_running_status(&daemon_socket_path).await?;
+        return Ok(());
+    }
+
+    if options.health {
+        print_running_health(&daemon_socket_path).await?;
         return Ok(());
     }
 
@@ -341,7 +342,7 @@ Usage:
 
 General:
   -h, --help                 Show this help text
-      --version              Print the local Veila version
+  -v, --version              Print the local Veila version
       --config=<path>        Use a specific config file
       --log-file=<path>      Append daemon logs to a file when starting the daemon
       --session-id=<id>      Override the logind session id
@@ -387,7 +388,7 @@ Usage:
 
 General:
   -h, --help                 Show this help text
-      --version              Print the local Veila version
+  -v, --version              Print the local Veila version
       --config=<path>        Use a specific config file for theme/config commands
       --force-emergency-ui   Combine with `lock` to test the emergency unlock prompt
       --latency-report[=verbose]

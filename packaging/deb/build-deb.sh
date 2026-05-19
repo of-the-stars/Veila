@@ -35,6 +35,7 @@ require_file target/release/veilad
 require_file target/release/veila-curtain
 require_file LICENSE
 require_file README.md
+require_file docs/man/veila.1
 require_file assets/systemd/veilad.service
 require_file assets/systemd/veila-idle.service
 
@@ -45,6 +46,7 @@ mkdir -p \
   "$staging/usr/bin" \
   "$staging/usr/lib/systemd/user" \
   "$staging/usr/share/doc/veila" \
+  "$staging/usr/share/man/man1" \
   "$staging/usr/share/veila" \
   "$output_dir"
 
@@ -56,6 +58,7 @@ install -m644 assets/systemd/veilad.service "$staging/usr/lib/systemd/user/veila
 install -m644 assets/systemd/veila-idle.service "$staging/usr/lib/systemd/user/veila-idle.service"
 install -m644 README.md "$staging/usr/share/doc/veila/README.md"
 install -m644 LICENSE "$staging/usr/share/doc/veila/copyright"
+install -m644 docs/man/veila.1 "$staging/usr/share/man/man1/veila.1"
 
 cp -R assets/fonts "$staging/usr/share/veila/"
 cp -R assets/icons "$staging/usr/share/veila/"

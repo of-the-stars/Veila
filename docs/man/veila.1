@@ -1,0 +1,219 @@
+.TH VEILA 1 "May 2026" "Veila 0.4.0" "User Commands"
+.SH NAME
+veila \- control CLI for the Veila Wayland screen locker
+.SH SYNOPSIS
+.B veila
+.RI [ command ]
+.RI [ options ]
+.br
+.B veilad
+.RI [ options ]
+.br
+.B veila-curtain
+.RI [ options ]
+.SH DESCRIPTION
+.B Veila
+is a native Wayland screen locker built around the secure
+.B ext-session-lock-v1
+protocol. The user-facing
+.B veila
+command talks to a running
+.B veilad
+daemon. It does not start the daemon by itself.
+.PP
+Start
+.B veilad
+from a user service or compositor startup command, then use
+.B veila
+to request locks, inspect state, validate configuration, view logs, and manage theme selection.
+.PP
+The
+.B veila-curtain
+binary owns the secure lock surfaces and is normally spawned by the daemon. Direct curtain launches are intended for preview and emergency testing.
+For theme preview flags such as
+.B --preview-png
+and
+.BR --preview-size ,
+run
+.BR "veila-curtain --help" .
+.SH COMMANDS
+.TP
+.B lock
+Ask the running daemon to lock the current logind session.
+.TP
+.B lock --wait-ready
+Wait until the secure lock surface is active before returning.
+.TP
+.B status
+Print daemon runtime status.
+.TP
+.B health
+Print build and platform information.
+.TP
+.B doctor
+Run read-only local diagnostics for the Wayland session, PAM service, daemon socket, user services, config, and session-lock protocol support.
+.TP
+.B check-config
+Validate the active configuration and selected theme without starting the daemon or locking the session.
+.TP
+.B init [--theme NAME] [--force]
+Create a starter configuration at the default config path, or replace an existing one when
+.B --force
+is supplied.
+.TP
+.B reload
+Ask the running daemon to reload configuration from disk.
+.TP
+.B stop
+Stop the running daemon.
+.TP
+.B idle [--lock-after=N] [--lock-before-sleep]
+Run the compositor idle helper. If
+.B --lock-after
+is omitted, the default delay is 300 seconds.
+.TP
+.B logs
+Show recent packaged systemd user service logs.
+.TP
+.B theme list
+List bundled theme presets.
+.TP
+.B theme current
+Print the active theme selection and resolved theme source.
+.TP
+.B theme print NAME
+Print the raw source for a bundled or user theme.
+.TP
+.B theme set NAME
+Set the top-level theme key in the active configuration and best-effort reload a running daemon.
+.TP
+.B theme unset
+Remove the top-level theme key from the active configuration and best-effort reload a running daemon.
+.SH OPTIONS
+.TP
+.B -h, --help
+Show command help.
+.TP
+.B -v, --version
+Print the local Veila version.
+.TP
+.BI --config= PATH
+Use a specific configuration file for commands that read or mutate config.
+.TP
+.B --force-emergency-ui
+Combine with
+.B lock
+to test the built-in emergency unlock prompt.
+.TP
+.B --latency-report[=verbose]
+Combine with
+.B lock --wait-ready
+to print startup timing details.
+.SH LOGS OPTIONS
+.TP
+.B --follow
+Follow log output.
+.TP
+.B --file
+Read the configured file log instead of the systemd user journal.
+.TP
+.BI --since= WHEN
+Show logs since a journalctl-compatible time or a short duration such as
+.B 10m
+or
+.BR 2h .
+.TP
+.BI --lines= N
+Limit the number of log lines.
+.TP
+.B --daemon, --curtain, --ui, --idle, --all
+Select which packaged service or process logs to show.
+.SH DAEMON
+.B veilad
+starts the daemon when no control action is supplied. It also accepts legacy control flags such as
+.B --lock-now,
+.B --reload-config,
+.B --status,
+.B --health,
+.B --doctor,
+.B --check-config,
+and
+.BR --stop .
+Prefer the
+.B veila
+subcommands for user-facing control.
+.PP
+Useful daemon-only options include:
+.TP
+.BI --config= PATH
+Load a specific config file.
+.TP
+.BI --log-file= PATH
+Append daemon logs to a file for this launch.
+.TP
+.BI --session-id= ID
+Override the logind session id.
+.SH CONFIGURATION
+The default config file is
+.BR $XDG_CONFIG_HOME/veila/config.toml ,
+falling back to
+.BR $HOME/.config/veila/config.toml .
+.PP
+If no config file exists, Veila uses the bundled default theme and hardcoded safety defaults. Run
+.B veila init
+to create a starter config explicitly.
+.SH FILES
+.TP
+.I ~/.config/veila/config.toml
+Default user configuration file.
+.TP
+.I ~/.config/veila/themes/
+User theme directory.
+.TP
+.I /usr/share/veila/
+Packaged assets, including bundled themes, fonts, icons, and systemd unit files.
+.TP
+.I /etc/pam.d/veila
+PAM service used for password authentication.
+.TP
+.I /usr/lib/systemd/user/veilad.service
+Packaged daemon user service.
+.TP
+.I /usr/lib/systemd/user/veila-idle.service
+Packaged idle helper user service.
+.SH ENVIRONMENT
+.TP
+.B VEILA_ASSET_DIR
+Overrides the packaged asset directory.
+.TP
+.B VEILA_CURTAIN_BIN
+Overrides the curtain binary path used by the daemon.
+.TP
+.B RUST_LOG
+Controls tracing verbosity for development and troubleshooting.
+.SH SECURITY NOTES
+Veila uses secure Wayland session-lock surfaces. A compositor must advertise
+.B ext_session_lock_manager_v1
+for the real lock path to work. Regular fullscreen windows are not treated as a secure lock screen.
+.PP
+Unlock authority stays with the daemon and logind state. The UI forwards authentication attempts but does not self-authorize unlock.
+.SH EXAMPLES
+.TP
+Start the daemon manually:
+.B veilad
+.TP
+Lock and wait for readiness:
+.B veila lock --wait-ready
+.TP
+Validate config:
+.B veila check-config
+.TP
+Create a starter config:
+.B veila init --theme default
+.TP
+Enable packaged user services:
+.B systemctl --user enable --now veilad.service
+.SH SEE ALSO
+.BR systemctl (1),
+.BR journalctl (1),
+.BR pam (8)

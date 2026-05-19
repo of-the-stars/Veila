@@ -74,11 +74,13 @@ jobs:
           rm -rf "$dist_dir"
           mkdir -p \
             "$dist_dir/bin" \
+            "$dist_dir/share/man/man1" \
             "$dist_dir/share/veila"
 
           install -m755 target/release/veila "$dist_dir/bin/veila"
           install -m755 target/release/veilad "$dist_dir/bin/veilad"
           install -m755 target/release/veila-curtain "$dist_dir/bin/veila-curtain"
+          install -m644 docs/man/veila.1 "$dist_dir/share/man/man1/veila.1"
           cp -R assets/fonts "$dist_dir/share/veila/"
           cp -R assets/icons "$dist_dir/share/veila/"
           cp -R assets/systemd "$dist_dir/share/veila/"
