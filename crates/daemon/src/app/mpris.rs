@@ -60,9 +60,10 @@ async fn run_now_playing_service(
     let mut last_snapshot = None;
     let mut last_playback_active = false;
     let mut config = config_rx.borrow().clone();
+    let mut client = None;
 
     loop {
-        let refresh = fetch_refresh_state(config.clone()).await;
+        let refresh = fetch_refresh_state(&mut client, &config).await;
         if !same_track_snapshot(last_snapshot.as_ref(), refresh.snapshot.as_ref()) {
             last_snapshot = refresh.snapshot.clone();
             snapshot_tx.send_replace(refresh.snapshot);
@@ -92,10 +93,42 @@ struct NowPlayingRefresh {
     playback_active: bool,
 }
 
-async fn fetch_refresh_state(config: NowPlayingConfig) -> NowPlayingRefresh {
-    match fetch_snapshot(&config).await {
+struct MprisClient {
+    connection: Connection,
+}
+
+impl MprisClient {
+    async fn connect() -> Result<Self> {
+        Ok(Self {
+            connection: Connection::session().await?,
+        })
+    }
+
+    async fn refresh(&self, config: &NowPlayingConfig) -> Result<NowPlayingRefresh> {
+        fetch_snapshot(&self.connection, config).await
+    }
+}
+
+async fn fetch_refresh_state(
+    client: &mut Option<MprisClient>,
+    config: &NowPlayingConfig,
+) -> NowPlayingRefresh {
+    let refresh = match client {
+        Some(client) => client.refresh(config).await,
+        None => match MprisClient::connect().await {
+            Ok(connected) => {
+                let refresh = connected.refresh(config).await;
+                *client = Some(connected);
+                refresh
+            }
+            Err(error) => Err(error),
+        },
+    };
+
+    match refresh {
         Ok(refresh) => refresh,
         Err(error) => {
+            *client = None;
             tracing::debug!("mpris refresh failed: {error:#}");
             NowPlayingRefresh {
                 snapshot: None,
@@ -105,9 +138,11 @@ async fn fetch_refresh_state(config: NowPlayingConfig) -> NowPlayingRefresh {
     }
 }
 
-async fn fetch_snapshot(config: &NowPlayingConfig) -> Result<NowPlayingRefresh> {
-    let connection = Connection::session().await?;
-    let dbus = DBusProxy::new(&connection).await?;
+async fn fetch_snapshot(
+    connection: &Connection,
+    config: &NowPlayingConfig,
+) -> Result<NowPlayingRefresh> {
+    let dbus = DBusProxy::new(connection).await?;
     let names = dbus.list_names().await?;
     let mut best = None;
 
@@ -117,7 +152,7 @@ async fn fetch_snapshot(config: &NowPlayingConfig) -> Result<NowPlayingRefresh> 
             continue;
         }
 
-        let Some(candidate) = player_snapshot(&connection, &name, config).await? else {
+        let Some(candidate) = player_snapshot(connection, &name, config).await? else {
             continue;
         };
 
