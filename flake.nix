@@ -159,6 +159,7 @@
           default = pkgs.mkShell {
             packages = with pkgs; [
               cargo
+              cargo-deny
               libxkbcommon
               pam
               pkg-config
