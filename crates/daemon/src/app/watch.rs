@@ -1,5 +1,7 @@
 use std::{
+    collections::hash_map::DefaultHasher,
     fs,
+    hash::{Hash, Hasher},
     path::{Path, PathBuf},
     time::{Duration, SystemTime},
 };
@@ -24,23 +26,42 @@ struct FileStamp {
     exists: bool,
     modified: Option<SystemTime>,
     len: u64,
+    content_hash: Option<u64>,
 }
 
 impl FileStamp {
     fn read(path: &Path) -> Self {
+        Self::read_inner(path, false)
+    }
+
+    fn read_with_content_hash(path: &Path) -> Self {
+        Self::read_inner(path, true)
+    }
+
+    fn read_inner(path: &Path, hash_content: bool) -> Self {
+        let content_hash = hash_content.then(|| file_content_hash(path)).flatten();
         match fs::metadata(path) {
             Ok(metadata) => Self {
                 exists: true,
                 modified: metadata.modified().ok(),
                 len: metadata.len(),
+                content_hash,
             },
             Err(_) => Self {
                 exists: false,
                 modified: None,
                 len: 0,
+                content_hash: None,
             },
         }
     }
+}
+
+fn file_content_hash(path: &Path) -> Option<u64> {
+    let bytes = fs::read(path).ok()?;
+    let mut hasher = DefaultHasher::new();
+    bytes.hash(&mut hasher);
+    Some(hasher.finish())
 }
 
 #[derive(Debug)]
@@ -82,7 +103,7 @@ impl AutoReloadWatcher {
 
         let mut changed = None;
         if let Some(path) = self.config_path.as_deref() {
-            let stamp = FileStamp::read(path);
+            let stamp = FileStamp::read_with_content_hash(path);
             if self.config_stamp != Some(stamp) {
                 self.config_stamp = Some(stamp);
                 changed = Some(AutoReloadTrigger::Config);
@@ -102,7 +123,7 @@ impl AutoReloadWatcher {
         if loaded_config.config.lock.auto_reload_config
             && let Some(path) = self.theme_path.as_deref()
         {
-            let stamp = FileStamp::read(path);
+            let stamp = FileStamp::read_with_content_hash(path);
             if self.theme_stamp != Some(stamp) {
                 self.theme_stamp = Some(stamp);
                 changed = Some(AutoReloadTrigger::Theme);
@@ -111,7 +132,7 @@ impl AutoReloadWatcher {
 
         if loaded_config.config.lock.auto_reload_config {
             for include_file in &mut self.include_files {
-                let stamp = FileStamp::read(&include_file.path);
+                let stamp = FileStamp::read_with_content_hash(&include_file.path);
                 if include_file.stamp != stamp {
                     include_file.stamp = stamp;
                     changed = Some(AutoReloadTrigger::Include);
@@ -148,6 +169,7 @@ impl AutoReloadWatcher {
             &mut self.config_path,
             &mut self.config_stamp,
             next_config_path.as_deref(),
+            FileStamp::read_with_content_hash,
         );
 
         let next_wallpaper_path = loaded_config.config.background.resolved_path();
@@ -155,6 +177,7 @@ impl AutoReloadWatcher {
             &mut self.wallpaper_path,
             &mut self.wallpaper_stamp,
             next_wallpaper_path.as_deref(),
+            FileStamp::read,
         );
 
         let next_theme_path = active_theme_source_path(next_config_path.as_deref()).unwrap_or(None);
@@ -162,6 +185,7 @@ impl AutoReloadWatcher {
             &mut self.theme_path,
             &mut self.theme_stamp,
             next_theme_path.as_deref(),
+            FileStamp::read_with_content_hash,
         );
 
         let next_include_paths =
@@ -182,6 +206,7 @@ fn sync_path(
     current_path: &mut Option<PathBuf>,
     current_stamp: &mut Option<FileStamp>,
     next_path: Option<&Path>,
+    read_stamp: fn(&Path) -> FileStamp,
 ) {
     let next = next_path.map(Path::to_path_buf);
     if *current_path == next {
@@ -189,7 +214,7 @@ fn sync_path(
     }
 
     *current_path = next.clone();
-    *current_stamp = next.as_deref().map(FileStamp::read);
+    *current_stamp = next.as_deref().map(read_stamp);
 }
 
 fn sync_paths(current_files: &mut Vec<WatchedFile>, next_paths: Vec<PathBuf>) {
@@ -205,7 +230,7 @@ fn sync_paths(current_files: &mut Vec<WatchedFile>, next_paths: Vec<PathBuf>) {
     *current_files = next_paths
         .into_iter()
         .map(|path| {
-            let stamp = FileStamp::read(&path);
+            let stamp = FileStamp::read_with_content_hash(&path);
             WatchedFile { path, stamp }
         })
         .collect();
