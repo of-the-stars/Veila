@@ -16,17 +16,21 @@ pub(super) fn widget_data(snapshot: Option<NowPlayingSnapshot>) -> Option<NowPla
     let title = normalize(snapshot.title)?;
     let artist = snapshot.artist.and_then(normalize);
     let artwork_path = snapshot.artwork_path;
-    let artwork = artwork_path.as_deref().and_then(|path| {
-        CoverArtAsset::load(path)
-            .map_err(|error| {
+    let artwork = artwork_path
+        .as_deref()
+        .and_then(|path| match CoverArtAsset::load(path) {
+            Ok(artwork) => {
+                tracing::debug!(path = %path.display(), "loaded now playing artwork");
+                Some(artwork)
+            }
+            Err(error) => {
                 tracing::debug!(
                     path = %path.display(),
                     "failed to load now playing artwork: {error:#}"
                 );
-                error
-            })
-            .ok()
-    });
+                None
+            }
+        });
 
     Some(NowPlayingWidgetData {
         title,

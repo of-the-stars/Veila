@@ -54,8 +54,8 @@ async fn main() -> anyhow::Result<()> {
 }
 
 fn init_tracing(options: &veila_daemon::DaemonOptions) -> anyhow::Result<Option<WorkerGuard>> {
-    let env_filter = tracing_subscriber::EnvFilter::from_default_env()
-        .add_directive(tracing::Level::INFO.into());
+    let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"));
 
     if let Some(path) = resolved_log_file_path(options)? {
         if let Some(parent) = path.parent() {
